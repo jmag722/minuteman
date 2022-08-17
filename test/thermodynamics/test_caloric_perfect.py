@@ -9,8 +9,8 @@ from thermodynamics.caloric_perfect import *
 
 class TestConstants(unittest.TestCase):
     def test_constants(self):
-        actual = NA*kB
-        expected = RU
+        actual = NA*kB_SI
+        expected = RU_SI
         self.assertAlmostEqual(actual, expected)
 
 class TestIdealGasLaw(unittest.TestCase):
@@ -49,7 +49,7 @@ class TestIdealGasLaw(unittest.TestCase):
 
 class TestR(unittest.TestCase):
     def test_R(self):
-        actual = R(53.0,True)
+        actual = R(53.0,True,)
         expected = 0.1568766
         self.assertAlmostEqual(actual, expected,places=6)
 
@@ -69,6 +69,18 @@ class TestEntropy(unittest.TestCase):
         actual = entropy(p2_p1=3,v2_v1=0.5,cp=25,cv=1.4)
         expected = -15.79062231
         self.assertAlmostEqual(actual,expected,places=6)
+
+class TestIsentropicRelations(unittest.TestCase):
+    def test_pr(self):
+        irs = IsentropicRelationSolver()
+        actual = irs.solve("p2_p1",("T2_T1",5),gam=3.1)
+        expected = 10.76001467
+        self.assertAlmostEqual(actual,expected,places=6)
+    def test_at(self):
+        irs = IsentropicRelationSolver()
+        actual = irs.solve("T2_T1",("a2_a1",1.1))
+        expected = 1.21
+        self.assertEqual(actual,expected)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
