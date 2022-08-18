@@ -29,21 +29,19 @@ class TestIdealGasLaw(unittest.TestCase):
 
     def test_rho_law3(self):
         igls = IdealGasLawSolver()
-        actual = igls.solve("p",values_dict={"n": 3, "T":4},eq=igls.PARTICLE_EQ)
+        actual = igls.solve("p",values_dict={"n": 3, "T":4})
         expected = 1.6567788e-22
         self.assertAlmostEqual(actual, expected)
 
     def test_rho_law4(self):
         igls = IdealGasLawSolver()
-        actual = igls.solve("rho",values_dict={"p": 2, "R": 1, "T":4},
-                            eq=igls.RHO_EQ)
+        actual = igls.solve("rho",values_dict={"p": 2, "R": 1, "T":4})
         expected = 0.5
         self.assertEqual(actual, expected)
 
     def test_rho_law5(self):
         igls = IdealGasLawSolver()
-        actual = igls.solve("T",values_dict={"p": 2, "V":4, "Nm":2},
-                            eq=igls.VOL_EQ)
+        actual = igls.solve("T",values_dict={"p": 2, "V":4, "Nm":2})
         expected = 0.48108942
         self.assertAlmostEqual(actual, expected,places=6)
 
@@ -80,7 +78,19 @@ class TestIsentropicRelations(unittest.TestCase):
         irs = IsentropicRelationSolver()
         actual = irs.solve("T2_T1",("a2_a1",1.1))
         expected = 1.21
-        self.assertEqual(actual,expected)
+        self.assertAlmostEqual(actual,expected)
+
+    def test_tr(self):
+        irs = IsentropicRelationSolver()
+        actual = irs.solve("T2_T1",("r2_r1",2),gam=1.3)
+        expected = 1.231144413
+        self.assertAlmostEqual(actual,expected)
+
+    def test_rt(self):
+        irs = IsentropicRelationSolver()
+        actual = irs.solve("r2_r1",("T2_T1",2),gam=1.3)
+        expected = 10.0793684
+        self.assertAlmostEqual(actual,expected)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

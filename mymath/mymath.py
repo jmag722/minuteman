@@ -12,10 +12,7 @@ class AlgebraicEquationSolver():
         solve_lst += [sp.parse_expr(eq)]
 
         for key, value in values_dict.items():
-            try:
-                solve_lst.append(sp.Eq(sp.parse_expr(key), value))
-            except Exception:
-                print("Eq. solver error with variable {} and value {}".format(key,value))
+            solve_lst.append(sp.Eq(sp.parse_expr(key), value))
         try:
             return sp.solve(solve_lst)[0][x]
         except IndexError:

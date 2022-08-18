@@ -27,15 +27,15 @@ class Units(enum.Enum):
 
 # for perfect (thermally+calorically) and reacting gases
 class IdealGasLawSolver():
-    # can't use N for # of moles, seems reserved by sympy
-    variables_str = ["p","V", "rho", "n","Nm", "R", "T","kB", "RU"]
     RHO_EQ = "p - rho*R*T"
     PARTICLE_EQ = "p - n*kB*T"
+    # can't use N for # of moles, seems reserved by sympy
     VOL_EQ = "p*V - Nm*RU*T"
     def __init__(self):
         pass
-
-    def solve(self,x,values_dict,eq=RHO_EQ,units:Units=Units.SI):
+    def solve(self,x,values_dict,units:Units=Units.SI):
+        varlist = {x}
+        varlist.update(list(values_dict))
         if units==Units.SI:
             ru = RU_SI
             boltz = kB_SI
@@ -46,13 +46,21 @@ class IdealGasLawSolver():
             ru = RU_IMP_SLUG
             boltz = kB_IMP
 
-        if "RU" in eq:
-            values_dict["RU"] = ru
-        if "kB" in eq:
+        if "p" in varlist and "rho" in varlist\
+            and "R" in varlist and "T" in varlist:
+            eq=self.RHO_EQ
+        elif "p" in varlist and "n" in varlist\
+            and "T" in varlist:
+            eq=self.PARTICLE_EQ
             values_dict["kB"] = boltz
-        for key,val in values_dict.items():
-            if key not in self.variables_str:
-                raise Exception("Variable {} not supported in ideal gas eq".format(key))
+        elif "p" in varlist and "V" in varlist\
+            and "Nm" in varlist and "T" in varlist:
+            eq=self.VOL_EQ
+            values_dict["RU"] = ru
+        else:
+            raise Exception("Variables {} are not supported for isentropic\
+                relations".format(varlist))
+            
         aes = mm.AlgebraicEquationSolver()
         return aes.solve(x,values_dict,eq)
 
@@ -109,30 +117,58 @@ def entropy(T2_T1=None,p2_p1=None,v2_v1=None,
     return s1 + expr # if s1=0, returns (s2-s1), else s2
 
 class IsentropicRelationSolver():
-    PT_EQ = "p2_p1 - T2_T1**(gam/(gam-1))"
-    PR_EQ = "p2_p1 - r2_r1**gam"
-    PA_EQ = "p2_p1 - a2_a1**(2*gam/(gam-1))"
-    RT_EQ = "r2_r1**gam - T2_T1**(gam/(gam-1))"
-    RA_EQ = "r2_r1**gam - a2_a1**(2*gam/(gam-1))"
-    TA_EQ = "T2_T1**(gam/(gam-1)) - a2_a1**(2*gam/(gam-1))"
+    # PT_EQ = "p2_p1 - T2_T1**(gam/(gam-1))"
+    # PR_EQ = "p2_p1 - r2_r1**gam"
+    # PA_EQ = "p2_p1 - a2_a1**(2*gam/(gam-1))"
+    # RT_EQ = "r2_r1 - T2_T1**(1/(gam-1))"
+    # RA_EQ = "r2_r1 - a2_a1**(2/(gam-1))"
+    # TA_EQ = "T2_T1 - a2_a1*a2_a1"
     def __init__(self):
         pass
     def solve(self,x,input:tuple,gam=1.4):
         varlist = {x,input[0]}
+        # values_dict = dict([input,("gam",gam)])
+        ans = None
         if "p2_p1" in varlist and "T2_T1" in varlist:
-            eq=self.PT_EQ
+            if x == "p2_p1":
+                ans = input[1]**(gam/(gam-1))
+            else:
+                ans = input[1]**((gam-1)/gam)
+            # eq=self.PT_EQ
         elif "p2_p1" in varlist and "r2_r1" in varlist:
-            eq = self.PR_EQ
+            if x == "p2_p1":
+                ans = input[1]**gam
+            else:
+                ans = input[1]**1/gam
+            # eq = self.PR_EQ
         elif "p2_p1" in varlist and "a2_a1" in varlist:
-            eq = self.PA_EQ
+            if x == "p2_p1":
+                ans = input[1]**(2*gam/(gam-1))
+            else:
+                ans = input[1]**((gam-1)/2/gam)
+            # eq = self.PA_EQ
         elif "T2_T1" in varlist and "r2_r1" in varlist:
-            eq = self.RT_EQ
+            if x == "T2_T1":
+                ans = input[1]**(gam-1)
+            else:
+                ans = input[1]**(1/(gam-1))
+            # eq = self.RT_EQ
         elif "T2_T1" in varlist and "a2_a1" in varlist:
-            eq = self.TA_EQ
+            if x == "T2_T1":
+                ans = input[1]**2
+            else:
+                ans = input[1]**0.5
+            # eq = self.TA_EQ
+            # del values_dict["gam"]
         elif "r2_r1" in varlist and "a2_a1" in varlist:
-            eq = self.RA_EQ
+            if x == "r2_r1":
+                ans = input[1]**(2/(gam-1))
+            else:
+                ans = input[1]**((gam-1)/2)
+            # eq = self.RA_EQ
         else:
             raise Exception("Variable {} or {} are not supported for isentropic\
                 relations".format(x,input[0]))
-        aes = mm.AlgebraicEquationSolver()
-        return aes.solve(x,dict([input,("gam",gam)]),eq=eq)
+        # aes = mm.AlgebraicEquationSolver()
+        # return aes.solve(x,values_dict,eq=eq)
+        return ans
