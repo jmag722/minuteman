@@ -69,28 +69,39 @@ class TestEntropy(unittest.TestCase):
         self.assertAlmostEqual(actual,expected,places=6)
 
 class TestIsentropicRelations(unittest.TestCase):
-    def test_pr(self):
-        irs = IsentropicRelationSolver()
-        actual = irs.solve("p2_p1",("T2_T1",5),gam=3.1)
-        expected = 10.76001467
-        self.assertAlmostEqual(actual,expected,places=6)
-    def test_at(self):
-        irs = IsentropicRelationSolver()
-        actual = irs.solve("T2_T1",("a2_a1",1.1))
-        expected = 1.21
-        self.assertAlmostEqual(actual,expected)
-
-    def test_tr(self):
-        irs = IsentropicRelationSolver()
-        actual = irs.solve("T2_T1",("r2_r1",2),gam=1.3)
-        expected = 1.231144413
-        self.assertAlmostEqual(actual,expected)
-
-    def test_rt(self):
-        irs = IsentropicRelationSolver()
-        actual = irs.solve("r2_r1",("T2_T1",2),gam=1.3)
-        expected = 10.0793684
-        self.assertAlmostEqual(actual,expected)
+    def test_p(self):
+        actual = isentropic_process(p21=1.2)
+        expected = {"p21":1.2,"t21":1.053472524,"r21":1.139089983,
+                    "a21":1.026388096,"gamma":1.4}
+        self.assertAlmostEqual(actual["p21"],expected["p21"])
+        self.assertAlmostEqual(actual["a21"],expected["a21"])
+        self.assertAlmostEqual(actual["t21"],expected["t21"])
+        self.assertAlmostEqual(actual["r21"],expected["r21"])
+        self.assertAlmostEqual(actual["gamma"],expected["gamma"])
+    def test_a(self):
+        actual = isentropic_process(a21=1.125)
+        expected = {"p21":2.280697346,"r21":1.802032471,"t21":1.265625,"a21":1.125,"gamma":1.4}
+        self.assertAlmostEqual(actual["p21"],expected["p21"])
+        self.assertAlmostEqual(actual["a21"],expected["a21"])
+        self.assertAlmostEqual(actual["t21"],expected["t21"])
+        self.assertAlmostEqual(actual["r21"],expected["r21"])
+        self.assertAlmostEqual(actual["gamma"],expected["gamma"])
+    def test_r(self):
+        actual = isentropic_process(r21=2,gamma=1.3)
+        expected = {"p21":2.462288827,"r21":2,"t21":1.231144413,"a21":1.109569472,"gamma":1.3}
+        self.assertAlmostEqual(actual["p21"],expected["p21"])
+        self.assertAlmostEqual(actual["a21"],expected["a21"])
+        self.assertAlmostEqual(actual["t21"],expected["t21"])
+        self.assertAlmostEqual(actual["r21"],expected["r21"])
+        self.assertAlmostEqual(actual["gamma"],expected["gamma"])
+    def test_t(self):
+        actual = isentropic_process(t21=0.7,gamma=1.35)
+        expected = {"p21":0.2526509942,"r21":0.3609299917,"t21":0.7,"a21":0.8366600265,"gamma":1.35}
+        self.assertAlmostEqual(actual["p21"],expected["p21"])
+        self.assertAlmostEqual(actual["a21"],expected["a21"])
+        self.assertAlmostEqual(actual["t21"],expected["t21"])
+        self.assertAlmostEqual(actual["r21"],expected["r21"])
+        self.assertAlmostEqual(actual["gamma"],expected["gamma"])
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

@@ -116,59 +116,24 @@ def entropy(T2_T1=None,p2_p1=None,v2_v1=None,
         raise Exception(error_msg)
     return s1 + expr # if s1=0, returns (s2-s1), else s2
 
-class IsentropicRelationSolver():
-    # PT_EQ = "p2_p1 - T2_T1**(gam/(gam-1))"
-    # PR_EQ = "p2_p1 - r2_r1**gam"
-    # PA_EQ = "p2_p1 - a2_a1**(2*gam/(gam-1))"
-    # RT_EQ = "r2_r1 - T2_T1**(1/(gam-1))"
-    # RA_EQ = "r2_r1 - a2_a1**(2/(gam-1))"
-    # TA_EQ = "T2_T1 - a2_a1*a2_a1"
-    def __init__(self):
-        pass
-    def solve(self,x,input:tuple,gam=1.4):
-        varlist = {x,input[0]}
-        # values_dict = dict([input,("gam",gam)])
-        ans = None
-        if "p2_p1" in varlist and "T2_T1" in varlist:
-            if x == "p2_p1":
-                ans = input[1]**(gam/(gam-1))
-            else:
-                ans = input[1]**((gam-1)/gam)
-            # eq=self.PT_EQ
-        elif "p2_p1" in varlist and "r2_r1" in varlist:
-            if x == "p2_p1":
-                ans = input[1]**gam
-            else:
-                ans = input[1]**1/gam
-            # eq = self.PR_EQ
-        elif "p2_p1" in varlist and "a2_a1" in varlist:
-            if x == "p2_p1":
-                ans = input[1]**(2*gam/(gam-1))
-            else:
-                ans = input[1]**((gam-1)/2/gam)
-            # eq = self.PA_EQ
-        elif "T2_T1" in varlist and "r2_r1" in varlist:
-            if x == "T2_T1":
-                ans = input[1]**(gam-1)
-            else:
-                ans = input[1]**(1/(gam-1))
-            # eq = self.RT_EQ
-        elif "T2_T1" in varlist and "a2_a1" in varlist:
-            if x == "T2_T1":
-                ans = input[1]**2
-            else:
-                ans = input[1]**0.5
-            # eq = self.TA_EQ
-            # del values_dict["gam"]
-        elif "r2_r1" in varlist and "a2_a1" in varlist:
-            if x == "r2_r1":
-                ans = input[1]**(2/(gam-1))
-            else:
-                ans = input[1]**((gam-1)/2)
-            # eq = self.RA_EQ
-        else:
-            raise Exception("Variable {} or {} are not supported for isentropic\
-                relations".format(x,input[0]))
-        # aes = mm.AlgebraicEquationSolver()
-        # return aes.solve(x,values_dict,eq=eq)
-        return ans
+# for isentropic (adiabatic+reversible), calorically perfect gases
+def isentropic_process(p21=None,t21=None,r21=None,a21=None,gamma=1.4):
+    if p21 is not None:
+        t21 = p21**((gamma-1)/gamma)
+        r21 = p21**(1/gamma)
+        a21 = p21**((gamma-1)/gamma/2)
+    elif t21 is not None:
+        p21 = t21**(gamma/(gamma-1))
+        r21 = t21**(1/(gamma-1))
+        a21 = t21**0.5
+    elif r21 is not None:
+        p21 = r21**gamma
+        t21 = r21**(gamma-1)
+        a21 = r21**((gamma-1)/2)
+    elif a21 is not None:
+        p21 = a21**(2*gamma/(gamma-1))
+        t21 = a21*a21
+        r21 = a21**(2/(gamma-1))
+    else:
+        raise Exception("Input p2/p1, T2/T1, rho2/rho1, or a2/a1.")
+    return {"p21":p21,"t21":t21,"r21":r21,"a21":a21,"gamma":gamma}
