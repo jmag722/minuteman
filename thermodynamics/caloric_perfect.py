@@ -1,3 +1,11 @@
+# Calorically perfect gases are those where gases are chemically unreactive
+#  and intermolecular forces are neglected. Internal energy and enthalpy are
+#  functions of temperature only AND the specific heats are constant.
+
+# This is the case for atmospheric air below ~1000 K. However, at higher
+#  temperatures where O2 and N2 vibrational motion/excitation becomes
+#  important, the gas is no longer calorically perfect.
+
 import numpy as np
 from multimethod import multimethod
 import enum
@@ -25,11 +33,12 @@ class Units(enum.Enum):
     IMP_SLUG = 2
 
 
-# for perfect (thermally+calorically) and reacting gases
+# Ideal gas equation valid for perfect (thermally+calorically) 
+#  and reacting gases
 class IdealGasLawSolver():
     RHO_EQ = "p - rho*R*T"
     PARTICLE_EQ = "p - n*kB*T"
-    # can't use N for # of moles, seems reserved by sympy
+    # can't use N for # of moles, it is reserved by sympy
     VOL_EQ = "p*V - Nm*RU*T"
     def __init__(self):
         pass
@@ -64,6 +73,7 @@ class IdealGasLawSolver():
         aes = mm.AlgebraicEquationSolver()
         return aes.solve(x,values_dict,eq)
 
+# definition of R
 @multimethod
 def R(m:float,is_molar:bool,units:Units=Units.SI):
     return R(np.asarray(m),is_molar,units)
@@ -82,6 +92,7 @@ def R(m:np.ndarray,is_molar:bool,units:Units=Units.SI):
         else:
             return kB_IMP/m
 
+# true for perfect (thermally & calorically) gases
 @multimethod
 def R(cp:float, cv:float):
     return R(np.asarray(cp),np.asarray(cv))
@@ -89,17 +100,19 @@ def R(cp:float, cv:float):
 def R(cp:np.ndarray, cv:np.ndarray):
     return cp - cv
 
+# definition of ratio of specific heats
 def gamma(cp,cv):
     return cp/cv
 
+# true for perfect (thermally & calorically) gases
 def cp(gamma,R=R_AIR_SI):
     return gamma*cv(gamma,R)
-
+# true for perfect (thermally & calorically) gases
 def cv(gamma,R=R_AIR_SI):
     return R/(gamma-1)
 
 
-# for calorically perfect gases
+# Entropy relation valid for calorically perfect gases only
 def entropy(T2_T1=None,p2_p1=None,v2_v1=None,
             cp=None,cv=None,R=R_AIR_SI,s1=0.0):
     if (T2_T1 and p2_p1 and cp and R)  is not None:
@@ -116,7 +129,8 @@ def entropy(T2_T1=None,p2_p1=None,v2_v1=None,
         raise Exception(error_msg)
     return s1 + expr # if s1=0, returns (s2-s1), else s2
 
-# for isentropic (adiabatic+reversible), calorically perfect gases
+# Isentropic relations valid for isentropic (adiabatic+reversible),
+#  calorically perfect gases only.
 def isentropic_process(p21=None,t21=None,r21=None,a21=None,gamma=1.4):
     if p21 is not None:
         t21 = p21**((gamma-1)/gamma)
