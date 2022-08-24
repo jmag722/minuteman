@@ -1,10 +1,12 @@
-# Calorically perfect gases are those where gases are chemically unreactive
-#  and intermolecular forces are neglected. Internal energy and enthalpy are
-#  functions of temperature only AND the specific heats are constant.
+"""
+Calorically perfect gases are those where gases are chemically unreactive
+and intermolecular forces are neglected. Internal energy and enthalpy are
+functions of temperature only AND the specific heats are constant.
 
-# This is the case for atmospheric air below ~1000 K. However, at higher
-#  temperatures where O2 and N2 vibrational motion/excitation becomes
-#  important, the gas is no longer calorically perfect.
+This is the case for atmospheric air below ~1000 K. However, at higher
+temperatures where O2 and N2 vibrational motion/excitation becomes
+important, the gas is no longer calorically perfect.
+"""
 
 import numpy as np
 from multimethod import multimethod
@@ -33,18 +35,35 @@ class Units(enum.Enum):
     IMP_SLUG = 2
 
 
-# Ideal gas equation valid for perfect (thermally+calorically) 
-#  and reacting gases
+
 class IdealGasLawSolver():
+    """
+    Ideal gas equation solver.
+
+    Ideal gas equation valid for perfect (thermally+calorically) 
+    and reacting gases.
+    """
+
     RHO_EQ = "p - rho*R*T"
     PARTICLE_EQ = "p - n*kB*T"
     # can't use N for # of moles, it is reserved by sympy
     VOL_EQ = "p*V - Nm*RU*T"
     def __init__(self):
         pass
-    def solve(self,x,values_dict,units:Units=Units.SI):
+    def solve(self,x,values,units:Units=Units.SI):
+        """
+        `solve` solves the ideal gas equation.
+
+        Parameters:
+        x (str): State variable to compute
+        values (dict): Known state variables.
+        units (Units): SI, IMPERIAL (slug or lbm)
+
+        Returns:
+        x: value
+        """
         varlist = {x}
-        varlist.update(list(values_dict))
+        varlist.update(list(values))
         if units==Units.SI:
             ru = RU_SI
             boltz = kB_SI
@@ -61,24 +80,45 @@ class IdealGasLawSolver():
         elif "p" in varlist and "n" in varlist\
             and "T" in varlist:
             eq=self.PARTICLE_EQ
-            values_dict["kB"] = boltz
+            values["kB"] = boltz
         elif "p" in varlist and "V" in varlist\
             and "Nm" in varlist and "T" in varlist:
             eq=self.VOL_EQ
-            values_dict["RU"] = ru
+            values["RU"] = ru
         else:
             raise Exception("Variables {} are not supported for isentropic\
                 relations".format(varlist))
             
         aes = mm.AlgebraicEquationSolver()
-        return aes.solve(x,values_dict,eq)
+        return aes.solve(x,values,eq)
 
-# definition of R
 @multimethod
 def R(m:float,is_molar:bool,units:Units=Units.SI):
+    """
+    `R` computes specific gas constant.
+
+    Parameters:
+    m (float): mass (per particle or per mol)
+    is_molar (bool): is mass per particle or per mol
+    units (Units): SI or IMPERIAL (slug or lbm)
+
+    Returns:
+    R: gas constant
+    """
     return R(np.asarray(m),is_molar,units)
 @multimethod
 def R(m:np.ndarray,is_molar:bool,units:Units=Units.SI):
+    """
+    `R` computes specific gas constant.
+
+    Parameters:
+    m (numpy.ndarray): mass (per particle or per mol)
+    is_molar (bool): is mass per particle or per mol
+    units (Units): SI or IMPERIAL (slug or lbm)
+
+    Returns:
+    R: gas constant
+    """
     if is_molar: # m in mass/mol
         if units == Units.SI:
             return RU_SI/m
@@ -92,35 +132,105 @@ def R(m:np.ndarray,is_molar:bool,units:Units=Units.SI):
         else:
             return kB_IMP/m
 
-# true for perfect (thermally & calorically) gases
 @multimethod
 def R(cp:float, cv:float):
+    """
+    `R` computes specific gas constant.
+
+    Valid for perfect (thermally & calorically) gases.
+
+    Parameters:
+    cp (float): specific heat (constant p)
+    cv (float): specific heat (constant v)
+
+    Returns:
+    Gas constant R
+    """
     return R(np.asarray(cp),np.asarray(cv))
 @multimethod
 def R(cp:np.ndarray, cv:np.ndarray):
+    """
+    `R` computes specific gas constant.
+
+    Valid for perfect (thermally & calorically) gases.
+
+    Parameters:
+    cp (numpy.ndarray): specific heat (constant p)
+    cv (numpy.ndarray): specific heat (constant v)
+
+    Returns:
+    Gas constant R
+    """
     return cp - cv
 
-# definition of ratio of specific heats
 def gamma(cp,cv):
+    """
+    `gamma` computes the ratio of specific heats.
+
+    Parameters:
+    cp (float): specific heat (constant p)
+    cv (float): specific heat (constant v)
+
+    Returns:
+    gamma: ratio of specific heats
+    """
     return cp/cv
 
-# true for perfect (thermally & calorically) gases
 def cp(gamma,R=R_AIR_SI):
+    """
+    `cp` computes the specific heat at consant pressure.
+
+    Valid for perfect (thermally & calorically) gases.
+
+    Parameters:
+    gamma (float): ratio of specific heats
+    R (float): specific gas constant
+
+    Returns:
+    cp: specific heat at constant pressure
+    """
     return gamma*cv(gamma,R)
-# true for perfect (thermally & calorically) gases
+    
 def cv(gamma,R=R_AIR_SI):
+    """
+    `cv` computes the specific heat at consant volume.
+
+    Valid for perfect (thermally & calorically) gases.
+
+    Parameters:
+    gamma (float): ratio of specific heats
+    R (float): specific gas constant
+
+    Returns:
+    cv: specific heat at constant volume
+    """
     return R/(gamma-1)
 
 
-# Entropy relation valid for calorically perfect gases only
-def entropy(T2_T1=None,p2_p1=None,v2_v1=None,
+def entropy(t21=None,p21=None,v21=None,
             cp=None,cv=None,R=R_AIR_SI,s1=0.0):
-    if (T2_T1 and p2_p1 and cp and R)  is not None:
-        expr = cp*np.log(T2_T1) - R * np.log(p2_p1)
-    elif (T2_T1 and v2_v1 and cv and R) is not None:
-        expr = cv*np.log(T2_T1) + R * np.log(v2_v1)
-    elif (p2_p1 and v2_v1 and cp and cv):
-        expr = cv*np.log(p2_p1) + cp*np.log(v2_v1)
+    """
+    `entropy` computes the change in entropy for a calorically perfect gas.
+
+    Parameters:
+    t21 (float): temperature ratio T2/T1
+    p21 (float): pressure ratio p2/p1
+    v21 (float): specific volume ratio v2/v1
+    cp (float): specific heat (constant p)
+    cv (float): specific heat (constant v)
+    R  (float): specific gas constant
+    s1 (float): entropy at state 1.
+
+    Returns:
+    ds: change in entropy  if s1==0
+    s2: entropy at state 2, s2, if s1 is given.
+    """
+    if (t21 and p21 and cp and R)  is not None:
+        expr = cp*np.log(t21) - R * np.log(p21)
+    elif (t21 and v21 and cv and R) is not None:
+        expr = cv*np.log(t21) + R * np.log(v21)
+    elif (p21 and v21 and cp and cv):
+        expr = cv*np.log(p21) + cp*np.log(v21)
     else:
         error_msg="Must specify one of the following: \n\
                 1) T2/T1, v2/v1, cp, R, OR\n\
@@ -129,9 +239,24 @@ def entropy(T2_T1=None,p2_p1=None,v2_v1=None,
         raise Exception(error_msg)
     return s1 + expr # if s1=0, returns (s2-s1), else s2
 
-# Isentropic relations valid for isentropic (adiabatic+reversible),
-#  calorically perfect gases only.
+
 def isentropic_process(p21=None,t21=None,r21=None,a21=None,gamma=1.4):
+    """
+    `isentropic_process` returns the state of an isentropic gas.
+
+    Isentropic relations valid for isentropic (adiabatic+reversible),
+    calorically perfect gases only.
+
+    Parameters:
+    p21 (float): pressure ratio p2/p1
+    t21 (float): temperature ratio T2/T1
+    r21 (float): density ratio rho2/rho1
+    a21 (float): speed of sound ratio a2/a1
+    gamma (float): ratio of specific heats
+
+    Returns:
+    dict of p2/p1, t2/t1, rho2/rho1, a2/a1, and gamma.
+    """
     if p21 is not None:
         t21 = p21**((gamma-1)/gamma)
         r21 = p21**(1/gamma)

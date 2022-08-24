@@ -17,31 +17,31 @@ class TestIdealGasLaw(unittest.TestCase):
     
     def test_rho_law(self):
         igls = IdealGasLawSolver()
-        actual = igls.solve("rho",values_dict={"p": 2, "R": 1, "T":4},)
+        actual = igls.solve("rho",values={"p": 2, "R": 1, "T":4},)
         expected = 0.5
         self.assertEqual(actual, expected)
 
     def test_rho_law2(self):
         igls = IdealGasLawSolver()
-        actual = igls.solve("rho",values_dict={"p": 2, "R": 3, "T":4},)
+        actual = igls.solve("rho",values={"p": 2, "R": 3, "T":4},)
         expected = 0.16666666666
         self.assertAlmostEqual(actual, expected)
 
     def test_rho_law3(self):
         igls = IdealGasLawSolver()
-        actual = igls.solve("p",values_dict={"n": 3, "T":4})
+        actual = igls.solve("p",values={"n": 3, "T":4})
         expected = 1.6567788e-22
         self.assertAlmostEqual(actual, expected)
 
     def test_rho_law4(self):
         igls = IdealGasLawSolver()
-        actual = igls.solve("rho",values_dict={"p": 2, "R": 1, "T":4})
+        actual = igls.solve("rho",values={"p": 2, "R": 1, "T":4})
         expected = 0.5
         self.assertEqual(actual, expected)
 
     def test_rho_law5(self):
         igls = IdealGasLawSolver()
-        actual = igls.solve("T",values_dict={"p": 2, "V":4, "Nm":2})
+        actual = igls.solve("T",values={"p": 2, "V":4, "Nm":2})
         expected = 0.48108942
         self.assertAlmostEqual(actual, expected,places=6)
 
@@ -54,17 +54,17 @@ class TestR(unittest.TestCase):
 
 class TestEntropy(unittest.TestCase):
     def test_entropy_PT(self):
-        actual = entropy(T2_T1=2,p2_p1=1.5,cp=1.3,R=287)
+        actual = entropy(t21=2,p21=1.5,cp=1.3,R=287)
         expected = -115.4673947
         self.assertAlmostEqual(actual,expected,places=6)
 
     def test_entropy_TV(self):
-        actual = entropy(T2_T1=11,v2_v1=0.1,cv=0.9,R=300, s1=1000)
+        actual = entropy(t21=11,v21=0.1,cv=0.9,R=300, s1=1000)
         expected = 311.3825778
         self.assertAlmostEqual(actual,expected,places=6)
 
     def test_entropy_PV(self):
-        actual = entropy(p2_p1=3,v2_v1=0.5,cp=25,cv=1.4)
+        actual = entropy(p21=3,v21=0.5,cp=25,cv=1.4)
         expected = -15.79062231
         self.assertAlmostEqual(actual,expected,places=6)
 
