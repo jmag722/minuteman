@@ -252,7 +252,7 @@ def isentropic_process(p21=None,t21=None,r21=None,a21=None,gamma=1.4):
     t21 (float): temperature ratio T2/T1
     r21 (float): density ratio rho2/rho1
     a21 (float): speed of sound ratio a2/a1
-    gamma (float): ratio of specific heats
+    gamma (float): ratio of specific heats gamma
 
     Returns:
     dict of p2/p1, t2/t1, rho2/rho1, a2/a1, and gamma.
