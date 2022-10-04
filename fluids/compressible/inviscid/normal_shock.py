@@ -1,21 +1,21 @@
 """
-Compressible, inviscid, 1D flow relations.
+This module computes flow parameters of 1D, stationary, calorically perfect normal shocks.
 
-These functions compute flow parameters of normal shocks,
-Rayleigh, and Fanno flow.
+Enthalpy is constant across these shocks. For perfect (calorically+thermally) gases, 
+total temperature is also constant across the shock, and will not be output here.
 """
 import numpy as np
 from scipy.optimize import fsolve
-from .base_relations import total_pressure
+from .isentropic import total_pressure
 
 
 
-def lookup_normal_shock(M1=None,p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
+def lookup_table(M1=None,p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
     """
-    `lookup_normal_shock` computes the normal shock parameters for a given input.
+    `lookup_table` computes the normal shock parameters for a given input.
 
     This form is valid for calorically perfect gases only, where gamma
-    is constant (M1 < 5).
+    is constant (M1 < 5). Note `T02/T01=1` for perfect gases, as is total enthalpy.
 
     Parameters:
     p21 (float): pressure ratio p2/p1
@@ -34,59 +34,59 @@ def lookup_normal_shock(M1=None,p21=None,r21=None,t21=None,p02_p01=None,p02_p1=N
         p21 is None and r21 is None and t21 is None 
         and p02_p01 is None and p02_p1 is None and M2 is None):
         return {"M1":M1,
-                "M2":normal_shock_mach(M1,gam),
-                "p21":normal_shock_pressure(M1,p1=1.0,gam=gam),
-                "r21":normal_shock_density(M1,rho1=1.0,gam=gam),
-                "t21":normal_shock_temperature(M1,t1=1.0,gam=gam),
-                "p02_p01":normal_shock_total_pressure(M1,p01=1.0,gam=gam),
-                "p02_p1":normal_shock_total_pressure(M1,p01=1.0,gam=gam)*total_pressure(M=M1,p=1.0,gam=gam)
+                "M2":mach_2(M1,gam),
+                "p21":pressure_2(M1,p1=1.0,gam=gam),
+                "r21":density_2(M1,rho1=1.0,gam=gam),
+                "t21":temperature_2(M1,t1=1.0,gam=gam),
+                "p02_p01":total_pressure_2(M1,p01=1.0,gam=gam),
+                "p02_p1":total_pressure_2(M1,p01=1.0,gam=gam)*total_pressure(M=M1,p=1.0,gam=gam)
                 }
     elif (p21 is not None and
           M1 is None and r21 is None and t21 is None 
           and p02_p01 is None and p02_p1 is None and M2 is None):
-        M1 = normal_shock_m1(p21=p21,gam=gam)
-        return lookup_normal_shock(M1=M1,gam=gam)
+        M1 = mach_1(p21=p21,gam=gam)
+        return lookup_table(M1=M1,gam=gam)
 
     elif (r21 is not None and
           M1 is None and p21 is None and t21 is None 
           and p02_p01 is None and p02_p1 is None and M2 is None):
-        M1 = normal_shock_m1(r21=r21,gam=gam)
-        return lookup_normal_shock(M1=M1,gam=gam)
+        M1 = mach_1(r21=r21,gam=gam)
+        return lookup_table(M1=M1,gam=gam)
 
     elif (t21 is not None and
           M1 is None and p21 is None and r21 is None 
           and p02_p01 is None and p02_p1 is None and M2 is None):
-        M1 = normal_shock_m1(t21=t21,gam=gam)
-        return lookup_normal_shock(M1=M1,gam=gam)
+        M1 = mach_1(t21=t21,gam=gam)
+        return lookup_table(M1=M1,gam=gam)
 
     elif (p02_p01 is not None and
           M1 is None and p21 is None and r21 is None 
           and t21 is None and p02_p1 is None and M2 is None):
-        M1 = normal_shock_m1(p02_p01=p02_p01,gam=gam)
-        return lookup_normal_shock(M1=M1,gam=gam)
+        M1 = mach_1(p02_p01=p02_p01,gam=gam)
+        return lookup_table(M1=M1,gam=gam)
     
     elif (p02_p1 is not None and
           M1 is None and p21 is None and r21 is None 
           and t21 is None and p02_p01 is None and M2 is None):
-        M1 = normal_shock_m1(p02_p1=p02_p1,gam=gam)
-        return lookup_normal_shock(M1=M1,gam=gam)
+        M1 = mach_1(p02_p1=p02_p1,gam=gam)
+        return lookup_table(M1=M1,gam=gam)
 
     elif (M2 is not None and
           M1 is None and p21 is None and r21 is None 
           and t21 is None and p02_p01 is None and p02_p1 is None):
-        M1 = normal_shock_m1(M2=M2,gam=gam)
-        return lookup_normal_shock(M1=M1,gam=gam)
+        M1 = mach_1(M2=M2,gam=gam)
+        return lookup_table(M1=M1,gam=gam)
     else:
         raise Exception("Specify only p2/p1, rho2/rho1, T2/T1, p02/p01, p02/p1, M1, or M2.")
 
 
 
-def normal_shock_m1(p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
+def mach_1(p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
     """
-    `normal_shock_m1` computes the Mach number `M1` ahead of a normal shock.
+    `mach_1` computes the Mach number `M1` ahead of a normal shock.
 
     This form is valid for calorically perfect gases only, where gamma
-    is constant (M1 < 5).
+    is constant (M1 < 5). Note `T02/T01=1` for perfect gases, as is total enthalpy.
 
     Parameters:
     p21 (float): pressure ratio p2/p1
@@ -130,7 +130,7 @@ def normal_shock_m1(p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,
           and p02_p01 is None and t21 is None):
         func = lambda M1,p02_p1,gam: (
             p02_p1 
-            - normal_shock_total_pressure(M1,p01=1.0,gam=gam) 
+            - total_pressure_2(M1,p01=1.0,gam=gam) 
             * total_pressure(M1,p=1.0,gam=gam)
         )
         M1 = fsolve(func,2.0, args=(p02_p1,gam))[0]
@@ -140,9 +140,9 @@ def normal_shock_m1(p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,
 
 
 
-def normal_shock_mach(M1,gam=1.4):
+def mach_2(M1,gam=1.4):
     """
-    `normal_shock_mach` computes the Mach number `M2` behind a normal shock.
+    `mach_2` computes the Mach number `M2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where gamma
     is constant (M1 < 5).
@@ -158,9 +158,9 @@ def normal_shock_mach(M1,gam=1.4):
 
 
 
-def normal_shock_density(M1,rho1=1.0,gam=1.4):
+def density_2(M1,rho1=1.0,gam=1.4):
     """
-    `normal_shock_density` computes the density `rho2` behind a normal shock.
+    `density_2` computes the density `rho2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
     is constant (M1 < 5). Density ratio `rho2/rho1` returned when default
@@ -179,9 +179,9 @@ def normal_shock_density(M1,rho1=1.0,gam=1.4):
 
 
 
-def normal_shock_pressure(M1,p1=1.0,gam=1.4):
+def pressure_2(M1,p1=1.0,gam=1.4):
     """
-    `normal_shock_pressure` computes the pressure `p2` behind a normal shock.
+    `pressure_2` computes the pressure `p2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
     is constant (M1 < 5). Pressure ratio `p2/p1` returned when default
@@ -200,9 +200,9 @@ def normal_shock_pressure(M1,p1=1.0,gam=1.4):
 
 
 
-def normal_shock_total_pressure(M1,p01=1.0,gam=1.4):
+def total_pressure_2(M1,p01=1.0,gam=1.4):
     """
-    `normal_shock_total_pressure` computes the total pressure `p02` behind a normal shock.
+    `total_pressure_2` computes the total pressure `p02` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
     is constant (M1 < 5). Pressure ratio `p02/p01` returned when default
@@ -223,9 +223,9 @@ def normal_shock_total_pressure(M1,p01=1.0,gam=1.4):
 
 
 
-def normal_shock_temperature(M1,t1=1.0,gam=1.4):
+def temperature_2(M1,t1=1.0,gam=1.4):
     """
-    `normal_shock_temperature` computes the temperature `t2` behind a normal shock.
+    `temperature_2` computes the temperature `t2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
     is constant (M1 < 5). Temperature ratio `t2/t1` returned when default
@@ -244,9 +244,9 @@ def normal_shock_temperature(M1,t1=1.0,gam=1.4):
 
 
 
-def normal_shock_entropy(R,p02_p01,s1=0.0):
+def entropy_2(R,p02_p01,s1=0.0):
     """
-    `normal_shock_entropy` computes the entropy `s2` behind a normal shock.
+    `entropy_2` computes the entropy `s2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
     is constant (M1 < 5). Temperature ratio `t2/t1` returned when default

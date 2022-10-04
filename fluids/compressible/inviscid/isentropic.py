@@ -10,11 +10,11 @@ import sys, os, inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(currentdir)))
 sys.path.insert(0, parentdir)
-from thermodynamics.caloric_perfect import isentropic_process
+import thermodynamics.caloric_perfect as calp
 
 
 
-def M(u,a):
+def mach(u,a):
     """
     `M` computes Mach number.
 
@@ -32,9 +32,9 @@ def M(u,a):
 
 
 
-def a(t=None,R=None,rho=None,p=None,gam=1.4):
+def speed_sound(t=None,R=None,rho=None,p=None,gam=1.4):
     """
-    `a` computes speed of sound.
+    `speed_sound` computes speed of sound.
 
     Definition of speed of sound for a perfect (thermally+calorically) gas.
     Relation is invalid for chemically reacting and real gases.
@@ -58,11 +58,11 @@ def a(t=None,R=None,rho=None,p=None,gam=1.4):
 
 
 
-def isentropic_flow_table(M=None,p0_ratio=None,r0_ratio=None,t0_ratio=None,
+def lookup_table(M=None,p0_ratio=None,r0_ratio=None,t0_ratio=None,
                            a0_ratio=None,area_ratio=None,gam=1.4,
                            regime="supersonic"):
     """
-    `lookup_isentropic_flow` provides all isentropic flow variables for a given input.
+    `lookup_table` provides all isentropic flow variables for a given input.
 
     Equivalent to a line from lookup tables for isentropic, calorically perfect gases 
     (1D and quasi-1D). Function is recursive.
@@ -101,39 +101,39 @@ def isentropic_flow_table(M=None,p0_ratio=None,r0_ratio=None,t0_ratio=None,
           M is None and r0_ratio is None and
           t0_ratio is None and a0_ratio is None and
           area_ratio is None):
-        t0_ratio = isentropic_process(p21=p0_ratio,gamma=gam)["t21"]
+        t0_ratio = calp.isentropic_process(p21=p0_ratio,gamma=gam)["t21"]
         M = mach_from_temperature_ratio(t0_ratio=t0_ratio,gam=gam)
-        return isentropic_flow_table(M=M,gam=gam)
+        return lookup_table(M=M,gam=gam)
 
     elif (r0_ratio is not None and  # rho0/rho specified
           p0_ratio is None and M is None and
           t0_ratio is None and a0_ratio is None and
           area_ratio is None):
-        t0_ratio = isentropic_process(r21=r0_ratio,gamma=gam)["t21"]
+        t0_ratio = calp.isentropic_process(r21=r0_ratio,gamma=gam)["t21"]
         M = mach_from_temperature_ratio(t0_ratio=t0_ratio,gam=gam)
-        return isentropic_flow_table(M=M,gam=gam)
+        return lookup_table(M=M,gam=gam)
 
     elif (t0_ratio is not None and  # T0/T specified
           p0_ratio is None and r0_ratio is None and
           M is None and a0_ratio is None and
           area_ratio is None):
         M = mach_from_temperature_ratio(t0_ratio=t0_ratio,gam=gam)
-        return isentropic_flow_table(M=M,gam=gam)
+        return lookup_table(M=M,gam=gam)
 
     elif (a0_ratio is not None and  # a0/a specified
           p0_ratio is None and r0_ratio is None and
           t0_ratio is None and M is None and
           area_ratio is None):
-        t0_ratio = isentropic_process(a21=a0_ratio,gamma=gam)["t21"]
+        t0_ratio = calp.isentropic_process(a21=a0_ratio,gamma=gam)["t21"]
         M = mach_from_temperature_ratio(t0_ratio=t0_ratio,gam=gam)
-        return isentropic_flow_table(M=M,gam=gam)
+        return lookup_table(M=M,gam=gam)
 
     elif (area_ratio is not None and  # A/A* specified
           p0_ratio is None and r0_ratio is None and
           t0_ratio is None and a0_ratio is None and
           M is None):
         M = area_mach_relation(area_ratio=area_ratio,gam=gam,regime=regime)
-        return isentropic_flow_table(M=M,gam=gam)
+        return lookup_table(M=M,gam=gam)
 
     else: # over or under-specified
         raise Exception("Specify Mach number, p0/p, rho0/rho, T0/T, a0/a, or A/A*.")
