@@ -276,3 +276,36 @@ def isentropic_process(p21=None,t21=None,r21=None,a21=None,gamma=1.4):
     else:
         raise Exception("Input p2/p1, T2/T1, rho2/rho1, or a2/a1.")
     return {"p21":p21,"t21":t21,"r21":r21,"a21":a21,"gamma":gamma}
+
+
+def heat_flux(q=None,c=None,t1=None,t2=None,m=1.0):
+    """
+    `heat_flux` computes the heat addition due to the total temperature
+    change of the flow.
+
+    Specify exactly three of the following input variables: `q`, `t2`, `t1`, or `c`. 
+    The unspecified variable (assigned `None`) will be returned. 
+    If `m==1.0` (default), values computed will be per unit mass.
+
+    Parameters:
+    q (float): Amount of heat added. This is specific heat if `m==1.0`.
+    c (float): Specific heat capacity.
+    t1 (float): Temperature before heat addition.
+    t2 (float): Temperature after heat addition.
+    m (float): Mass of substance.
+    
+    Returns:
+    q,c,m,t2, or t1 (float)
+    """
+    if q is None and t2 is not None and t1 is not None and c is not None:
+        return m * c * (t2 - t1)  # q
+    elif t2 is None and q is not None and t1 is not None and c is not None:
+        return q/c/m + t1  # T2
+    elif t1 is None and q is not None and t2 is not None and c is not None:
+        return t2 - q/c/m  # T1
+    elif c is None and q is not None and t2 is not None and t1 is not None:
+        return q/m/(t2-t1) # c
+    elif m is None and q is not None and t2 is not None and t1 is not None and c is not None:
+        return q/c/(t2-t1) # m
+    else:
+        raise Exception("Must specify exactly three of the following: `q`, `T1`, `T2`, `c`.")
