@@ -6,8 +6,7 @@ total temperature is also constant across the shock, and will not be output here
 """
 import numpy as np
 from scipy.optimize import fsolve
-from .isentropic import total_pressure
-
+from . import isentropic as isc
 
 
 def lookup_table(M1=None,p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
@@ -39,7 +38,8 @@ def lookup_table(M1=None,p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=
                 "r21":density_2(M1,rho1=1.0,gam=gam),
                 "t21":temperature_2(M1,t1=1.0,gam=gam),
                 "p02_p01":total_pressure_2(M1,p01=1.0,gam=gam),
-                "p02_p1":total_pressure_2(M1,p01=1.0,gam=gam)*total_pressure(M=M1,p=1.0,gam=gam)
+                "p02_p1":( total_pressure_2(M1,p01=1.0,gam=gam)
+                         * isc.total_pressure(M=M1,p=1.0,gam=gam) )
                 }
     elif (p21 is not None and
           M1 is None and r21 is None and t21 is None 
@@ -111,8 +111,7 @@ def mach_1(p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
     elif (t21 is not None and  # T2/T1 known
           p21 is None and r21 is None and p02_p01 is None
           and p02_p1 is None and M2 is None):
-        func = lambda M1,t21,gam: ( t21 - ( 1+2*gam/(gam+1)*(M1*M1-1) )
-                    * ( (2+(gam-1)*M1*M1)/(gam+1)/M1/M1 ) )
+        func = lambda M1,t21,gam: t21 - temperature_2(M1,t1=1.0,gam=gam)
         M1= fsolve(func, 2.0,args=(t21,gam))[0]
     elif (M2 is not None and  # M2 known
           p21 is None and r21 is None and p02_p01 is None
@@ -121,9 +120,7 @@ def mach_1(p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
     elif (p02_p01 is not None and #p02/p01 known
           p21 is None and r21 is None and M2 is None
           and p02_p1 is None and t21 is None):
-        func = lambda M1,p02_p01,gam: ( p02_p01  
-            - ( (gam+1)/(2*gam*M1*M1-gam+1) )**(1/(gam-1)) 
-            * ( (gam+1)*M1*M1/((gam-1)*M1*M1+2) )**(gam/(gam-1)) )
+        func = lambda M1, p02_p01,gam: p02_p01 - total_pressure_2(M1,p01=1.0,gam=gam)
         M1= fsolve(func, 2.0,args=(p02_p01,gam))[0]
     elif (p02_p1 is not None and  # p02/p1 known
           p21 is None and r21 is None and M2 is None
@@ -131,7 +128,7 @@ def mach_1(p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
         func = lambda M1,p02_p1,gam: (
             p02_p1 
             - total_pressure_2(M1,p01=1.0,gam=gam) 
-            * total_pressure(M1,p=1.0,gam=gam)
+            * isc.total_pressure(M1,p=1.0,gam=gam)
         )
         M1 = fsolve(func,2.0, args=(p02_p1,gam))[0]
     else:

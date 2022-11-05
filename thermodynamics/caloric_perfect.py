@@ -280,16 +280,18 @@ def isentropic_process(p21=None,t21=None,r21=None,a21=None,gamma=1.4):
 
 def heat_flux(q=None,c=None,t1=None,t2=None,m=1.0):
     """
-    `heat_flux` computes the heat addition due to the total temperature
-    change of the flow.
+    `heat_flux` computes the heat addition due to the temperature
+    change of the substance.
 
     Specify exactly three of the following input variables: `q`, `t2`, `t1`, or `c`. 
     The unspecified variable (assigned `None`) will be returned. 
     If `m==1.0` (default), values computed will be per unit mass.
 
+    Valid for general calorimetry and calorically perfect gases only.
+
     Parameters:
     q (float): Amount of heat added. This is specific heat if `m==1.0`.
-    c (float): Specific heat capacity.
+    c (float): Specific heat capacity at constant pressure or volume.
     t1 (float): Temperature before heat addition.
     t2 (float): Temperature after heat addition.
     m (float): Mass of substance.
