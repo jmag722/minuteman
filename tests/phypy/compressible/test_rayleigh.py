@@ -1,9 +1,4 @@
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(os.path.dirname(currentdir))
-sys.path.insert(0, parentdir)
-
-from fluids.compressible.inviscid.rayleigh import *
+from phypy.compressible.rayleigh import *
 import pytest
 
 def test_lookup_table_m_supersonic():

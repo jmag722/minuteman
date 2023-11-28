@@ -4,15 +4,10 @@ Online calculator for comparison at: http://www.dept.aoe.vt.edu/~devenpor/aoe311
 Additional notes: https://kyleniemeyer.github.io/gas-dynamics-notes/compressible-flows/heat-transfer.html
 """
 
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(os.path.dirname(os.path.dirname(currentdir)))
-sys.path.insert(0, parentdir)
-
 from scipy.optimize import fsolve
 import numpy as np
-import thermodynamics.caloric_perfect as calp
-from . import isentropic as isc
+import phypy.thermodynamics.caloric_perfect as calp
+import phypy.compressible.isentropic as isc
 
 def lookup_table(p21=None,r21=None,t21=None,s21=None,p02_p01=None,t02_t01=None,m2=None,supersonic=True,m1=1.0,gam=1.4):
     """

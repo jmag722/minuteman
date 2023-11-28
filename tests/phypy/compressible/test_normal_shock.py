@@ -1,11 +1,5 @@
-# from cgitb import lookup
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(os.path.dirname(currentdir))
-sys.path.insert(0, parentdir)
-
 import unittest
-from fluids.compressible.inviscid.normal_shock import *
+from phypy.compressible.normal_shock import *
 
 class TestNormalShockLookup(unittest.TestCase):
     def test_m1(self):

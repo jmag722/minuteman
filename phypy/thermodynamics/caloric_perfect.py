@@ -12,12 +12,7 @@ import numpy as np
 from multimethod import multimethod
 import enum
 
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(os.path.dirname(currentdir))
-sys.path.insert(0, parentdir)
-
-import mymath.mymath as mm
+import phypy.mymath.mymath as mm
 
 NA = 6.02214076e23        # count/mol, Avogadro's number
 kB_SI = 1.380649e-23         # J/K, Boltzmann constant

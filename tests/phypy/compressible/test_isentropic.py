@@ -1,11 +1,5 @@
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(os.path.dirname(currentdir))
-sys.path.insert(0, parentdir)
-
-
 import unittest
-from fluids.compressible.inviscid.isentropic import *
+from phypy.compressible.isentropic import *
 
 class TestIsentropicLookupTable(unittest.TestCase):
     def test_a(self):

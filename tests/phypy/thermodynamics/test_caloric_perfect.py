@@ -1,11 +1,5 @@
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(os.path.dirname(currentdir))
-sys.path.insert(0, parentdir)
-
-
 import unittest
-from thermodynamics.caloric_perfect import *
+from phypy.thermodynamics.caloric_perfect import *
 
 class TestConstants(unittest.TestCase):
     def test_constants(self):
