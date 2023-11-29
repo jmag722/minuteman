@@ -8,18 +8,18 @@ temperatures where O2 and N2 vibrational motion/excitation becomes
 important, the gas is no longer calorically perfect.
 """
 
-import numpy as np
-from multimethod import multimethod
 import enum
+import numpy as np
+import scipy.constants as scc
 
 import phypy.mymath.mymath as mm
 
-NA = 6.02214076e23        # count/mol, Avogadro's number
-kB_SI = 1.380649e-23         # J/K, Boltzmann constant
+NA = scc.Avogadro        # count/mol, Avogadro's number
+kB_SI = scc.Boltzmann         # J/K, Boltzmann constant
 kB_IMP = 5.657302466e-24  # ft-lb/R, Boltzmann constant
-RU_SI = 8.31446261815324     # J/K/kg-mol, Universal gas constant (kB*NA)
+RU_SI = scc.R     # J/K/kg-mol, Universal gas constant (kB*NA)
 RU_IMP_LBM = 1545.349     # ft-lbf/R/lbm-mol, Universal gas constant
-RU_IMP_SLUG = 49720       # ft-lbf/R/slug-mol, Universal gas constant
+RU_IMP_SLUG = 49720.0       # ft-lbf/R/slug-mol, Universal gas constant
 R_AIR_SI = 287.058           # J/kg/K, Specific gas constant for dry air
 R_AIR_IMP_LBM = 53.3533   # ft-lbf/lbm/R, Specific gas constant for dry air
 R_AIR_IMP_SLUG = 1716.49  # ft-lbf/slug/R, Specific gas constant for dry air
@@ -29,9 +29,7 @@ class Units(enum.Enum):
     IMP_LBM = 1
     IMP_SLUG = 2
 
-
-
-class IdealGasLawSolver():
+class IdealGasLawSolver():    
     """
     Ideal gas equation solver.
 
@@ -45,20 +43,31 @@ class IdealGasLawSolver():
     VOL_EQ = "p*V - Nm*RU*T"
     def __init__(self):
         pass
-    def solve(self,x,values,units:Units=Units.SI):
+    def solve(self, unknown:str, knowns:dict, units:Units=Units.SI):
         """
-        `solve` solves the ideal gas equation.
+        Solve the ideal gas equation.
 
-        Parameters:
-        x (str): State variable to compute
-        values (dict): Known state variables.
-        units (Units): SI, IMPERIAL (slug or lbm)
+        Parameters
+        ----------
+        unknown : str
+            State variable to compute
+        knowns : dict
+            Key value pairs of known state variables
+        units : Units, optional
+            SI, IMPERIAL (slug or lbm), by default Units.SI
 
-        Returns:
-        x: value
+        Returns
+        -------
+        float
+            Desired unknown
+
+        Raises
+        ------
+        ValueError
+            Incorrect or inconsistent inputs specified
         """
-        varlist = {x}
-        varlist.update(list(values))
+        varlist = {unknown}
+        varlist.update(list(knowns))
         if units==Units.SI:
             ru = RU_SI
             boltz = kB_SI
@@ -68,190 +77,208 @@ class IdealGasLawSolver():
         elif units==Units.IMP_SLUG:
             ru = RU_IMP_SLUG
             boltz = kB_IMP
-
-        if "p" in varlist and "rho" in varlist\
-            and "R" in varlist and "T" in varlist:
+        if all(var in varlist for var in ["p", "rho", "R", "T"]):
             eq=self.RHO_EQ
-        elif "p" in varlist and "n" in varlist\
-            and "T" in varlist:
+        elif all(var in varlist for var in ["p", "n", "T"]):
             eq=self.PARTICLE_EQ
-            values["kB"] = boltz
-        elif "p" in varlist and "V" in varlist\
-            and "Nm" in varlist and "T" in varlist:
+            knowns["kB"] = boltz
+        elif all(var in varlist for var in ["p", "V", "Nm", "T"]):
             eq=self.VOL_EQ
-            values["RU"] = ru
+            knowns["RU"] = ru
         else:
-            raise Exception("Variables {} are not supported for isentropic\
+            raise ValueError("Variables {} are not supported for isentropic\
                 relations".format(varlist))
             
-        aes = mm.AlgebraicEquationSolver()
-        return aes.solve(x,values,eq)
+        return mm.solve_algebraic_eqn(unknown, knowns, eq)
 
-@multimethod
-def R(m:float,is_molar:bool,units:Units=Units.SI):
+def R(mass=None, cp=None, cv=None, is_molar:bool=True,
+      units:Units=Units.SI):    
     """
-    `R` computes specific gas constant.
+    Compute specific gas constant.
 
-    Parameters:
-    m (float): mass (per particle or per mol)
-    is_molar (bool): is mass per particle or per mol
-    units (Units): SI or IMPERIAL (slug or lbm)
+    Valid for perfect (thermally & calorically) gases.
 
-    Returns:
-    R: gas constant
-    """
-    return R(np.asarray(m),is_molar,units)
-@multimethod
-def R(m:np.ndarray,is_molar:bool,units:Units=Units.SI):
-    """
-    `R` computes specific gas constant.
+    Parameters
+    ----------
+    mass : Any, optional
+        gas mass (molar or per particle), by default None
+    cp : Any, optional
+        specific heat (constant pressure), by default None
+    cv : Any, optional
+        specific heat (constant volume), by default None
+    is_molar : bool, optional
+        mass is per mol or per particle, by default True
+    units : Units, optional
+        SI or IMPERIAL (slug or lbm), by default Units.SI
 
-    Parameters:
-    m (numpy.ndarray): mass (per particle or per mol)
-    is_molar (bool): is mass per particle or per mol
-    units (Units): SI or IMPERIAL (slug or lbm)
+    Returns
+    -------
+    Any
+        specific gas constant
 
-    Returns:
-    R: gas constant
-    """
-    if is_molar: # m in mass/mol
+    Raises
+    ------
+    ValueError
+        User did not specify mass OR both cp and cv.
+    """    
+    if mass is not None:
+        return _spec_gas_const_from_mass(mass, is_molar=is_molar, units=units)
+    elif all(var is not None for var in [cp, cv]):
+        return _spec_gas_const_from_spec_heat(cp=cp, cv=cv)
+    else:
+        raise ValueError("Must specify mass OR both cp and cv.")
+        
+def _spec_gas_const_from_mass(mass, is_molar:bool, units:Units):
+    if is_molar: # mass per mol
         if units == Units.SI:
-            return RU_SI/m
+            return RU_SI/mass
         elif units == Units.IMP_LBM:
-            return RU_IMP_LBM/m
+            return RU_IMP_LBM/mass
         else:
-            return RU_IMP_SLUG/m
-    else: # m in mass/particle
+            return RU_IMP_SLUG/mass
+    else: # mass per particle
         if units == Units.SI:
-            return kB_SI/m
+            return kB_SI/mass
         else:
-            return kB_IMP/m
+            return kB_IMP/mass
 
-@multimethod
-def R(cp:float, cv:float):
-    """
-    `R` computes specific gas constant.
-
-    Valid for perfect (thermally & calorically) gases.
-
-    Parameters:
-    cp (float): specific heat (constant p)
-    cv (float): specific heat (constant v)
-
-    Returns:
-    Gas constant R
-    """
-    return R(np.asarray(cp),np.asarray(cv))
-@multimethod
-def R(cp:np.ndarray, cv:np.ndarray):
-    """
-    `R` computes specific gas constant.
-
-    Valid for perfect (thermally & calorically) gases.
-
-    Parameters:
-    cp (numpy.ndarray): specific heat (constant p)
-    cv (numpy.ndarray): specific heat (constant v)
-
-    Returns:
-    Gas constant R
-    """
+def _spec_gas_const_from_spec_heat(cp, cv):           
     return cp - cv
 
 def gamma(cp,cv):
     """
-    `gamma` computes the ratio of specific heats.
+    Compute the ratio of specific heats.
 
-    Parameters:
-    cp (float): specific heat (constant p)
-    cv (float): specific heat (constant v)
+    Valid for perfect (thermally & calorically) gases.
 
-    Returns:
-    gamma: ratio of specific heats
-    """
+    Parameters
+    ----------
+    cp : Any
+        specific heat (constant pressure)
+    cv : Any
+        specific heat (constant volume)
+
+    Returns
+    -------
+    Any
+        ratio of specific heats
+    """    
     return cp/cv
 
-def cp(gamma,R=R_AIR_SI):
+def cp(gamma:float, R:float=R_AIR_SI):
     """
-    `cp` computes the specific heat at consant pressure.
+    Computes the specific heat at constant pressure.
 
     Valid for perfect (thermally & calorically) gases.
 
-    Parameters:
-    gamma (float): ratio of specific heats
-    R (float): specific gas constant
+    Parameters
+    ----------
+    gamma : float
+        ratio of specific heats
+    R : float, optional
+        specific gas constant, by default R_AIR_SI
 
-    Returns:
-    cp: specific heat at constant pressure
-    """
+    Returns
+    -------
+    float
+        specific heat at constant pressure
+    """    
     return gamma*cv(gamma,R)
     
-def cv(gamma,R=R_AIR_SI):
+def cv(gamma:float, R:float=R_AIR_SI):
     """
-    `cv` computes the specific heat at consant volume.
+    Computes the specific heat at constant volume.
 
     Valid for perfect (thermally & calorically) gases.
 
-    Parameters:
-    gamma (float): ratio of specific heats
-    R (float): specific gas constant
+    Parameters
+    ----------
+    gamma : float
+        ratio of specific heats
+    R : float, optional
+        specific gas constant, by default R_AIR_SI
 
-    Returns:
-    cv: specific heat at constant volume
+    Returns
+    -------
+    float
+        specific heat at constant volume
     """
     return R/(gamma-1)
 
-
-def entropy(t21=None,p21=None,v21=None,
-            cp=None,cv=None,R=R_AIR_SI,s1=0.0):
+def entropy(t21:float=None, p21:float=None, v21:float=None,
+            cp:float=None, cv:float=None, R:float=R_AIR_SI, s1:float=0.0):
     """
-    `entropy` computes the change in entropy for a calorically perfect gas.
+    Computes the change in entropy for a calorically perfect gas.
 
-    Parameters:
-    t21 (float): temperature ratio T2/T1
-    p21 (float): pressure ratio p2/p1
-    v21 (float): specific volume ratio v2/v1
-    cp (float): specific heat (constant p)
-    cv (float): specific heat (constant v)
-    R  (float): specific gas constant
-    s1 (float): entropy at state 1.
+    Parameters
+    ----------
+    t21 : float, optional
+        temperature ratio T2/T1, by default None
+    p21 : float, optional
+        pressure ratio p2/p1, by default None
+    v21 : float, optional
+        specific volume ratio v2/v1, by default None
+    cp : float, optional
+        specific heat (constant pressure), by default None
+    cv : float, optional
+        specific heat (constant volume), by default None
+    R : float, optional
+        specific gas constant, by default R_AIR_SI
+    s1 : float, optional
+        entropy at state 1, by default 0.0
 
-    Returns:
-    ds: change in entropy  if s1==0
-    s2: entropy at state 2, s2, if s1 is given.
-    """
-    if (t21 and p21 and cp and R)  is not None:
+    Returns
+    -------
+    float
+        entropy change ds if s1==0.0 else entropy at state 2 (s2)
+
+    Raises
+    ------
+    ValueError
+        Incorrect or insufficient inputs supplied
+    """    
+    if all(var is not None for var in [t21, p21, cp, R]):
         expr = cp*np.log(t21) - R * np.log(p21)
-    elif (t21 and v21 and cv and R) is not None:
+    elif all(var is not None for var in [t21, v21, cv, R]):
         expr = cv*np.log(t21) + R * np.log(v21)
-    elif (p21 and v21 and cp and cv):
+    elif all(var is not None for var in [p21, v21, cp, cv]):
         expr = cv*np.log(p21) + cp*np.log(v21)
     else:
         error_msg="Must specify one of the following: \n\
                 1) T2/T1, v2/v1, cp, R, OR\n\
                 2) T2/T1, v2/v1, cv, R, OR\n\
                 3) p2/p1, v2/v1, cp, cv"
-        raise Exception(error_msg)
-    return s1 + expr # if s1=0, returns (s2-s1), else s2
+        raise ValueError(error_msg)
+    return s1 + expr # if s1==0, returns (s2-s1), else s2
 
-
-def isentropic_process(p21=None,t21=None,r21=None,a21=None,gamma=1.4):
+def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
+                       a21:float=None, gamma:float=1.4):
     """
-    `isentropic_process` returns the state of an isentropic gas.
+    Returns the state of an isentropic process.
 
-    Isentropic relations valid for isentropic (adiabatic+reversible),
-    calorically perfect gases only.
+    Parameters
+    ----------
+    p21 : float, optional
+        pressure ratio p2/p1, by default None
+    t21 : float, optional
+        temperature ratio T2/T1, by default None
+    r21 : float, optional
+        density ratio rho2/rho1, by default None
+    a21 : float, optional
+        speed of sound ratio a2/a1, by default None
+    gamma : float, optional
+        ratio of specific heats gamma, by default 1.4
 
-    Parameters:
-    p21 (float): pressure ratio p2/p1
-    t21 (float): temperature ratio T2/T1
-    r21 (float): density ratio rho2/rho1
-    a21 (float): speed of sound ratio a2/a1
-    gamma (float): ratio of specific heats gamma
+    Returns
+    -------
+    dict
+        table of p2/p1, t2/t1, rho2/rho1, a2/a1, and gamma
 
-    Returns:
-    dict of p2/p1, t2/t1, rho2/rho1, a2/a1, and gamma.
-    """
+    Raises
+    ------
+    ValueError
+        Incorrect or insufficient inputs supplied. 
+    """    
     if p21 is not None:
         t21 = p21**((gamma-1)/gamma)
         r21 = p21**(1/gamma)
@@ -269,11 +296,12 @@ def isentropic_process(p21=None,t21=None,r21=None,a21=None,gamma=1.4):
         t21 = a21*a21
         r21 = a21**(2/(gamma-1))
     else:
-        raise Exception("Input p2/p1, T2/T1, rho2/rho1, or a2/a1.")
-    return {"p21":p21,"t21":t21,"r21":r21,"a21":a21,"gamma":gamma}
+        raise ValueError("Supply either p2/p1, T2/T1, rho2/rho1, or a2/a1.")
+    return {"p21":p21, "t21":t21, "r21":r21, "a21":a21, "gamma":gamma}
 
 
-def heat_flux(q=None,c=None,t1=None,t2=None,m=1.0):
+def heat_flux(q:float=None, c:float=None, t1:float=None, t2:float=None,
+              m:float=1.0):
     """
     `heat_flux` computes the heat addition due to the temperature
     change of the substance.
@@ -294,15 +322,18 @@ def heat_flux(q=None,c=None,t1=None,t2=None,m=1.0):
     Returns:
     q,c,m,t2, or t1 (float)
     """
-    if q is None and t2 is not None and t1 is not None and c is not None:
+    condition = lambda desired, user_specified: (
+        desired is None and all(var is not None for var in user_specified)
+    )
+    if condition(q, [t1, t2, c]):
         return m * c * (t2 - t1)  # q
-    elif t2 is None and q is not None and t1 is not None and c is not None:
+    elif condition(t2, [q, t1, c]):
         return q/c/m + t1  # T2
-    elif t1 is None and q is not None and t2 is not None and c is not None:
+    elif condition(t1, [q, t2, c]):
         return t2 - q/c/m  # T1
-    elif c is None and q is not None and t2 is not None and t1 is not None:
+    elif condition(c, [q, t1, t2]):
         return q/m/(t2-t1) # c
-    elif m is None and q is not None and t2 is not None and t1 is not None and c is not None:
+    elif condition(m, [q, t1, t2, c]):
         return q/c/(t2-t1) # m
     else:
-        raise Exception("Must specify exactly three of the following: `q`, `T1`, `T2`, `c`.")
+        raise ValueError("Must specify exactly three of the following: `q`, `T1`, `T2`, `c`.")

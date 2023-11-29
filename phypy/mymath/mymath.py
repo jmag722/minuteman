@@ -1,31 +1,32 @@
-import sympy as sp
+import sympy
 
-class AlgebraicEquationSolver():
+def solve_algebraic_eqn(unknown:str, knowns:dict, eq:str):
     """
-    `AlgebraicEquationSolver` uses sympy to solve equations.
-    """
-    def __init__(self):
-        pass
-    def solve(self,x:str,values:dict,eq:str):
-        """
-        `solve` uses sympy.solve to solve equations.
+    Solve algebraic equation with sympy.solve
 
-        Parameters:
-        x (str): value to be converted to symbol and solved.
-        values (dict): Values of known symbols in equation.
-        eq (str): Equation to be solved.
-        Returns:
-        x (float): Value of desired variable.
-        """
-        symbols_lst = sp.symbols(list(values))
-        symbols_lst
-        x = sp.parse_expr(x)
-        solve_lst = []
-        solve_lst += [sp.parse_expr(eq)]
+    Parameters
+    ----------
+    unknown : str
+        value to be converted to symbol and solved.
+    knowns : dict
+        Key value pairs of known symbols in equation.
+    eq : str
+        Equation to be solved.
 
-        for key, value in values.items():
-            solve_lst.append(sp.Eq(sp.parse_expr(key), value))
-        try:
-            return sp.solve(solve_lst)[0][x]
-        except IndexError:
-            print('This equation has no solutions.')
+    Returns
+    -------
+    Any
+        Value of desired variable.
+    """        
+    symbols_lst = sympy.symbols(list(knowns))
+    symbols_lst
+    unknown = sympy.parse_expr(unknown)
+    solve_lst = []
+    solve_lst += [sympy.parse_expr(eq)]
+
+    for key, value in knowns.items():
+        solve_lst.append(sympy.Eq(sympy.parse_expr(key), value))
+    try:
+        return sympy.solve(solve_lst)[0][unknown]
+    except IndexError:
+        print('This equation has no solutions.')
