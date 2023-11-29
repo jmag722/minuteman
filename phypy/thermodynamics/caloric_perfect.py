@@ -303,8 +303,7 @@ def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
 def heat_flux(q:float=None, c:float=None, t1:float=None, t2:float=None,
               m:float=1.0):
     """
-    `heat_flux` computes the heat addition due to the temperature
-    change of the substance.
+    Computes the heat addition due to the temperature change of the substance.
 
     Specify exactly three of the following input variables: `q`, `t2`, `t1`, or `c`. 
     The unspecified variable (assigned `None`) will be returned. 
@@ -312,16 +311,29 @@ def heat_flux(q:float=None, c:float=None, t1:float=None, t2:float=None,
 
     Valid for general calorimetry and calorically perfect gases only.
 
-    Parameters:
-    q (float): Amount of heat added. This is specific heat if `m==1.0`.
-    c (float): Specific heat capacity at constant pressure or volume.
-    t1 (float): Temperature before heat addition.
-    t2 (float): Temperature after heat addition.
-    m (float): Mass of substance.
-    
-    Returns:
-    q,c,m,t2, or t1 (float)
-    """
+    Parameters
+    ----------
+    q : float, optional
+        Amount of heat added. This is specific heat if `m==1.0`, by default None
+    c : float, optional
+        Specific heat capacity at constant pressure or volume, by default None
+    t1 : float, optional
+        Temperature before heat transfer, by default None
+    t2 : float, optional
+        Temperature after heat transfer, by default None
+    mass : float, optional
+        Mass of substance, by default 1.0
+
+    Returns
+    -------
+    float
+        q, c, m, t2, or t1
+
+    Raises
+    ------
+    ValueError
+        Incorrect or inconsistent inputs supplied.
+    """    
     condition = lambda desired, user_specified: (
         desired is None and all(var is not None for var in user_specified)
     )
