@@ -165,7 +165,7 @@ def gamma(cp,cv):
     """    
     return cp/cv
 
-def cp(gamma:float, R:float=R_AIR_SI):
+def cp(gam:float, R:float=R_AIR_SI):
     """
     Computes the specific heat at constant pressure.
 
@@ -173,7 +173,7 @@ def cp(gamma:float, R:float=R_AIR_SI):
 
     Parameters
     ----------
-    gamma : float
+    gam : float
         ratio of specific heats
     R : float, optional
         specific gas constant, by default R_AIR_SI
@@ -183,9 +183,9 @@ def cp(gamma:float, R:float=R_AIR_SI):
     float
         specific heat at constant pressure
     """    
-    return gamma*cv(gamma,R)
+    return gam*cv(gam, R)
     
-def cv(gamma:float, R:float=R_AIR_SI):
+def cv(gam:float, R:float=R_AIR_SI):
     """
     Computes the specific heat at constant volume.
 
@@ -193,7 +193,7 @@ def cv(gamma:float, R:float=R_AIR_SI):
 
     Parameters
     ----------
-    gamma : float
+    gam : float
         ratio of specific heats
     R : float, optional
         specific gas constant, by default R_AIR_SI
@@ -203,7 +203,7 @@ def cv(gamma:float, R:float=R_AIR_SI):
     float
         specific heat at constant volume
     """
-    return R/(gamma-1)
+    return R/(gam-1)
 
 def entropy(t21:float=None, p21:float=None, v21:float=None,
             cp:float=None, cv:float=None, R:float=R_AIR_SI, s1:float=0.0):
@@ -252,7 +252,7 @@ def entropy(t21:float=None, p21:float=None, v21:float=None,
     return s1 + expr # if s1==0, returns (s2-s1), else s2
 
 def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
-                       a21:float=None, gamma:float=1.4):
+                       a21:float=None, gam:float=1.4):
     """
     Returns the state of an isentropic process.
 
@@ -266,13 +266,13 @@ def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
         density ratio rho2/rho1, by default None
     a21 : float, optional
         speed of sound ratio a2/a1, by default None
-    gamma : float, optional
-        ratio of specific heats gamma, by default 1.4
+    gam : float, optional
+        ratio of specific heats gam, by default 1.4
 
     Returns
     -------
     dict
-        table of p2/p1, t2/t1, rho2/rho1, a2/a1, and gamma
+        table of p2/p1, t2/t1, rho2/rho1, a2/a1, and gam
 
     Raises
     ------
@@ -280,24 +280,24 @@ def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
         Incorrect or insufficient inputs supplied. 
     """    
     if p21 is not None:
-        t21 = p21**((gamma-1)/gamma)
-        r21 = p21**(1/gamma)
-        a21 = p21**((gamma-1)/gamma/2)
+        t21 = p21**((gam-1)/gam)
+        r21 = p21**(1/gam)
+        a21 = p21**((gam-1)/gam/2)
     elif t21 is not None:
-        p21 = t21**(gamma/(gamma-1))
-        r21 = t21**(1/(gamma-1))
+        p21 = t21**(gam/(gam-1))
+        r21 = t21**(1/(gam-1))
         a21 = t21**0.5
     elif r21 is not None:
-        p21 = r21**gamma
-        t21 = r21**(gamma-1)
-        a21 = r21**((gamma-1)/2)
+        p21 = r21**gam
+        t21 = r21**(gam-1)
+        a21 = r21**((gam-1)/2)
     elif a21 is not None:
-        p21 = a21**(2*gamma/(gamma-1))
+        p21 = a21**(2*gam/(gam-1))
         t21 = a21*a21
-        r21 = a21**(2/(gamma-1))
+        r21 = a21**(2/(gam-1))
     else:
         raise ValueError("Supply either p2/p1, T2/T1, rho2/rho1, or a2/a1.")
-    return {"p21":p21, "t21":t21, "r21":r21, "a21":a21, "gamma":gamma}
+    return {"p21":p21, "t21":t21, "r21":r21, "a21":a21, "gam":gam}
 
 
 def heat_flux(q:float=None, c:float=None, t1:float=None, t2:float=None,

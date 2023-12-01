@@ -211,8 +211,8 @@ def total_temperature_2(m2,m1=1.0,t01=1.0,gam=1.4):
     return t01 * (
         pressure_2(m2=m2,m1=m1,p1=1.0,gam=gam)**2
         * (m2*m2/m1/m1)
-        * isc.total_temperature(M=m2,t=1.0,gam=gam)
-        / isc.total_temperature(M=m1,t=1.0,gam=gam)
+        * isc.total_temperature(M=m2,T=1.0,gam=gam)
+        / isc.total_temperature(M=m1,T=1.0,gam=gam)
     )
 
 

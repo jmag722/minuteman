@@ -58,27 +58,27 @@ class TestIsentropicRelations:
     def test_p(self):
         actual = calp.isentropic_process(p21=1.2)
         expected = {"p21":1.2,"t21":1.053472524,"r21":1.139089983,
-                    "a21":1.026388096,"gamma":1.4}
+                    "a21":1.026388096,"gam":1.4}
         assert all(actual[key] == pytest.approx(expected[key])
                    for key in expected.keys())
 
     def test_a(self):
         actual = calp.isentropic_process(a21=1.125)
         expected = {"p21":2.280697346,"r21":1.802032471,"t21":1.265625,
-                    "a21":1.125,"gamma":1.4}
+                    "a21":1.125,"gam":1.4}
         assert all(actual[key] == pytest.approx(expected[key])
                    for key in expected.keys())
 
     def test_r(self):
-        actual = calp.isentropic_process(r21=2,gamma=1.3)
+        actual = calp.isentropic_process(r21=2,gam=1.3)
         expected = {"p21":2.462288827,"r21":2,"t21":1.231144413,
-                    "a21":1.109569472,"gamma":1.3}
+                    "a21":1.109569472,"gam":1.3}
         assert all(actual[key] == pytest.approx(expected[key])
                    for key in expected.keys())
 
     def test_t(self):
-        actual = calp.isentropic_process(t21=0.7,gamma=1.35)
+        actual = calp.isentropic_process(t21=0.7,gam=1.35)
         expected = {"p21":0.2526509942,"r21":0.3609299917,"t21":0.7,
-                    "a21":0.8366600265,"gamma":1.35}
+                    "a21":0.8366600265,"gam":1.35}
         assert all(actual[key] == pytest.approx(expected[key])
                    for key in expected.keys())
