@@ -6,278 +6,345 @@ total temperature is also constant across the shock, and will not be output here
 """
 import numpy as np
 from scipy.optimize import fsolve
-from . import isentropic as isc
+import phypy.compressible.isentropic as isen
+import phypy.utils.arg_checks as ac
 
 
-def lookup_table(M1=None,p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
+def lookup_table(M1:float=None, p21:float=None, r21:float=None,
+                 T21:float=None, p02_p01:float=None, p02_p1:float=None,
+                 M2:float=None, gam:float=1.4):
     """
-    `lookup_table` computes the normal shock parameters for a given input.
+    Computes the normal shock parameters for a given input.
 
     This form is valid for calorically perfect gases only, where gamma
-    is constant (M1 < 5). Note `T02/T01=1` for perfect gases, as is total enthalpy.
-
-    Parameters:
-    p21 (float): pressure ratio p2/p1
-    r21 (float): density ratio rho2/rho1
-    t21 (float): temperature ratio T2/T1
-    p02_p01 (float): total pressure ratio p02/p01
-    p02_p1 (float): total pressure to static ratio p02/p1
-    M1 (float): Mach number ahead of normal shock
-    M2 (float): Mach number behind normal shock
-    gam (float): ratio of specific heats gamma
-
-    Returns:
-    dict: Normal shock table parameters
-    """
-    if (M1 is not None and
-        p21 is None and r21 is None and t21 is None 
-        and p02_p01 is None and p02_p1 is None and M2 is None):
-        return {"M1":M1,
-                "M2":mach_2(M1,gam),
-                "p21":pressure_2(M1,p1=1.0,gam=gam),
-                "r21":density_2(M1,rho1=1.0,gam=gam),
-                "t21":temperature_2(M1,t1=1.0,gam=gam),
-                "p02_p01":total_pressure_2(M1,p01=1.0,gam=gam),
-                "p02_p1":( total_pressure_2(M1,p01=1.0,gam=gam)
-                         * isc.total_pressure(M=M1,p=1.0,gam=gam) )
-                }
-    elif (p21 is not None and
-          M1 is None and r21 is None and t21 is None 
-          and p02_p01 is None and p02_p1 is None and M2 is None):
-        M1 = mach_1(p21=p21,gam=gam)
-        return lookup_table(M1=M1,gam=gam)
-
-    elif (r21 is not None and
-          M1 is None and p21 is None and t21 is None 
-          and p02_p01 is None and p02_p1 is None and M2 is None):
-        M1 = mach_1(r21=r21,gam=gam)
-        return lookup_table(M1=M1,gam=gam)
-
-    elif (t21 is not None and
-          M1 is None and p21 is None and r21 is None 
-          and p02_p01 is None and p02_p1 is None and M2 is None):
-        M1 = mach_1(t21=t21,gam=gam)
-        return lookup_table(M1=M1,gam=gam)
-
-    elif (p02_p01 is not None and
-          M1 is None and p21 is None and r21 is None 
-          and t21 is None and p02_p1 is None and M2 is None):
-        M1 = mach_1(p02_p01=p02_p01,gam=gam)
-        return lookup_table(M1=M1,gam=gam)
+    is constant (M1 < 5).
     
-    elif (p02_p1 is not None and
-          M1 is None and p21 is None and r21 is None 
-          and t21 is None and p02_p01 is None and M2 is None):
-        M1 = mach_1(p02_p1=p02_p1,gam=gam)
-        return lookup_table(M1=M1,gam=gam)
+    Note `T02/T01`=1.0 for perfect gases, as does total enthalpy ratio.
 
-    elif (M2 is not None and
-          M1 is None and p21 is None and r21 is None 
-          and t21 is None and p02_p01 is None and p02_p1 is None):
-        M1 = mach_1(M2=M2,gam=gam)
-        return lookup_table(M1=M1,gam=gam)
-    else:
-        raise Exception("Specify only p2/p1, rho2/rho1, T2/T1, p02/p01, p02/p1, M1, or M2.")
+    Parameters
+    ----------
+    M1 : float, optional
+        Mach number upstream of the normal shock, by default None
+    p21 : float, optional
+        pressure ratio p2/p1, by default None
+    r21 : float, optional
+        density ratio rho2/rho1, by default None
+    T21 : float, optional
+        temperature ratio T2/T1, by default None
+    p02_p01 : float, optional
+        total pressure ratio p02/p01, by default None
+    p02_p1 : float, optional
+        total pressure to static ratio p02/p1, by default None
+    M2 : float, optional
+        Mach number downstream of the normal shock, by default None
+    gam : float, optional
+        ratio of specific heats gamma, by default 1.4
 
+    Returns
+    -------
+    dict
+        normal shock table parameters
 
-
-def mach_1(p21=None,r21=None,t21=None,p02_p01=None,p02_p1=None,M2=None,gam=1.4):
+    Raises
+    ------
+    ValueError
+        Incorrect or inconsistent inputs specified. Specify one and only 
+        one input parameter along with gamma.
     """
-    `mach_1` computes the Mach number `M1` ahead of a normal shock.
+    if ac.is1known(M1, [p21, r21, T21, p02_p01, p02_p1, M2]):
+        return {
+            "M1": M1,
+            "M2": mach2(M1=M1, gam=gam),
+            "p21": pressure2(M1=M1, p1=1.0, gam=gam),
+            "r21": density2(M1=M1, rho1=1.0, gam=gam),
+            "T21": temperature2(M1=M1, T1=1.0, gam=gam),
+            "p02_p01": total_pressure2(M1=M1, p01=1.0, gam=gam),
+            "p02_p1":( total_pressure2(M1=M1, p01=1.0, gam=gam)
+                       * isen.total_pressure(M=M1, p=1.0, gam=gam) )
+        }
+    elif ac.is1known(p21, [M1, r21, T21, p02_p01, p02_p1, M2]):
+        M1 = mach_1(p21=p21, gam=gam)
+        return lookup_table(M1=M1, gam=gam)
+
+    elif ac.is1known(r21, [M1, p21, T21, p02_p01, p02_p1, M2]):
+        M1 = mach_1(r21=r21, gam=gam)
+        return lookup_table(M1=M1, gam=gam)
+
+    elif ac.is1known(T21, [M1, p21, r21, p02_p01, p02_p1, M2]):
+        M1 = mach_1(T21=T21, gam=gam)
+        return lookup_table(M1=M1, gam=gam)
+
+    elif ac.is1known(p02_p01, [M1, p21, r21, T21, p02_p1, M2]):
+        M1 = mach_1(p02_p01=p02_p01, gam=gam)
+        return lookup_table(M1=M1, gam=gam)
+    
+    elif ac.is1known(p02_p1, [M1, p21, r21, T21, p02_p01, M2]):
+        M1 = mach_1(p02_p1=p02_p1, gam=gam)
+        return lookup_table(M1=M1, gam=gam)
+
+    elif ac.is1known(M2, [M1, p21, r21, T21, p02_p01, p02_p1]):
+        M1 = mach_1(M2=M2, gam=gam)
+        return lookup_table(M1=M1, gam=gam)
+    else:
+        raise ValueError("Specify only p2/p1, rho2/rho1, T2/T1, p02/p01, "
+                         "p02/p1, M1, or M2.")
+
+def mach_1(p21:float=None, r21:float=None, T21:float=None, p02_p01:float=None,
+           p02_p1:float=None, M2:float=None, gam:float=1.4):
+    """
+    Computes the Mach number `M1` upstream of a normal shock.
 
     This form is valid for calorically perfect gases only, where gamma
-    is constant (M1 < 5). Note `T02/T01=1` for perfect gases, as is total enthalpy.
+    is constant (M1 < 5).
+    
+    Note `T02/T01`=1.0 for perfect gases, as does total enthalpy ratio.
 
-    Parameters:
-    p21 (float): pressure ratio p2/p1
-    r21 (float): density ratio rho2/rho1
-    t21 (float): temperature ratio T2/T1
-    p02_p01 (float): total pressure ratio p02/p01
-    p02_p1 (float): total pressure to static ratio p02/p1
-    M2 (float): Mach number behind normal shock
-    gam (float): ratio of specific heats gamma
+    Parameters
+    ----------
+    p21 : float, optional
+        pressure ratio p2/p1, by default None
+    r21 : float, optional
+        density ratio rho2/rho1, by default None
+    T21 : float, optional
+        temperature ratio T2/T1, by default None
+    p02_p01 : float, optional
+        total pressure ratio p02/p01, by default None
+    p02_p1 : float, optional
+        total pressure to static ratio p02/p1, by default None
+    M2 : float, optional
+        Mach number downstream of a normal shock, by default None
+    gam : float, optional
+        ratio of specific heats gamma, by default 1.4
 
-    Returns:
-    M1: Mach number ahead of a normal shock
-    """
-    if ( p21 is not None and  # p2/p1 known
-        r21 is None and t21 is None and p02_p01 is None
-         and p02_p1 is None and M2 is None):
+    Returns
+    -------
+    float
+        Mach number upstream of a normal shock
+
+    Raises
+    ------
+    ValueError
+        Incorrect or inconsistent inputs specified. Specify one and only 
+        one input parameter along with gamma.
+    """    
+    if ac.is1known(p21, [r21, T21, p02_p01, p02_p1, M2]):
         M1 = ((p21-1)*(gam+1)/2/gam + 1)**0.5
-    elif (r21 is not None and  # rho2/rho1 known
-          p21 is None and t21 is None and p02_p01 is None
-          and p02_p1 is None and M2 is None):
+
+    elif ac.is1known(r21, [p21, T21, p02_p01, p02_p1, M2]):
         M1 = ( 2 / ((gam+1)/r21 - gam + 1) )**0.5
-    elif (t21 is not None and  # T2/T1 known
-          p21 is None and r21 is None and p02_p01 is None
-          and p02_p1 is None and M2 is None):
-        func = lambda M1,t21,gam: t21 - temperature_2(M1,t1=1.0,gam=gam)
-        M1= fsolve(func, 2.0,args=(t21,gam))[0]
-    elif (M2 is not None and  # M2 known
-          p21 is None and r21 is None and p02_p01 is None
-          and p02_p1 is None and t21 is None):
+
+    elif ac.is1known(T21, [p21, r21, p02_p01, p02_p1, M2]):
+        func = lambda M1, T21, gam: T21 - temperature2(M1=M1, T1=1.0, gam=gam)
+        M1= fsolve(func, 2.0, args=(T21, gam))[0]
+
+    elif ac.is1known(M2, [p21, r21, p02_p01, p02_p1, T21]):
         M1 = ( (1+M2*M2*(gam-1)/2) / (gam*M2*M2-(gam-1)/2) )**0.5
-    elif (p02_p01 is not None and #p02/p01 known
-          p21 is None and r21 is None and M2 is None
-          and p02_p1 is None and t21 is None):
-        func = lambda M1, p02_p01,gam: p02_p01 - total_pressure_2(M1,p01=1.0,gam=gam)
-        M1= fsolve(func, 2.0,args=(p02_p01,gam))[0]
-    elif (p02_p1 is not None and  # p02/p1 known
-          p21 is None and r21 is None and M2 is None
-          and p02_p01 is None and t21 is None):
-        func = lambda M1,p02_p1,gam: (
+
+    elif ac.is1known(p02_p01, [p21, r21, T21, p02_p1, M2]):
+        func = lambda M1, p02_p01, gam: p02_p01 - total_pressure2(M1=M1, p01=1.0, gam=gam)
+        M1= fsolve(func, 2.0, args=(p02_p01, gam))[0]
+
+    elif ac.is1known(p02_p1, [p21, r21, T21, p02_p01, M2]):
+        func = lambda M1, p02_p1, gam: (
             p02_p1 
-            - total_pressure_2(M1,p01=1.0,gam=gam) 
-            * isc.total_pressure(M1,p=1.0,gam=gam)
+            - total_pressure2(M1=M1, p01=1.0, gam=gam) 
+            * isen.total_pressure(M1, p=1.0, gam=gam)
         )
-        M1 = fsolve(func,2.0, args=(p02_p1,gam))[0]
+        M1 = fsolve(func, 2.0, args=(p02_p1, gam))[0]
     else:
-        raise Exception("Specify only p2/p1, rho2/rho1, T2/T1, p02/p01, p02/p1, or M2.")
+        raise ValueError("Specify only p2/p1, rho2/rho1, T2/T1, p02/p01, p02/p1, or M2.")
     return M1
 
-
-
-def mach_2(M1,gam=1.4):
+def mach2(M1, gam:float=1.4):
     """
-    `mach_2` computes the Mach number `M2` behind a normal shock.
+    Computes the Mach number `M2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where gamma
     is constant (M1 < 5).
 
-    Parameters:
-    M1 (float): Mach number ahead of normal shock
-    gam (float): gamma, ratio of specific heats
+    Parameters
+    ----------
+    M1 : Any
+        Mach number upstream of the normal shock
+    gam : float, optional
+        ratio of specific heats gamma, by default 1.4
 
-    Returns:
-    M2: Mach number behind a normal shock
+    Returns
+    -------
+    Any
+        Mach number M2 downstream of the normal shock
     """
     return ( (1 + (gam-1)*M1*M1/2) / (gam*M1*M1 - (gam-1)/2) )**0.5
 
-
-
-def density_2(M1,rho1=1.0,gam=1.4):
+def density2(M1, rho1=1.0, gam:float=1.4):
     """
-    `density_2` computes the density `rho2` behind a normal shock.
+    Computes the density `rho2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
-    is constant (M1 < 5). Density ratio `rho2/rho1` returned when default
-    argument `rho1`==1.0. `rho2/rho1` is equivalent to `u1/u2`.
+    is constant (M1 < 5).
+    
+    Density ratio `rho2/rho1` returned when `rho1`==1.0.
+    
+    `rho2/rho1` is equivalent to `u1/u2`.
 
-    Parameters:
-    M1 (float): Mach number ahead of normal shock
-    rho1 (float): density ahead of normal shock
-    gam (float): gamma, ratio of specific heats
+    Parameters
+    ----------
+    M1 : Any
+        Mach number upstream of the normal shock
+    rho1 : float, optional
+        Density upstream of the normal shock, by default 1.0
+    gam : float, optional
+        ratio of specific heats gamma, by default 1.4
 
-    Returns:
-    rho2: density behind normal shock
-    rho2/rho1: density ratio when rho1==1.0.
+    Returns
+    -------
+    Any
+        density rho2 downstream the normal shock AND
+
+        density ratio rho2/rho1 when `rho1`==1.0
     """
     return rho1 * (gam+1)*M1*M1/(2+(gam-1)*M1*M1)
 
-
-
-def pressure_2(M1,p1=1.0,gam=1.4):
+def pressure2(M1, p1=1.0, gam:float=1.4):
     """
-    `pressure_2` computes the pressure `p2` behind a normal shock.
+    Computes the pressure `p2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
-    is constant (M1 < 5). Pressure ratio `p2/p1` returned when default
-    argument `p1`==1.0.
+    is constant (M1 < 5). 
+    
+    Pressure ratio `p2/p1` returned when `p1`==1.0.
 
-    Parameters:
-    M1 (float): Mach number ahead of normal shock
-    p1 (float): pressure ahead of normal shock
-    gam (float): gamma, ratio of specific heats
+    Parameters
+    ----------
+    M1 : Any
+        Mach number upstream of the normal shock
+    p1 : float, optional
+        pressure upstream of the normal shock, by default 1.0
+    gam : float, optional
+        ratio of specific heats gamma, by default 1.4
 
-    Returns:
-    p2: pressure behind normal shock
-    p2/p1: pressure ratio when `p1`==1.0.
+    Returns
+    -------
+    Any
+        pressure p2 downstream the normal shock AND
+
+        pressure ratio p2/p1 when `p1`==1.0
     """
     return p1 * (1 + 2*gam/(gam+1)*(M1*M1-1))
 
-
-
-def total_pressure_2(M1,p01=1.0,gam=1.4):
+def total_pressure2(M1, p01=1.0, gam:float=1.4):
     """
-    `total_pressure_2` computes the total pressure `p02` behind a normal shock.
+    Computes the total pressure `p02` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
-    is constant (M1 < 5). Pressure ratio `p02/p01` returned when default
-    argument `p01`==1.0.
+    is constant (M1 < 5).
+    Pressure ratio `p02/p01` returned when `p01`==1.0.
 
-    Parameters:
-    M1 (float): Mach number ahead of normal shock
-    p01 (float): total pressure ahead of normal shock
-    gam (float): gamma, ratio of specific heats
+    Parameters
+    ----------
+    M1 : Any
+        Mach number upstream of the normal shock
+    p01 : float, optional
+        total pressure upstream of the normal shock, by default 1.0
+    gam : float, optional
+        ratio of specific heats gamma, by default 1.4
 
-    Returns:
-    p02: pressure behind normal shock
-    p02/p01: pressure ratio when `p01`==1.0.
+    Returns
+    -------
+    Any
+        total pressure p02 downstream the normal shock AND
+
+        total pressure ratio p02/p01 when `p01`==1.0
     """
-    return ( p01 
-            * ( (gam+1)/(2*gam*M1*M1-gam+1) )**(1/(gam-1)) 
-            * ( (gam+1)*M1*M1/((gam-1)*M1*M1+2) )**(gam/(gam-1)) )
+    return (
+        p01 
+        * ( (gam+1)/(2*gam*M1*M1-gam+1) )**(1/(gam-1)) 
+        * ( (gam+1)*M1*M1/((gam-1)*M1*M1+2) )**(gam/(gam-1))
+    )
 
-
-
-def temperature_2(M1,t1=1.0,gam=1.4):
+def temperature2(M1, T1=1.0, gam:float=1.4):
     """
-    `temperature_2` computes the temperature `t2` behind a normal shock.
+    Computes the temperature `T2` behind a normal shock.
 
     This form is valid for calorically perfect gases only, where `gamma`
-    is constant (M1 < 5). Temperature ratio `t2/t1` returned when default
-    argument `t1`==1.0. `t2/t1` is equivalent to `h2/h1`.
+    is constant (M1 < 5).
+    
+    Temperature ratio `T2/T1` returned when `T1`==1.0.
+    
+    T2/T1 is equivalent to h2/h1.
 
-    Parameters:
-    M1 (float): Mach number ahead of normal shock
-    t1 (float): temperature ahead of normal shock
-    gam (float): gamma, ratio of specific heats
+    Parameters
+    ----------
+    M1 : Any
+        Mach number upstream of the normal shock
+    T1 : float, optional
+        temperature upstream of the normal shock, by default 1.0
+    gam : float, optional
+        ratio of specific heats gamma, by default 1.4
 
-    Returns:
-    t2: temperature behind normal shock
-    t2/t1: temperature ratio when `t1`==1.0.
+    Returns
+    -------
+    Any
+        temperature T2 downstream the normal shock AND
+
+        temperature ratio T2/T1 when `T1`==1.0
     """
-    return t1 * (1+2*gam/(gam+1)*(M1*M1-1)) * (2+(gam-1)*M1*M1)/((gam+1)*M1*M1)
+    return T1 * (1+2*gam/(gam+1)*(M1*M1-1)) * (2+(gam-1)*M1*M1) / ((gam+1)*M1*M1)
 
-
-
-def entropy_2(R,p02_p01,s1=0.0):
+def entropy2(p02_p01, R:float, s1:float=0.0):
     """
-    `entropy_2` computes the entropy `s2` behind a normal shock.
+    Computes the entropy `s2` behind a normal shock.
 
-    This form is valid for calorically perfect gases only, where `gamma`
-    is constant (M1 < 5). Temperature ratio `t2/t1` returned when default
-    argument `t1`==1.0. `t2/t1` is equivalent to `h2/h1`.
+    This form is valid for calorically+thermally perfect gases over
+    a stationary shock.
+    
+    Entropy change ds returned when `s1`==1.0.
 
-    Parameters:
-    R (float): Specific gas constant of the gas.
-    p02_p01 (float): Total pressure ratio p02/p01.
-    s1 (float): Entropy before normal shock.
+    Parameters
+    ----------
+    p02_p01 : Any
+        total pressure ratio
+    R : float
+        specific gas constant
+    s1 : float, optional
+        entropy upstream of the shock, by default 0.0
 
-    Returns:
-    s2: entropy behind normal shock
-    ds: entropy change due to normal shock when `s1==0.0`
+    Returns
+    -------
+    Any
+        entropy s2 downstream of the normal shock AND
+
+        entropy change ds due to the normal shock if `s1`==0.0
     """
     return s1 - R * np.log(p02_p01)
 
 
 
-def hugoniot(p1,p2,v1,v2,e1=0.0):
+def hugoniot(p1:float, p2:float, v1:float, v2:float, e1:float=0.0):
     """
-    `hugoniot` computes the change in specific energy about a normal shock.
+    Computes the change in specific energy about a normal shock.
 
     This relates only thermodynamic quantities across a shock.
     This relation is valid for perfect, chemically reacting, and real gases.
 
-    Parameters:
-    p1 (float): Static pressure ahead of normal shock.
-    p2 (float): Static pressure behind normal shock.
-    v1 (float): Specific volume ahead of normal shock.
-    v2 (float): Specific volume behind a normal shock.
-    e1 (float): Specific energy ahead of normal shock.
+    Parameters
+    ----------
+    p1 : float
+        static pressure upstream of a normal shock
+    p2 : float
+        static pressure downstream of a normal shock
+    v1 : float
+        specific volume upstream of a normal shock
+    v2 : float
+        specific volume downstream of a normal shock
+    e1 : float, optional
+        specific energy upstream of a normal shock, by default 0.0
 
-    Returns:
-    e2: specific energy downstream of the normal shock
-    de: energy change due to normal shock when `e1==0.0`
+    Returns
+    -------
+    float
+        specific energy e2 downstream of the normal shock AND
+
+        energy change de due to normal shock when `e1`==0.0
     """
     return e1 + (p1+p2)/2 * (v1-v2)

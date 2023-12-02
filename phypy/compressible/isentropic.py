@@ -6,6 +6,7 @@ compressible, inviscid flow.
 """
 from scipy.optimize import fsolve
 import phypy.thermodynamics.caloric_perfect as calp
+import phypy.utils.arg_checks as ac
 
 def mach(u, a):
     """
@@ -108,10 +109,7 @@ def lookup_table(
     ValueError
         Incorrect or inconsistent inputs specified.
     """
-    knowns = lambda known, unknown: ( # 1 and only 1 known
-        known is not None and all(var is None for var in unknown)
-    )    
-    if (knowns(M, [p0_ratio, r0_ratio, T0_ratio, a0_ratio, area_ratio])):
+    if (ac.is1known(M, [p0_ratio, r0_ratio, T0_ratio, a0_ratio, area_ratio])):
         p0_ratio = total_pressure(M=M, p=1.0, gam=gam)
         r0_ratio = total_density(M=M, rho=1.0, gam=gam)
         T0_ratio = total_temperature(M=M, T=1.0, gam=gam)
@@ -127,26 +125,26 @@ def lookup_table(
             "gam":gam
         }
 
-    elif (knowns(p0_ratio, [M, r0_ratio, T0_ratio, a0_ratio, area_ratio])):
+    elif (ac.is1known(p0_ratio, [M, r0_ratio, T0_ratio, a0_ratio, area_ratio])):
         T0_ratio = calp.isentropic_process(p21=p0_ratio, gam=gam)["t21"]
         M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
         return lookup_table(M=M, gam=gam)
 
-    elif (knowns(r0_ratio, [p0_ratio, M, T0_ratio, a0_ratio, area_ratio])):
+    elif (ac.is1known(r0_ratio, [p0_ratio, M, T0_ratio, a0_ratio, area_ratio])):
         T0_ratio = calp.isentropic_process(r21=r0_ratio, gam=gam)["t21"]
         M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
         return lookup_table(M=M, gam=gam)
 
-    elif (knowns(T0_ratio, [p0_ratio, r0_ratio, M, a0_ratio, area_ratio])):
+    elif (ac.is1known(T0_ratio, [p0_ratio, r0_ratio, M, a0_ratio, area_ratio])):
         M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
         return lookup_table(M=M, gam=gam)
 
-    elif (knowns(a0_ratio, [p0_ratio, r0_ratio, T0_ratio, M, area_ratio])):
+    elif (ac.is1known(a0_ratio, [p0_ratio, r0_ratio, T0_ratio, M, area_ratio])):
         T0_ratio = calp.isentropic_process(a21=a0_ratio, gam=gam)["t21"]
         M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
         return lookup_table(M=M, gam=gam)
 
-    elif (knowns(area_ratio, [p0_ratio, r0_ratio, T0_ratio, a0_ratio, M])):
+    elif (ac.is1known(area_ratio, [p0_ratio, r0_ratio, T0_ratio, a0_ratio, M])):
         M = area_mach_relation(area_ratio=area_ratio, gam=gam,
                                is_supersonic=is_supersonic)
         return lookup_table(M=M, gam=gam)
