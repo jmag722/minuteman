@@ -68,31 +68,26 @@ def lookup_table(p21:float=None, r21:float=None, T21:float=None,
     
     elif ac.is1known(p21, [M2, r21, T21, ds21_R, p02_p01, T02_T01]):
         M2 = mach2(M1=M1, p21=p21, gam=gam, is_supersonic=is_supersonic)
-        return lookup_table(M2=M2, M1=M1, gam=gam)
     
     elif ac.is1known(r21, [p21, M2, T21, ds21_R, p02_p01, T02_T01]):
         M2 = mach2(M1=M1, r21=r21, gam=gam, is_supersonic=is_supersonic)
-        return lookup_table(M2=M2, M1=M1, gam=gam)
     
     elif ac.is1known(T21, [p21, r21, M2, ds21_R, p02_p01, T02_T01]):
         M2 = mach2(M1=M1, T21=T21, gam=gam, is_supersonic=is_supersonic)
-        return lookup_table(M2=M2, M1=M1, gam=gam)
     
     elif ac.is1known(ds21_R, [p21, r21, T21, M2, p02_p01, T02_T01]):
         M2 = mach2(M1=M1, ds21_R=ds21_R, gam=gam, is_supersonic=is_supersonic)
-        return lookup_table(M2=M2, M1=M1, gam=gam)
     
     elif ac.is1known(p02_p01, [p21, r21, T21, ds21_R, M2, T02_T01]):
         M2 = mach2(M1=M1, p02_p01=p02_p01, gam=gam, is_supersonic=is_supersonic)
-        return lookup_table(M2=M2, M1=M1, gam=gam)
     
     elif ac.is1known(T02_T01, [p21, r21, T21, ds21_R, p02_p01, M2]):
         M2 = mach2(M1=M1, T02_T01=T02_T01, gam=gam, is_supersonic=is_supersonic)
-        return lookup_table(M2=M2, M1=M1, gam=gam)
 
     else:
         raise ValueError("Specify only p2/p1, rho2/rho1, T2/T1, p02/p01, "
                          "T02/T01, or M2.")
+    return lookup_table(M2=M2, M1=M1, gam=gam)
 
 def mach2(M1:float=1.0, is_supersonic:bool=True, p21:float=None,
           r21:float=None, T21:float=None, ds21_R:float=None,
