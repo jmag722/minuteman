@@ -78,3 +78,12 @@ class TestIsentropicRelations:
         expected = {"p21":0.2526509942,"r21":0.3609299917,"t21":0.7,
                     "a21":0.8366600265,"gam":1.35}
         check_dicts(actual, expected)
+
+def test_entropy_state():
+    assert calp.entropy_state(100, 2.5, gam=1.3, R=200) == pytest.approx(2275.9948230344603)
+
+def test_total_energy():
+    assert calp.total_energy(100, 1.2, 5000, 1.3) == pytest.approx(15000333.333333334)
+
+def test_specific_enthalpy():
+    assert calp.specific_enthalpy(100, 1e4, 0.8) == pytest.approx(12600)

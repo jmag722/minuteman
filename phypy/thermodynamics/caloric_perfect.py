@@ -205,6 +205,28 @@ def cv(gam:float, R:float=R_AIR_SI):
     """
     return R/(gam-1)
 
+def entropy_state(p, rho, gam, R):
+    """
+    Compute entropy state of a calorically perfect gas.
+
+    Parameters
+    ----------
+    p : float | ArrayLike
+        pressure
+    rho : float | ArrayLike
+        density
+    gam : float | ArrayLike
+        ratio of specific heats
+    R : float | ArrayLike
+        gas constant
+
+    Returns
+    -------
+    float | ArrayLike
+        entropy
+    """    
+    return np.log(p / rho**gam) * cv(gam=gam, R=R)
+
 def entropy(t21:float=None, p21:float=None, v21:float=None,
             cp:float=None, cv:float=None, R:float=R_AIR_SI, s1:float=0.0):
     """
@@ -299,6 +321,47 @@ def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
         raise ValueError("Supply either p2/p1, T2/T1, rho2/rho1, or a2/a1.")
     return {"p21":p21, "t21":t21, "r21":r21, "a21":a21, "gam":gam}
 
+def total_energy(p, rho, v, gam=1.4):
+    """
+    Compute total energy, in units of energy/unit volume.
+
+    Parameters
+    ----------
+    p : float | ArrayLike
+        pressure [Pa]
+    rho : float | ArrayLike
+        density [kg/m3]
+    v : float | ArrayLike
+        speed
+    gam : float, float | ArrayLike
+        ratio of specific heats, by default 1.4
+
+    Returns
+    -------
+    float | ArrayLike
+        total energy in volumetric units
+    """    
+    return p/(gam-1) + 0.5*rho*v**2
+
+def specific_enthalpy(e, p, rho):
+    """
+    Compute specific enthalpy, in units of energy per unit mass
+
+    Parameters
+    ----------
+    e : float | ArrayLike
+        specific internal energy [energy/mass]
+    p : float | ArrayLike
+        pressure
+    rho : float | ArrayLike
+        density [mass/volume]
+
+    Returns
+    -------
+    float | ArrayLike
+        specific enthalpy
+    """    
+    return e + p/rho
 
 def heat_flux(q:float=None, c:float=None, t1:float=None, t2:float=None,
               m:float=1.0):
