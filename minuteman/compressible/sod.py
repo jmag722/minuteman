@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import fsolve
-import phypy.thermodynamics.caloric_perfect as calp
-import phypy.compressible.isentropic as isen
+import minuteman.thermodynamics.caloric_perfect as calp
+import minuteman.compressible.isentropic as isen
 
 def shock_tube(t:float,
                p_driver:float, p_driven:float, rho_driver:float, rho_driven:float,

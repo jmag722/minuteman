@@ -7,8 +7,8 @@ Additional notes: https://kyleniemeyer.github.io/gas-dynamics-notes/compressible
 import numpy as np
 from scipy.optimize import fsolve
 
-import phypy.compressible.isentropic as isen
-import phypy.utils.arg_checks as ac
+import minuteman.compressible.isentropic as isen
+import minuteman.utils.arg_checks as ac
 
 def lookup_table(p21:float=None, r21:float=None, T21:float=None,
                  ds21_R:float=None, p02_p01:float=None, T02_T01:float=None,

@@ -12,7 +12,7 @@ import enum
 import numpy as np
 import scipy.constants as scc
 
-import phypy.mymath.mymath as mm
+import minuteman.mymath.mymath as mm
 
 NA = scc.Avogadro        # count/mol, Avogadro's number
 kB_SI = scc.Boltzmann         # J/K, Boltzmann constant

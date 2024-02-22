@@ -1,5 +1,5 @@
 import pytest
-import phypy.compressible.rayleigh as ray
+import minuteman.compressible.rayleigh as ray
 
 def test_lookup_table_M_supersonic():
     actual = ray.lookup_table(M2=2.0, M1=1.0)

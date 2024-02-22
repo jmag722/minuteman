@@ -6,8 +6,8 @@ total temperature is also constant across the shock, and will not be output here
 """
 import numpy as np
 from scipy.optimize import fsolve
-import phypy.compressible.isentropic as isen
-import phypy.utils.arg_checks as ac
+import minuteman.compressible.isentropic as isen
+import minuteman.utils.arg_checks as ac
 
 
 def lookup_table(M1:float=None, p21:float=None, r21:float=None,

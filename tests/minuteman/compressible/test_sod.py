@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-import phypy.compressible.isentropic as isen
-import phypy.compressible.sod as sod
+import minuteman.compressible.isentropic as isen
+import minuteman.compressible.sod as sod
 
 def test_solve_p21():
     gam4=1.4

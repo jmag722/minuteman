@@ -1,5 +1,5 @@
 import pytest
-import phypy.compressible.isentropic as isen
+import minuteman.compressible.isentropic as isen
 
 def test_speed_sound():
     actual = isen.speed_sound(T=300, R=287, gam=1.4)

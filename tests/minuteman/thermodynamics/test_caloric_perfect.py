@@ -1,5 +1,5 @@
 import pytest
-import phypy.thermodynamics.caloric_perfect as calp
+import minuteman.thermodynamics.caloric_perfect as calp
 
 class TestIdealGasLawSolver:
     

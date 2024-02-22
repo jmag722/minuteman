@@ -1,5 +1,5 @@
 import pytest
-import phypy.compressible.fanno as fan
+import minuteman.compressible.fanno as fan
 
 def test_lookup_table_M(check_dicts):
     check_dicts(

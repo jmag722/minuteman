@@ -1,2 +1,2 @@
-# phypy
-Python library for physics modeling: thermodynamics, incompressible, compressible and hypersonic flow relations, chemistry, plasma, etc.
+# minuteman
+Toolkit for rapid solutions to common engineering problems in thermodynamics, fluid and solid mechanics, heat transfer, chemistry, plasma, etc.

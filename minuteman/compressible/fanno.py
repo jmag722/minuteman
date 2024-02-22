@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import fsolve
-import phypy.utils.arg_checks as ac
+import minuteman.utils.arg_checks as ac
 
 def lookup_table(p_ratio:float=None, r_ratio:float=None, T_ratio:float=None,
                  ds_R_ratio:float=None, p0_ratio:float=None,

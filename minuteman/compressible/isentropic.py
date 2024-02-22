@@ -5,8 +5,8 @@ These functions are basic definitions pertaining to 1-,2-, and 3-D
 compressible, inviscid flow.
 """
 from scipy.optimize import fsolve
-import phypy.thermodynamics.caloric_perfect as calp
-import phypy.utils.arg_checks as ac
+import minuteman.thermodynamics.caloric_perfect as calp
+import minuteman.utils.arg_checks as ac
 
 def mach(u, a):
     """

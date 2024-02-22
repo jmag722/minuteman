@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "phypy"
-version = "0.1.0"
+name = "minuteman"
+version = "0.0.1"
 authors = [
     {name = "Jared Magnusson", email = "jmag722@gmail.com"},
 ]
@@ -13,7 +13,8 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {file = "LICENSE"}
 keywords = [
-    "phypy", "python", "physics"
+    "minuteman", "python", "physics", "physics", "science", "engineering",
+    "toolkit"
 ]
 classifiers = [
     "Programming Language :: Python :: 3 :: Only",
@@ -23,7 +24,7 @@ classifiers = [
 dynamic = ["dependencies"]
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
-optional-dependencies = {dev = { file = ["requirements_dev.txt"] }}
+optional-dependencies = {dev = { file = ["requirements-dev.txt"] }}
 
 [tool.pytest.ini_options]
 addopts = [
@@ -34,5 +35,5 @@ pythonpath = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/jmag722/phypy"
-"Bug Reports" = "https://github.com/jmag722/phypy/issues"
+"Homepage" = "https://github.com/jmag722/minuteman"
+"Bug Reports" = "https://github.com/jmag722/minuteman/issues"

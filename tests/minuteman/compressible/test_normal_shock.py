@@ -1,5 +1,5 @@
 import pytest
-import phypy.compressible.normal_shock as nsk
+import minuteman.compressible.normal_shock as nsk
 
 def test_lookup_table_m1(check_dicts):
     actual=nsk.lookup_table(M1=3.0)
