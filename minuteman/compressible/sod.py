@@ -7,7 +7,7 @@ def shock_tube(t:float,
                p_driver:float, p_driven:float, rho_driver:float, rho_driven:float,
                gam_driver:float=1.4, gam_driven:float=1.4, 
                R_driver:float=calp.R_AIR_SI, R_driven:float=calp.R_AIR_SI,
-               left_driver:bool=True, tube_length:float=20.0):
+               left_driver:bool=True, tube_length:float=20.0, positions:np.ndarray=None):
     """
     Computes Sod shock tube problem. Both gases initially stagnant, with the contact
     surface centered in the tube at x=0.
@@ -36,6 +36,9 @@ def shock_tube(t:float,
         driver gas starts on left hand side rather than the right, by default True
     tube_length : float, optional
         shock tube length, by default 20. (Sod problem #1 length)
+    positions : np.ndarray, optional
+        explicit positions along the shock tube to evaluate, by default None.
+        This is helpful when comparing to CFD grid directly.
 
     Returns
     -------
@@ -100,11 +103,15 @@ def shock_tube(t:float,
     x32 = u2*t # contact surface
     x21 = W*t # shock
     crit_pts = np.array(list(set([x45, x53, x32, x21]))) # `set` removes multiple zeros @ t=0
-    N=500
-    x_arr = np.zeros(N + crit_pts.size) # adding crit pts so discont. always well resolved
-    x_arr[:N] = np.linspace(-0.5*tube_length, 0.5*tube_length, N)
-    x_arr[-crit_pts.size:] = crit_pts
-    x_arr.sort()
+    if positions is None:
+        N=500
+        x_arr = np.zeros(N + crit_pts.size) # adding crit pts so discont. always well resolved
+        x_arr[:N] = np.linspace(-0.5*tube_length, 0.5*tube_length, N)
+        x_arr[-crit_pts.size:] = crit_pts
+        x_arr.sort()
+    else:
+        x_arr = np.zeros_like(positions)
+        x_arr[:] = positions[:]
 
     # masks for each region
     region4 = x_arr < x45
