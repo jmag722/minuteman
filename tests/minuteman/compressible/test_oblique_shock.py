@@ -116,7 +116,7 @@ def test_check_deflection_angle(theta):
 @pytest.mark.parametrize("beta, M", [
     (45, 2), (35, 4), (65, 1.2)
 ])
-def test_check_deflection_angle(beta, M):
+def test_check_shock_angle(beta, M):
     beta = np.radians(beta)
     obs.check_shock_angle(beta=beta, M=M)
     with pytest.raises(ValueError):

@@ -24,16 +24,18 @@ R_AIR_SI = 287.058           # J/kg/K, Specific gas constant for dry air
 R_AIR_IMP_LBM = 53.3533   # ft-lbf/lbm/R, Specific gas constant for dry air
 R_AIR_IMP_SLUG = 1716.49  # ft-lbf/slug/R, Specific gas constant for dry air
 
+
 class Units(enum.Enum):
     SI = 0
     IMP_LBM = 1
     IMP_SLUG = 2
 
-class IdealGasLawSolver():    
+
+class IdealGasLawSolver():
     """
     Ideal gas equation solver.
 
-    Ideal gas equation valid for perfect (thermally+calorically) 
+    Ideal gas equation valid for perfect (thermally+calorically)
     and reacting gases.
     """
 
@@ -41,9 +43,11 @@ class IdealGasLawSolver():
     PARTICLE_EQ = "p - n*kB*T"
     # can't use N for # of moles, it is reserved by sympy
     VOL_EQ = "p*V - Nm*RU*T"
+
     def __init__(self):
         pass
-    def solve(self, unknown:str, knowns:dict, units:Units=Units.SI):
+
+    def solve(self, unknown: str, knowns: dict, units: Units = Units.SI):
         """
         Solve the ideal gas equation.
 
@@ -68,31 +72,32 @@ class IdealGasLawSolver():
         """
         varlist = {unknown}
         varlist.update(list(knowns))
-        if units==Units.SI:
+        if units == Units.SI:
             ru = RU_SI
             boltz = kB_SI
-        elif units==Units.IMP_LBM:
+        elif units == Units.IMP_LBM:
             ru = RU_IMP_LBM
             boltz = kB_IMP
-        elif units==Units.IMP_SLUG:
+        elif units == Units.IMP_SLUG:
             ru = RU_IMP_SLUG
             boltz = kB_IMP
         if all(var in varlist for var in ["p", "rho", "R", "T"]):
-            eq=self.RHO_EQ
+            eq = self.RHO_EQ
         elif all(var in varlist for var in ["p", "n", "T"]):
-            eq=self.PARTICLE_EQ
+            eq = self.PARTICLE_EQ
             knowns["kB"] = boltz
         elif all(var in varlist for var in ["p", "V", "Nm", "T"]):
-            eq=self.VOL_EQ
+            eq = self.VOL_EQ
             knowns["RU"] = ru
         else:
             raise ValueError("Variables {} are not supported for isentropic\
                 relations".format(varlist))
-            
+
         return mm.solve_algebraic_eqn(unknown, knowns, eq)
 
-def R(mass=None, cp=None, cv=None, is_molar:bool=True,
-      units:Units=Units.SI):    
+
+def R(mass=None, cp=None, cv=None, is_molar: bool = True,
+      units: Units = Units.SI):
     """
     Compute specific gas constant.
 
@@ -120,32 +125,35 @@ def R(mass=None, cp=None, cv=None, is_molar:bool=True,
     ------
     ValueError
         User did not specify mass OR both cp and cv.
-    """    
+    """
     if mass is not None:
         return _spec_gas_const_from_mass(mass, is_molar=is_molar, units=units)
     elif all(var is not None for var in [cp, cv]):
         return _spec_gas_const_from_spec_heat(cp=cp, cv=cv)
     else:
         raise ValueError("Must specify mass OR both cp and cv.")
-        
-def _spec_gas_const_from_mass(mass, is_molar:bool, units:Units):
-    if is_molar: # mass per mol
+
+
+def _spec_gas_const_from_mass(mass, is_molar: bool, units: Units):
+    if is_molar:  # mass per mol
         if units == Units.SI:
             return RU_SI/mass
         elif units == Units.IMP_LBM:
             return RU_IMP_LBM/mass
         else:
             return RU_IMP_SLUG/mass
-    else: # mass per particle
+    else:  # mass per particle
         if units == Units.SI:
             return kB_SI/mass
         else:
             return kB_IMP/mass
 
-def _spec_gas_const_from_spec_heat(cp, cv):           
+
+def _spec_gas_const_from_spec_heat(cp, cv):
     return cp - cv
 
-def gamma(cp,cv):
+
+def gamma(cp, cv):
     """
     Compute the ratio of specific heats.
 
@@ -162,10 +170,11 @@ def gamma(cp,cv):
     -------
     Any
         ratio of specific heats
-    """    
+    """
     return cp/cv
 
-def cp(gam:float, R:float=R_AIR_SI):
+
+def cp(gam: float, R: float = R_AIR_SI):
     """
     Computes the specific heat at constant pressure.
 
@@ -182,10 +191,11 @@ def cp(gam:float, R:float=R_AIR_SI):
     -------
     float
         specific heat at constant pressure
-    """    
+    """
     return gam*cv(gam, R)
-    
-def cv(gam:float, R:float=R_AIR_SI):
+
+
+def cv(gam: float, R: float = R_AIR_SI):
     """
     Computes the specific heat at constant volume.
 
@@ -204,6 +214,7 @@ def cv(gam:float, R:float=R_AIR_SI):
         specific heat at constant volume
     """
     return R/(gam-1)
+
 
 def entropy_state(p, rho, gam, R):
     """
@@ -224,11 +235,12 @@ def entropy_state(p, rho, gam, R):
     -------
     float | ArrayLike
         entropy
-    """    
+    """
     return np.log(p / rho**gam) * cv(gam=gam, R=R)
 
-def entropy(t21:float=None, p21:float=None, v21:float=None,
-            cp:float=None, cv:float=None, R:float=R_AIR_SI, s1:float=0.0):
+
+def entropy(t21: float = None, p21: float = None, v21: float = None,
+            cp: float = None, cv: float = None, R: float = R_AIR_SI, s1: float = 0.0):
     """
     Computes the change in entropy for a calorically perfect gas.
 
@@ -258,7 +270,7 @@ def entropy(t21:float=None, p21:float=None, v21:float=None,
     ------
     ValueError
         Incorrect or insufficient inputs supplied
-    """    
+    """
     if all(var is not None for var in [t21, p21, cp, R]):
         expr = cp*np.log(t21) - R * np.log(p21)
     elif all(var is not None for var in [t21, v21, cv, R]):
@@ -266,15 +278,16 @@ def entropy(t21:float=None, p21:float=None, v21:float=None,
     elif all(var is not None for var in [p21, v21, cp, cv]):
         expr = cv*np.log(p21) + cp*np.log(v21)
     else:
-        error_msg="Must specify one of the following: \n\
+        error_msg = "Must specify one of the following: \n\
                 1) T2/T1, v2/v1, cp, R, OR\n\
                 2) T2/T1, v2/v1, cv, R, OR\n\
                 3) p2/p1, v2/v1, cp, cv"
         raise ValueError(error_msg)
-    return s1 + expr # if s1==0, returns (s2-s1), else s2
+    return s1 + expr  # if s1==0, returns (s2-s1), else s2
 
-def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
-                       a21:float=None, gam:float=1.4):
+
+def isentropic_process(p21: float = None, t21: float = None, r21: float = None,
+                       a21: float = None, gam: float = 1.4):
     """
     Returns the state of an isentropic process.
 
@@ -299,8 +312,8 @@ def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
     Raises
     ------
     ValueError
-        Incorrect or insufficient inputs supplied. 
-    """    
+        Incorrect or insufficient inputs supplied.
+    """
     if p21 is not None:
         t21 = p21**((gam-1)/gam)
         r21 = p21**(1/gam)
@@ -319,7 +332,8 @@ def isentropic_process(p21:float=None, t21:float=None, r21:float=None,
         r21 = a21**(2/(gam-1))
     else:
         raise ValueError("Supply either p2/p1, T2/T1, rho2/rho1, or a2/a1.")
-    return {"p21":p21, "t21":t21, "r21":r21, "a21":a21, "gam":gam}
+    return {"p21": p21, "t21": t21, "r21": r21, "a21": a21, "gam": gam}
+
 
 def total_energy(p, rho, v, gam=1.4):
     """
@@ -340,8 +354,9 @@ def total_energy(p, rho, v, gam=1.4):
     -------
     float | ArrayLike
         total energy in volumetric units
-    """    
+    """
     return p/(gam-1) + 0.5*rho*v**2
+
 
 def specific_enthalpy(e, p, rho):
     """
@@ -360,16 +375,17 @@ def specific_enthalpy(e, p, rho):
     -------
     float | ArrayLike
         specific enthalpy
-    """    
+    """
     return e + p/rho
 
-def heat_flux(q:float=None, c:float=None, t1:float=None, t2:float=None,
-              m:float=1.0):
+
+def heat_flux(q: float = None, c: float = None, t1: float = None, t2: float = None,
+              m: float = 1.0):
     """
     Computes the heat addition due to the temperature change of the substance.
 
-    Specify exactly three of the following input variables: `q`, `t2`, `t1`, or `c`. 
-    The unspecified variable (assigned `None`) will be returned. 
+    Specify exactly three of the following input variables: `q`, `t2`, `t1`, or `c`.
+    The unspecified variable (assigned `None`) will be returned.
     If `m==1.0` (default), values computed will be per unit mass.
 
     Valid for general calorimetry and calorically perfect gases only.
@@ -396,8 +412,8 @@ def heat_flux(q:float=None, c:float=None, t1:float=None, t2:float=None,
     ------
     ValueError
         Incorrect or inconsistent inputs supplied.
-    """    
-    condition = lambda desired, user_specified: (
+    """
+    def condition(desired, user_specified): return (
         desired is None and all(var is not None for var in user_specified)
     )
     if condition(q, [t1, t2, c]):
@@ -407,8 +423,9 @@ def heat_flux(q:float=None, c:float=None, t1:float=None, t2:float=None,
     elif condition(t1, [q, t2, c]):
         return t2 - q/c/m  # T1
     elif condition(c, [q, t1, t2]):
-        return q/m/(t2-t1) # c
+        return q/m/(t2-t1)  # c
     elif condition(m, [q, t1, t2, c]):
-        return q/c/(t2-t1) # m
+        return q/c/(t2-t1)  # m
     else:
-        raise ValueError("Must specify exactly three of the following: `q`, `T1`, `T2`, `c`.")
+        raise ValueError(
+            "Must specify exactly three of the following: `q`, `T1`, `T2`, `c`.")

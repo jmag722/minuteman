@@ -8,6 +8,7 @@ from scipy.optimize import fsolve
 import minuteman.thermodynamics.caloric_perfect as calp
 import minuteman.utils.arg_checks as ac
 
+
 def mach(u, a):
     """
     Compute Mach number
@@ -23,10 +24,11 @@ def mach(u, a):
     -------
     Any
         Mach Number
-    """    
+    """
     return u/a
 
-def speed_sound(T=None, R:float=None, rho=None, p=None, gam:float=1.4):
+
+def speed_sound(T=None, R: float = None, rho=None, p=None, gam: float = 1.4):
     """
     Compute the speed of sound.
 
@@ -68,11 +70,12 @@ def speed_sound(T=None, R:float=None, rho=None, p=None, gam:float=1.4):
     else:
         raise ValueError("Specify only (gamma,R,T) or only (gamma,p,rho).")
 
+
 def lookup_table(
-    M:float=None, p0_ratio:float=None, r0_ratio:float=None,
-    T0_ratio:float=None, a0_ratio:float=None,
-    area_ratio:float=None, gam:float=1.4,
-    is_supersonic:bool=True):
+        M: float = None, p0_ratio: float = None, r0_ratio: float = None,
+        T0_ratio: float = None, a0_ratio: float = None,
+        area_ratio: float = None, gam: float = 1.4,
+        is_supersonic: bool = True):
     """
     Provides all isentropic flow variables for a given input.
 
@@ -116,13 +119,13 @@ def lookup_table(
         a0_ratio = total_speed_sound(M=M, a=1.0, gam=gam)
         area_ratio = area_mach_relation(M=M, gam=gam)
         return {
-            "p0_ratio":p0_ratio,
-            "r0_ratio":r0_ratio,
-            "T0_ratio":T0_ratio,
-            "a0_ratio":a0_ratio,
-            "area_ratio":area_ratio,
-            "M":M,
-            "gam":gam
+            "p0_ratio": p0_ratio,
+            "r0_ratio": r0_ratio,
+            "T0_ratio": T0_ratio,
+            "a0_ratio": a0_ratio,
+            "area_ratio": area_ratio,
+            "M": M,
+            "gam": gam
         }
 
     elif (ac.is1known(p0_ratio, [M, r0_ratio, T0_ratio, a0_ratio, area_ratio])):
@@ -149,11 +152,12 @@ def lookup_table(
                                is_supersonic=is_supersonic)
         return lookup_table(M=M, gam=gam)
 
-    else: # over or under-specified
+    else:  # over or under-specified
         raise ValueError("Specify Mach number, p0/p, rho0/rho, "
                          "T0/T, a0/a, or A/A*.")
 
-def total_temperature(M=1.0, T=1.0, gam:float=1.4):
+
+def total_temperature(M=1.0, T=1.0, gam: float = 1.4):
     """
     Computes the stagnation or total temperature T0.
 
@@ -180,7 +184,8 @@ def total_temperature(M=1.0, T=1.0, gam:float=1.4):
     """
     return T*(1 + (gam-1)/2 * M*M)
 
-def mach_from_temperature_ratio(T0_ratio, gam:float=1.4):
+
+def mach_from_temperature_ratio(T0_ratio, gam: float = 1.4):
     """
     Computes the Mach number from total temperature ratio T0/T.
 
@@ -197,10 +202,11 @@ def mach_from_temperature_ratio(T0_ratio, gam:float=1.4):
     -------
     Any
         Mach number
-    """    
-    return ( 2/(gam-1) * (T0_ratio - 1) )**0.5
+    """
+    return (2/(gam-1) * (T0_ratio - 1))**0.5
 
-def total_pressure(M=1.0, p=1.0, gam:float=1.4):
+
+def total_pressure(M=1.0, p=1.0, gam: float = 1.4):
     """
     Computes the stagnation or total pressure p0.
 
@@ -224,10 +230,11 @@ def total_pressure(M=1.0, p=1.0, gam:float=1.4):
         p0/p: stagnation pressure ratio if `p`==1.0 AND
 
        p0/p*: stagnation pressure ratio (sonic) if `p`==1.0 and `M`==1.0
-    """    
+    """
     return p*total_temperature(M=M, T=1.0, gam=gam)**(gam/(gam-1))
 
-def total_density(M=1.0, rho=1.0, gam:float=1.4):
+
+def total_density(M=1.0, rho=1.0, gam: float = 1.4):
     """
     Computes the stagnation or total density rho0.
 
@@ -254,7 +261,8 @@ def total_density(M=1.0, rho=1.0, gam:float=1.4):
     """
     return rho*total_temperature(M=M, T=1.0, gam=gam)**(1/(gam-1))
 
-def total_speed_sound(M=1.0, a=1.0, gam:float=1.4):
+
+def total_speed_sound(M=1.0, a=1.0, gam: float = 1.4):
     """
     Computes the stagnation or total speed of sound a0.
 
@@ -281,8 +289,9 @@ def total_speed_sound(M=1.0, a=1.0, gam:float=1.4):
     """
     return a*(total_temperature(M=M, T=1.0, gam=gam))**0.5
 
-def area_mach_relation(area_ratio:float=None, M:float=None, gam:float=1.4,
-                       is_supersonic:bool=True):
+
+def area_mach_relation(area_ratio: float = None, M: float = None, gam: float = 1.4,
+                       is_supersonic: bool = True):
     """
     Computes the area ratio A/A* or Mach number in an isentropic process.
 
@@ -311,20 +320,20 @@ def area_mach_relation(area_ratio:float=None, M:float=None, gam:float=1.4,
     ------
     ValueError
         Both A/A* and M specified, or neither are specified
-    """    
+    """
     guess_mach = True if M is None and area_ratio is not None else False
-    func = lambda _m: (
-        _m**-2 * ( 
+
+    def func(_m): return (
+        _m**-2 * (
             2/(gam+1)*total_temperature(M=_m, T=1.0, gam=gam)
         )**((gam+1)/(gam-1))
     )
     if guess_mach:
         mach_guess = 2.0 if is_supersonic else 0.2
-        compute_mach = lambda _m, _Aratio: (_Aratio**2 - func(_m))
+        def compute_mach(_m, _Aratio): return (_Aratio**2 - func(_m))
         return fsolve(compute_mach, mach_guess, area_ratio)[0]
     elif not guess_mach:
         return func(M)**0.5
 
     else:
         raise ValueError("Specify either A/A* or M, not both.")
-    

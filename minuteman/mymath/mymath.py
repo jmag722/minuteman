@@ -1,6 +1,7 @@
 import sympy
 
-def solve_algebraic_eqn(unknown:str, knowns:dict, eq:str):
+
+def solve_algebraic_eqn(unknown: str, knowns: dict, eq: str):
     """
     Solve algebraic equation with sympy.solve
 
@@ -17,7 +18,7 @@ def solve_algebraic_eqn(unknown:str, knowns:dict, eq:str):
     -------
     Any
         Value of desired variable.
-    """        
+    """
     symbols_lst = sympy.symbols(list(knowns))
     symbols_lst
     unknown = sympy.parse_expr(unknown)
