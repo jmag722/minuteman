@@ -38,3 +38,32 @@ def test_taylor_maccoll_from_shock(M1, shock_angle, gam, theta_c, mach_c,
     mach = cf.mach_from_nondimensional_velocity(v, gam=gam)
     assert theta[-1] == pytest.approx(theta_c, rel=rtol_theta)
     assert mach[-1] == pytest.approx(mach_c, rel=rtol_mach)
+
+
+@pytest.mark.parametrize("M1, cone_angle, gam, theta_shock, mach_c, rtol_theta, rtol_mach", [
+    (5.0, 10.0, 1.4, 15.608275334274234, 4.292164349604961, None, None),  # SAEMiller
+    (10.0, 2.5, 1.4, np.degrees(.10660326), 9.5046400, None, None),  # Sims
+    (10.0, 20.0, 1.4, np.degrees(.39698293), 4.6723717, None, 1e-5),  # Sims
+])
+def test_taylor_maccoll_from_cone(M1, cone_angle, gam, theta_shock, mach_c,
+                                  rtol_theta, rtol_mach):
+    """Check Taylor-Maccoll relations with input cone angle.
+
+    Unit tests taken from the following sources:
+
+    Sims, Joseph L. "Tables for supersonic flow around right circular cones at
+        zero angle of attack." (1964).
+    Fluid Dynamics Flow Calculators - Prof. S. A. E. Miller:
+        https://saemiller.com/flow/SAEMiller_Comp_Calc.html
+    Compressible Aerodynamics Calculator v3.2:
+        https://devenport.aoe.vt.edu/aoe3114/calc.html
+
+    I get better agreement with SAEMiller calculator than VT calculator.
+    """
+    theta, vr, vtheta = cf.taylor_maccoll_from_cone(
+        M1=M1, cone_angle=np.radians(cone_angle), gam=gam)
+    theta = np.degrees(theta)
+    v = cf.nondimensional_velocity_from_components(vr, vtheta)
+    mach = cf.mach_from_nondimensional_velocity(v, gam=gam)
+    assert theta[0] == pytest.approx(theta_shock, rel=rtol_theta)
+    assert mach[-1] == pytest.approx(mach_c, rel=rtol_mach)

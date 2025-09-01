@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
+from scipy.optimize import fsolve
 import minuteman.compressible.oblique_shock as obs
 
 
@@ -132,70 +133,16 @@ def taylor_maccoll_from_cone(M1: float, cone_angle: float, gam: float = 1.4):
     initial_shock_guess = obs.shock_angle(
         M1=M1, theta=cone_angle, gam=gam)
 
-    print(f"Freestream Mach at gamma: {M1} at gam={gam}")
+    def objective(shock_angle, M1, cone_angle, gam):
+        theta, _, _ = taylor_maccoll_from_shock(
+            M1=M1, shock_angle=shock_angle[0], gam=gam)
+        return np.abs(theta[-1] - cone_angle)
 
-    solution = _tay_mac_cone(
-        shock_angle_guess=initial_shock_guess,
-        cone_angle=cone_angle,
-        M1=M1,
-        gam=gam)
-    vr, vtheta = solution.y
-    theta = solution.t
-    sol_vprime = (vr**2 + vtheta**2)**0.5
-    sol_mach = ((sol_vprime**-2 - 1) * (gam-1)/2) ** -0.5
-
-    print(f"Mach at surface: {sol_mach[-1]}")
-    print(f"Shock Angle: {np.degrees(theta[0])} deg")
-    print(
-        f"Deflection Angle: {np.degrees(obs.deflection_angle(M1=M1, beta=theta[0], gam=gam))} deg")
-    print(f"Cone angle = {np.degrees(theta[-1])} deg")
-    print(f"Vtheta at cone = {np.degrees(vtheta[-1])}")
-
-
-def _tay_mac_cone(shock_angle_guess: float, M1: float,
-                  cone_angle: float, gam: float, x1=None, x2=None, fx1=None, fx2=None,
-                  epsilon: float = 1e-15, ntheta: int = 100):
-    mn1 = obs.mach1_normal(M1=M1, beta=shock_angle_guess)
-    mn2 = obs.mach2_normal(Mn1=mn1, gam=gam)
-    deflection_angle = obs.deflection_angle(
-        M1=M1, beta=shock_angle_guess, gam=gam)
-    m2 = obs.mach2(Mn2=mn2, beta=shock_angle_guess, theta=deflection_angle)
-    v_shock = nondimensional_velocity_from_mach(M=m2, gam=gam)
-    vtheta_shock = nondimensional_velocity_azimuth(velocity_nondim=v_shock, shock_angle=shock_angle_guess,
-                                                   deflection_angle=deflection_angle)
-    vr_shock = nondimensional_velocity_radial(velocity_nondim=v_shock, shock_angle=shock_angle_guess,
-                                              deflection_angle=deflection_angle)
-
-    theta_arr = np.linspace(shock_angle_guess, cone_angle, ntheta)
-    solution = solve_ivp(fun=taylor_maccoll_odes, t_span=(
-        shock_angle_guess, cone_angle), y0=(vr_shock, vtheta_shock), args=(gam,), t_eval=theta_arr)
-
-    v_r, v_theta = solution.y
-
-    if fx1 is None or fx2 is None:
-        cone_angle_new = (cone_angle - v_theta[-1] /
-                          taylor_maccoll_odes(azimuth_angles=theta_arr[-1],
-                                              nondim_velocity_components=(
-                                              v_r[-1], v_theta[-1]),
-                                              gam=gam)[-1])
-        # we know the actual cone angle (it's cone_angle), so adjust the new shock
-        # angle by the amount needed to get vtheta(theta_c)=0
-        shock_angle_new = shock_angle_guess - (cone_angle_new - cone_angle)
-        shock_angle_new = np.maximum(shock_angle_new, obs.mach_angle(M=M1))
-    else:
-        shock_angle_new = x1 - fx1 * (x1 - x2) / (fx1 - fx2)
-        shock_angle_new = np.maximum(shock_angle_new, obs.mach_angle(M=M1))
-    print(f"Vtheta at surf: {v_theta[-1]}")
-    print(f"Cone angle: {np.degrees(shock_angle_new)}")
-    fx2 = fx1
-    fx1 = v_theta[-1]
-    x2 = x1
-    x1 = shock_angle_guess
-    if np.abs(v_theta[-1]) < epsilon:
-        return solution
-    else:
-        return _tay_mac_cone(shock_angle_guess=shock_angle_new, M1=M1,
-                             cone_angle=cone_angle, gam=gam, x1=x1, x2=x2, fx1=fx1, fx2=fx2)
+    actual_shock_angle = fsolve(
+        objective, x0=[initial_shock_guess], args=(M1, cone_angle, gam),
+        xtol=1e-9)[0]
+    return taylor_maccoll_from_shock(
+        M1=M1, shock_angle=actual_shock_angle, gam=gam)
 
 
 def taylor_maccoll_from_shock(M1: float, shock_angle: float, gam: float = 1.4):
@@ -208,6 +155,10 @@ def taylor_maccoll_from_shock(M1: float, shock_angle: float, gam: float = 1.4):
         M1 (float): freestream Mach number [-]
         shock_angle (float): oblique shock angle [radians]
         gam (float, optional): ratio of specific heats. Defaults to 1.4.
+
+    Returns:
+        tuple: theta, radial velocity, azimuthal velocity
+
     """
     obs.check_shock_angle(beta=shock_angle, M=M1)
     mn1 = obs.mach1_normal(M1=M1, beta=shock_angle)
@@ -215,9 +166,11 @@ def taylor_maccoll_from_shock(M1: float, shock_angle: float, gam: float = 1.4):
     deflection_angle = obs.deflection_angle(M1=M1, beta=shock_angle, gam=gam)
     m2 = obs.mach2(Mn2=mn2, beta=shock_angle, theta=deflection_angle)
     v_shock = nondimensional_velocity_from_mach(M=m2, gam=gam)
-    vr_shock = nondimensional_velocity_radial(velocity_nondim=v_shock, shock_angle=shock_angle,
+    vr_shock = nondimensional_velocity_radial(velocity_nondim=v_shock,
+                                              shock_angle=shock_angle,
                                               deflection_angle=deflection_angle)
-    vtheta_shock = nondimensional_velocity_azimuth(velocity_nondim=v_shock, shock_angle=shock_angle,
+    vtheta_shock = nondimensional_velocity_azimuth(velocity_nondim=v_shock,
+                                                   shock_angle=shock_angle,
                                                    deflection_angle=deflection_angle)
     if vtheta_shock >= 0.0:
         raise ValueError("Angular velocity at the shock must be negative!")
@@ -235,4 +188,4 @@ def taylor_maccoll_from_shock(M1: float, shock_angle: float, gam: float = 1.4):
 
     vr, vtheta = solution.y
     theta = solution.t
-    return (theta, vr, vtheta)
+    return theta, vr, vtheta
