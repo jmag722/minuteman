@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from scipy.optimize import fsolve
+from scipy.optimize import brentq
 import minuteman.compressible.oblique_shock as obs
 
 
@@ -130,17 +130,21 @@ def taylor_maccoll_from_cone(M1: float, cone_angle: float, gam: float = 1.4):
         shock_angle (float): oblique shock angle [radians]
         gam (float, optional): ratio of specific heats. Defaults to 1.4.
     """
-    initial_shock_guess = obs.shock_angle(
-        M1=M1, theta=cone_angle, gam=gam)
+    max_defl_ang = obs.max_deflection_angle(M1=M1, gam=gam)
+    if cone_angle >= max_defl_ang:
+        shock_angle_wedge = obs.sonic_shock_angle(M1=M1, gam=gam)
+    else:
+        shock_angle_wedge = obs.shock_angle(
+            M1=M1, theta=cone_angle, gam=gam)
 
-    def objective(shock_angle, M1, cone_angle, gam):
+    def func(shock_angle, M1, cone_angle, gam):
         theta, _, _ = taylor_maccoll_from_shock(
-            M1=M1, shock_angle=shock_angle[0], gam=gam)
-        return np.abs(theta[-1] - cone_angle)
-
-    actual_shock_angle = fsolve(
-        objective, x0=[initial_shock_guess], args=(M1, cone_angle, gam),
-        xtol=1e-9)[0]
+            M1=M1, shock_angle=shock_angle, gam=gam)
+        return theta[-1] - cone_angle
+    # multiply by 1+small decimal to avoid numerical issues with edge case
+    actual_shock_angle = brentq(
+        func, a=obs.mach_angle(M=M1)*1.00001, b=shock_angle_wedge,
+        args=(M1, cone_angle, gam))
     return taylor_maccoll_from_shock(
         M1=M1, shock_angle=actual_shock_angle, gam=gam)
 

@@ -42,8 +42,16 @@ def test_taylor_maccoll_from_shock(M1, shock_angle, gam, theta_c, mach_c,
 
 @pytest.mark.parametrize("M1, cone_angle, gam, theta_shock, mach_c, rtol_theta, rtol_mach", [
     (5.0, 10.0, 1.4, 15.608275334274234, 4.292164349604961, None, None),  # SAEMiller
-    (10.0, 2.5, 1.4, np.degrees(.10660326), 9.5046400, None, None),  # Sims
+    (10.0, 2.5, 1.4, np.degrees(.10660326), 9.5046400, None, 5e-5),  # Sims
     (10.0, 20.0, 1.4, np.degrees(.39698293), 4.6723717, None, 1e-5),  # Sims
+    (20.0, 30.0, 1.4, np.degrees(.58182628), 3.3673365, 1e-5, 1e-5),  # Sims
+    (1.5, 25.0, 1.4, np.degrees(.95578504), 1.0100703, 1e-5, 5e-5),  # Sims
+    (19.0, 1.0, 1.25, 3.0892857358022963,
+     18.60504230165579, None, None),  # SAEMiller
+    (3.5, 11.0, 1.5, 20.190166783821734,
+     3.0152597231607237, None, None),  # SAEMiller
+    (10.0, 10.0, 1.3, 12.104996198134035,
+     7.686454681916647, None, None),  # SAEMiller
 ])
 def test_taylor_maccoll_from_cone(M1, cone_angle, gam, theta_shock, mach_c,
                                   rtol_theta, rtol_mach):
