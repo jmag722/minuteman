@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Python library for solving engineering problems."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 keywords = [
     "minuteman", "python", "physics", "physics", "science", "engineering",
