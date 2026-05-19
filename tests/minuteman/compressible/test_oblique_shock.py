@@ -138,9 +138,9 @@ def test_max_shock_deflection_angle(M1, gam):
         M1=M1, theta=theta_max - 1e-16, gam=gam)
     assert actual == pytest.approx(expected)
 
-    # check that shock_angle errors out just above max (numerical issues)
+    # check that shock_angle errors out just above max
     with pytest.raises(ValueError):
-        obs.shock_angle(M1=M1, theta=theta_max+1e-16, gam=gam)
+        obs.shock_angle(M1=M1, theta=theta_max+1e-10, gam=gam)
 
 
 @pytest.mark.parametrize("M1, gam, expected", [

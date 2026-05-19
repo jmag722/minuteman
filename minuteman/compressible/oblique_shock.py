@@ -191,7 +191,7 @@ def shock_angle(M1: float, theta: float, is_strong_shock: bool = False,
 
     xi = ((M1**2-1)**3 - 9 * (1 + (gam-1) / 2 * M1**2)
           * (1 + (gam-1) / 2*M1**2 + (gam+1) / 4 * M1**4) * (np.tan(theta))**2) / lam**3
-    if np.abs(xi) >= 1.0:
+    if np.abs(xi) > 1.0:
         raise ValueError("No solution, detached shock")
 
     return np.atan(
