@@ -2,6 +2,26 @@ import pytest
 import minuteman.thermodynamics.caloric_perfect as calp
 
 
+def test_boltzmann():
+    assert calp.boltzmann_imperial == pytest.approx(5.6573e-24)
+
+
+def test_universal_gas_constant():
+    assert calp.universal_gas_constant_si == pytest.approx(8314.462)
+    assert calp.universal_gas_constant_imperial_lbm == pytest.approx(
+        1545.35, rel=1e-5)
+    assert calp.universal_gas_constant_imperial_slug == pytest.approx(
+        49720.0, rel=1e-5)
+
+
+def test_gas_constant_air():
+    assert calp.gas_constant_air_si == pytest.approx(287.055)
+    assert calp.gas_constant_air_imperial_lbm == pytest.approx(
+        53.353, rel=1e-5)
+    assert calp.gas_constant_air_imperial_slug == pytest.approx(
+        1716.57, rel=1e-5)
+
+
 class TestEntropy:
     def test_entropy_PT(self):
         actual = calp.entropy(t21=2, p21=1.5, cp=1.3, R=287)

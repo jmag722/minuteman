@@ -11,18 +11,52 @@ important, the gas is no longer calorically perfect.
 import numpy as np
 import scipy.constants as scc
 
-NA = scc.Avogadro        # count/mol, Avogadro's number
-kB_SI = scc.Boltzmann         # J/K, Boltzmann constant
-kB_IMP = 5.657302466e-24  # ft-lb/R, Boltzmann constant
-RU_SI = scc.R     # J/K/kg-mol, Universal gas constant (kB*NA)
-RU_IMP_LBM = 1545.349     # ft-lbf/R/lbm-mol, Universal gas constant
-RU_IMP_SLUG = 49720.0       # ft-lbf/R/slug-mol, Universal gas constant
-R_AIR_SI = 287.058           # J/kg/K, Specific gas constant for dry air
-R_AIR_IMP_LBM = 53.3533   # ft-lbf/lbm/R, Specific gas constant for dry air
-R_AIR_IMP_SLUG = 1716.49  # ft-lbf/slug/R, Specific gas constant for dry air
+avogadro = scc.Avogadro
+"""Avogadro constant [#/mol]"""
+
+boltzmann_si = scc.Boltzmann  # J/K, Boltzmann constant
+"""Boltzmann constant in SI units [J/K]"""
+
+boltzmann_imperial = (
+    scc.Boltzmann /
+    (scc.foot * scc.pound_force * scc.convert_temperature(1.0, "K", "R"))
+)
+"""Boltzmann constant in Imperial units [ft-lb/R]"""
+
+universal_gas_constant_si = scc.R * scc.kilo
+"""Universal gas constant in SI units [J/(kg-mol K)]"""
+
+universal_gas_constant_imperial_lbm = (
+    scc.R * scc.kilo * scc.pound /
+    (scc.foot * scc.pound_force * scc.convert_temperature(1.0, "K", "R"))
+)
+"""Universal gas constant in Imperial units [ft-lbf/(lbm-mol R)]"""
+
+universal_gas_constant_imperial_slug = (
+    scc.R * scc.kilo * scc.slug /
+    (scc.foot * scc.pound_force * scc.convert_temperature(1.0, "K", "R"))
+)
+"""Universal gas constant in Imperial units [ft-lbf/(slug-mol R)]"""
+
+molecular_weight_air = 28.9647
+"""Molecular weight for dry air [kg/kg-mol]"""
+# https://www.engineeringtoolbox.com/molecular-mass-air-d_679.html
+
+gas_constant_air_si = universal_gas_constant_si / molecular_weight_air
+"""Specific gas constant for air in SI units [J/(kg K)]"""
+
+gas_constant_air_imperial_lbm = (
+    universal_gas_constant_imperial_lbm / molecular_weight_air
+)
+"""Specific gas constant for air in Imperial units [ft-lbf/(lbm R)]"""
+
+gas_constant_air_imperial_slug = (
+    universal_gas_constant_imperial_slug / molecular_weight_air
+)
+"""Specific gas constant for air in Imperial units [ft-lbf/(slug R)]"""
 
 
-def cp(gam: float, R: float = R_AIR_SI):
+def cp(gam: float, R: float = gas_constant_air_si):
     """
     Computes the specific heat at constant pressure.
 
@@ -33,7 +67,7 @@ def cp(gam: float, R: float = R_AIR_SI):
     gam : float
         ratio of specific heats
     R : float, optional
-        specific gas constant, by default R_AIR_SI
+        specific gas constant, by default gas_constant_air_si
 
     Returns
     -------
@@ -43,7 +77,7 @@ def cp(gam: float, R: float = R_AIR_SI):
     return gam*cv(gam, R)
 
 
-def cv(gam: float, R: float = R_AIR_SI):
+def cv(gam: float, R: float = gas_constant_air_si):
     """
     Computes the specific heat at constant volume.
 
@@ -54,7 +88,7 @@ def cv(gam: float, R: float = R_AIR_SI):
     gam : float
         ratio of specific heats
     R : float, optional
-        specific gas constant, by default R_AIR_SI
+        specific gas constant, by default gas_constant_air_si
 
     Returns
     -------
@@ -88,7 +122,7 @@ def entropy_state(p, rho, gam, R):
 
 
 def entropy(t21: float = None, p21: float = None, v21: float = None,
-            cp: float = None, cv: float = None, R: float = R_AIR_SI, s1: float = 0.0):
+            cp: float = None, cv: float = None, R: float = gas_constant_air_si, s1: float = 0.0):
     """
     Computes the change in entropy for a calorically perfect gas.
 
@@ -105,7 +139,7 @@ def entropy(t21: float = None, p21: float = None, v21: float = None,
     cv : float, optional
         specific heat (constant volume), by default None
     R : float, optional
-        specific gas constant, by default R_AIR_SI
+        specific gas constant, by default gas_constant_air_si
     s1 : float, optional
         entropy at state 1, by default 0.0
 

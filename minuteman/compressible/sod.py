@@ -7,7 +7,7 @@ import minuteman.compressible.isentropic as isen
 def shock_tube(t: float,
                p_driver: float, p_driven: float, rho_driver: float, rho_driven: float,
                gam_driver: float = 1.4, gam_driven: float = 1.4,
-               R_driver: float = calp.R_AIR_SI, R_driven: float = calp.R_AIR_SI,
+               R_driver: float = calp.gas_constant_air_si, R_driven: float = calp.gas_constant_air_si,
                left_driver: bool = True, tube_length: float = 20.0, positions: np.ndarray = None):
     """
     Computes Sod shock tube problem. Both gases initially stagnant, with the contact
@@ -30,9 +30,9 @@ def shock_tube(t: float,
     gam_driven : float, optional
         driven gas heat capacity ratio gamma, by default 1.4
     R_driver : float, optional
-        driver gas constant, by default calp.R_AIR_SI
+        driver gas constant, by default calp.gas_constant_air_si
     R_driven : float, optional
-        driven gas constant, by default calp.R_AIR_SI
+        driven gas constant, by default calp.gas_constant_air_si
     left_driver : bool, optional
         driver gas starts on left hand side rather than the right, by default True
     tube_length : float, optional
