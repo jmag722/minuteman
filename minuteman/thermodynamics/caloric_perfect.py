@@ -96,63 +96,6 @@ class IdealGasLawSolver():
         return mm.solve_algebraic_eqn(unknown, knowns, eq)
 
 
-def R(mass=None, cp=None, cv=None, is_molar: bool = True,
-      units: Units = Units.SI):
-    """
-    Compute specific gas constant.
-
-    Valid for perfect (thermally & calorically) gases.
-
-    Parameters
-    ----------
-    mass : Any, optional
-        gas mass (molar or per particle), by default None
-    cp : Any, optional
-        specific heat (constant pressure), by default None
-    cv : Any, optional
-        specific heat (constant volume), by default None
-    is_molar : bool, optional
-        mass is per mol or per particle, by default True
-    units : Units, optional
-        SI or IMPERIAL (slug or lbm), by default Units.SI
-
-    Returns
-    -------
-    Any
-        specific gas constant
-
-    Raises
-    ------
-    ValueError
-        User did not specify mass OR both cp and cv.
-    """
-    if mass is not None:
-        return _spec_gas_const_from_mass(mass, is_molar=is_molar, units=units)
-    elif all(var is not None for var in [cp, cv]):
-        return _spec_gas_const_from_spec_heat(cp=cp, cv=cv)
-    else:
-        raise ValueError("Must specify mass OR both cp and cv.")
-
-
-def _spec_gas_const_from_mass(mass, is_molar: bool, units: Units):
-    if is_molar:  # mass per mol
-        if units == Units.SI:
-            return RU_SI/mass
-        elif units == Units.IMP_LBM:
-            return RU_IMP_LBM/mass
-        else:
-            return RU_IMP_SLUG/mass
-    else:  # mass per particle
-        if units == Units.SI:
-            return kB_SI/mass
-        else:
-            return kB_IMP/mass
-
-
-def _spec_gas_const_from_spec_heat(cp, cv):
-    return cp - cv
-
-
 def gamma(cp, cv):
     """
     Compute the ratio of specific heats.

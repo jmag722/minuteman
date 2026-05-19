@@ -35,12 +35,6 @@ class TestIdealGasLawSolver:
         assert actual == pytest.approx(expected)
 
 
-def test_R():
-    actual = calp.R(53.0, True,)
-    expected = 0.1568766
-    assert actual == pytest.approx(expected)
-
-
 class TestEntropy:
     def test_entropy_PT(self):
         actual = calp.entropy(t21=2, p21=1.5, cp=1.3, R=287)
