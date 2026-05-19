@@ -96,27 +96,6 @@ class IdealGasLawSolver():
         return mm.solve_algebraic_eqn(unknown, knowns, eq)
 
 
-def gamma(cp, cv):
-    """
-    Compute the ratio of specific heats.
-
-    Valid for perfect (thermally & calorically) gases.
-
-    Parameters
-    ----------
-    cp : Any
-        specific heat (constant pressure)
-    cv : Any
-        specific heat (constant volume)
-
-    Returns
-    -------
-    Any
-        ratio of specific heats
-    """
-    return cp/cv
-
-
 def cp(gam: float, R: float = R_AIR_SI):
     """
     Computes the specific heat at constant pressure.
