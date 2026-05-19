@@ -11,6 +11,8 @@ important, the gas is no longer calorically perfect.
 import numpy as np
 import scipy.constants as scc
 
+import minuteman.utils.types as ut
+
 avogadro = scc.Avogadro
 """Avogadro constant [#/mol]"""
 
@@ -56,46 +58,41 @@ gas_constant_air_imperial_slug = (
 """Specific gas constant for air in Imperial units [ft-lbf/(slug R)]"""
 
 
-def cp(gam: float, R: float = gas_constant_air_si):
-    """
-    Computes the specific heat at constant pressure.
+def specific_heat_constant_pressure(
+        specific_heat_ratio: ut.ndarray | float,
+        gas_constant: ut.ndarray | float) -> ut.ndarray | float:
+    """Computes the specific heat at constant pressure.
 
     Valid for perfect (thermally & calorically) gases.
 
-    Parameters
-    ----------
-    gam : float
-        ratio of specific heats
-    R : float, optional
-        specific gas constant, by default gas_constant_air_si
+    Args:
+        specific_heat_ratio (ndarray | float): ratio of specific heats (gamma)
+        gas_constant (ndarray | float): specific gas constant
 
-    Returns
-    -------
-    float
-        specific heat at constant pressure
+    Returns:
+        ndarray | float: specific heat at constant pressure
     """
-    return gam*cv(gam, R)
+    return specific_heat_ratio * specific_heat_constant_volume(
+        specific_heat_ratio=specific_heat_ratio,
+        gas_constant=gas_constant
+    )
 
 
-def cv(gam: float, R: float = gas_constant_air_si):
-    """
-    Computes the specific heat at constant volume.
+def specific_heat_constant_volume(
+        specific_heat_ratio: ut.ndarray | float,
+        gas_constant: ut.ndarray | float) -> ut.ndarray | float:
+    """Computes the specific heat at constant volume.
 
     Valid for perfect (thermally & calorically) gases.
 
-    Parameters
-    ----------
-    gam : float
-        ratio of specific heats
-    R : float, optional
-        specific gas constant, by default gas_constant_air_si
+    Args:
+        specific_heat_ratio (ndarray | float): ratio of specific heats
+        gas_constant (ndarray | float): specific gas constant
 
-    Returns
-    -------
-    float
-        specific heat at constant volume
+    Returns:
+        ndarray | float: specific heat at constant volume
     """
-    return R/(gam-1)
+    return gas_constant / (specific_heat_ratio - 1.0)
 
 
 def entropy_state(p, rho, gam, R):
@@ -118,7 +115,8 @@ def entropy_state(p, rho, gam, R):
     float | ArrayLike
         entropy
     """
-    return np.log(p / rho**gam) * cv(gam=gam, R=R)
+    return np.log(p / rho**gam) * specific_heat_constant_volume(
+        specific_heat_ratio=gam, gas_constant=R)
 
 
 def entropy(t21: float = None, p21: float = None, v21: float = None,
