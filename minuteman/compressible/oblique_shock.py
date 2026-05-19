@@ -181,7 +181,7 @@ def shock_angle(M1: float, theta: float, is_strong_shock: bool = False,
     delta = 0.0 if is_strong_shock else 1.0
     check_deflection_angle(theta)
     # for valid solution (undetached shock), lam must be real value, and
-    #   xi must be within (-1, 1)
+    #   xi must be within [-1, 1]
 
     detachment_crit = ((M1**2 - 1)**2 - 3 * (1 + (gam - 1)/2 * M1**2) *
                        (1 + (gam + 1) / 2 * M1**2) * (np.tan(theta))**2)
@@ -192,7 +192,10 @@ def shock_angle(M1: float, theta: float, is_strong_shock: bool = False,
     xi = ((M1**2-1)**3 - 9 * (1 + (gam-1) / 2 * M1**2)
           * (1 + (gam-1) / 2*M1**2 + (gam+1) / 4 * M1**4) * (np.tan(theta))**2) / lam**3
     if np.abs(xi) > 1.0:
-        raise ValueError("No solution, detached shock")
+        if np.abs(xi) - 1.0 < 1e-9:
+            xi = np.sign(xi) * 1.0
+        else:
+            raise ValueError("No solution, detached shock")
 
     return np.atan(
         (M1**2 - 1 + 2 * lam * np.cos((4 * np.pi * delta + np.acos(xi)) / 3)) / (
