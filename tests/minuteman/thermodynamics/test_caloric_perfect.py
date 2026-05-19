@@ -2,39 +2,6 @@ import pytest
 import minuteman.thermodynamics.caloric_perfect as calp
 
 
-class TestIdealGasLawSolver:
-
-    def test_rho_law(self):
-        igls = calp.IdealGasLawSolver()
-        actual = igls.solve("rho", knowns={"p": 2, "R": 1, "T": 4},)
-        expected = 0.5
-        assert actual == pytest.approx(expected)
-
-    def test_rho_law2(self):
-        igls = calp.IdealGasLawSolver()
-        actual = igls.solve("rho", knowns={"p": 2, "R": 3, "T": 4},)
-        expected = 0.16666666666
-        assert actual == pytest.approx(expected)
-
-    def test_rho_law3(self):
-        igls = calp.IdealGasLawSolver()
-        actual = igls.solve("p", knowns={"n": 3, "T": 4})
-        expected = 1.6567788e-22
-        assert actual == pytest.approx(expected)
-
-    def test_rho_law4(self):
-        igls = calp.IdealGasLawSolver()
-        actual = igls.solve("rho", knowns={"p": 2, "R": 1, "T": 4})
-        expected = 0.5
-        assert actual == pytest.approx(expected)
-
-    def test_rho_law5(self):
-        igls = calp.IdealGasLawSolver()
-        actual = igls.solve("T", knowns={"p": 2, "V": 4, "Nm": 2})
-        expected = 0.48108942
-        assert actual == pytest.approx(expected)
-
-
 class TestEntropy:
     def test_entropy_PT(self):
         actual = calp.entropy(t21=2, p21=1.5, cp=1.3, R=287)

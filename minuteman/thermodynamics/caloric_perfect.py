@@ -8,11 +8,8 @@ temperatures where O2 and N2 vibrational motion/excitation becomes
 important, the gas is no longer calorically perfect.
 """
 
-import enum
 import numpy as np
 import scipy.constants as scc
-
-import minuteman.mymath.mymath as mm
 
 NA = scc.Avogadro        # count/mol, Avogadro's number
 kB_SI = scc.Boltzmann         # J/K, Boltzmann constant
@@ -23,77 +20,6 @@ RU_IMP_SLUG = 49720.0       # ft-lbf/R/slug-mol, Universal gas constant
 R_AIR_SI = 287.058           # J/kg/K, Specific gas constant for dry air
 R_AIR_IMP_LBM = 53.3533   # ft-lbf/lbm/R, Specific gas constant for dry air
 R_AIR_IMP_SLUG = 1716.49  # ft-lbf/slug/R, Specific gas constant for dry air
-
-
-class Units(enum.Enum):
-    SI = 0
-    IMP_LBM = 1
-    IMP_SLUG = 2
-
-
-class IdealGasLawSolver():
-    """
-    Ideal gas equation solver.
-
-    Ideal gas equation valid for perfect (thermally+calorically)
-    and reacting gases.
-    """
-
-    RHO_EQ = "p - rho*R*T"
-    PARTICLE_EQ = "p - n*kB*T"
-    # can't use N for # of moles, it is reserved by sympy
-    VOL_EQ = "p*V - Nm*RU*T"
-
-    def __init__(self):
-        pass
-
-    def solve(self, unknown: str, knowns: dict, units: Units = Units.SI):
-        """
-        Solve the ideal gas equation.
-
-        Parameters
-        ----------
-        unknown : str
-            State variable to compute
-        knowns : dict
-            Key value pairs of known state variables
-        units : Units, optional
-            SI, IMPERIAL (slug or lbm), by default Units.SI
-
-        Returns
-        -------
-        float
-            Desired unknown
-
-        Raises
-        ------
-        ValueError
-            Incorrect or inconsistent inputs specified
-        """
-        varlist = {unknown}
-        varlist.update(list(knowns))
-        if units == Units.SI:
-            ru = RU_SI
-            boltz = kB_SI
-        elif units == Units.IMP_LBM:
-            ru = RU_IMP_LBM
-            boltz = kB_IMP
-        elif units == Units.IMP_SLUG:
-            ru = RU_IMP_SLUG
-            boltz = kB_IMP
-        if all(var in varlist for var in ["p", "rho", "R", "T"]):
-            eq = self.RHO_EQ
-        elif all(var in varlist for var in ["p", "n", "T"]):
-            eq = self.PARTICLE_EQ
-            knowns["kB"] = boltz
-        elif all(var in varlist for var in ["p", "V", "Nm", "T"]):
-            eq = self.VOL_EQ
-            knowns["RU"] = ru
-        else:
-            raise ValueError("Variables {} are not supported for isentropic\
-                relations".format(varlist))
-
-        return mm.solve_algebraic_eqn(unknown, knowns, eq)
 
 
 def cp(gam: float, R: float = R_AIR_SI):
