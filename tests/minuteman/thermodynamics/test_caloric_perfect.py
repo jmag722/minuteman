@@ -67,7 +67,8 @@ class TestIsentropicRelations:
 
 def test_entropy_state():
     assert calp.entropy_state(
-        100, 2.5, gam=1.3, R=200) == pytest.approx(2275.9948230344603)
+        pressure=100, density=2.5, specific_heat_ratio=1.3, gas_constant=200
+    ) == pytest.approx(2275.9948230344603)
 
 
 def test_total_energy():

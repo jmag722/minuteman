@@ -159,7 +159,9 @@ def shock_tube(t: float,
     assign_regions(T_arr, T4, T5, T3, T2, T1)
     assign_regions(gam_arr, gam4, gam4, gam4, gam1, gam1)
     assign_regions(Rgas_arr, R_driver, R_driver, R_driver, R_driven, R_driven)
-    s_arr[:] = calp.entropy_state(p_arr, r_arr, gam_arr, Rgas_arr)
+    s_arr[:] = calp.entropy_state(pressure=p_arr, density=r_arr,
+                                  specific_heat_ratio=gam_arr,
+                                  gas_constant=Rgas_arr)
     m_arr[:] = isen.mach(u_arr, a_arr)
     e_arr[:] = calp.specific_heat_constant_volume(
         specific_heat_ratio=gam_arr, gas_constant=Rgas_arr) * \
