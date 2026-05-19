@@ -129,12 +129,15 @@ def taylor_maccoll_from_cone(M1: float, cone_angle: float, gam: float = 1.4):
         M1 (float): freestream Mach number [-]
         shock_angle (float): oblique shock angle [radians]
         gam (float, optional): ratio of specific heats. Defaults to 1.4.
+
+    Returns:
+        tuple: see taylor_maccoll_from_shock return
     """
     max_defl_ang = obs.max_deflection_angle(M1=M1, gam=gam)
     if cone_angle >= max_defl_ang:
-        shock_angle_wedge = obs.sonic_shock_angle(M1=M1, gam=gam)
+        max_angle = obs.sonic_shock_angle(M1=M1, gam=gam)
     else:
-        shock_angle_wedge = obs.shock_angle(
+        max_angle = obs.shock_angle(
             M1=M1, theta=cone_angle, gam=gam)
 
     def func(shock_angle, M1, cone_angle, gam):
@@ -143,8 +146,36 @@ def taylor_maccoll_from_cone(M1: float, cone_angle: float, gam: float = 1.4):
         return theta[-1] - cone_angle
     # multiply by 1+small decimal to avoid numerical issues with edge case
     actual_shock_angle = brentq(
-        func, a=obs.mach_angle(M=M1)*1.00001, b=shock_angle_wedge,
+        func, a=obs.mach_angle(M=M1)*1.00001, b=max_angle,
         args=(M1, cone_angle, gam))
+    return taylor_maccoll_from_shock(
+        M1=M1, shock_angle=actual_shock_angle, gam=gam)
+
+
+def taylor_maccoll_from_surface_mach(M1: float, cone_mach: float, gam: float = 1.4):
+    """_summary_
+
+    Args:
+        M1 (float): freestream Mach number [-]
+        cone_mach (float): Mach number at the cone surface [-]
+        gam (float, optional): ratio of specific heats. Defaults to 1.4.
+
+    Returns:
+        tuple: see taylor_maccoll_from_shock return
+    """
+    if cone_mach > M1:
+        raise ValueError("Surface mach number should be less than freestream")
+    max_angle = obs.sonic_shock_angle(M1=M1, gam=gam)
+
+    def func(shock_angle, M1, cone_mach, gam):
+        _, vr, vtheta = taylor_maccoll_from_shock(
+            M1=M1, shock_angle=shock_angle, gam=gam)
+        vprime = nondimensional_velocity_from_components(vr, vtheta)
+        mach = mach_from_nondimensional_velocity(vprime, gam=gam)
+        return mach[-1] - cone_mach
+    actual_shock_angle = brentq(
+        func, a=obs.mach_angle(M=M1)*1.00001, b=max_angle,
+        args=(M1, cone_mach, gam))
     return taylor_maccoll_from_shock(
         M1=M1, shock_angle=actual_shock_angle, gam=gam)
 

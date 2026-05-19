@@ -75,3 +75,22 @@ def test_taylor_maccoll_from_cone(M1, cone_angle, gam, theta_shock, mach_c,
     mach = cf.mach_from_nondimensional_velocity(v, gam=gam)
     assert theta[0] == pytest.approx(theta_shock, rel=rtol_theta)
     assert mach[-1] == pytest.approx(mach_c, rel=rtol_mach)
+
+
+@pytest.mark.parametrize("M1, cone_mach, gam, theta_shock, theta_cone, rtol_shock, rtol_cone", [
+    (5.0, 3.0, 1.4, 29.3616760, 24.2337037, 1e-3, 1e-3),  # VT
+    (20.0, 7.0145241, 1.4, np.degrees(.29125730), 15.0, 1e-5, 1e-5),  # Sims
+    (10.0, 3.1391940, 1.4, np.degrees(0.58984179), 30.0, 1e-5, 1e-5),  # Sims
+    (3.0, 2.9627600, 1.4, np.degrees(0.34011057), 2.5, 1e-5, 1e-3),  # Sims
+    (15.0, 5.0, 1.3,  25.8012147, 23.6526230, 1e-3, 1e-3),  # VT
+    (15.0, 1.4, 1.3,  61.5824290, 54.3345129, 1e-3, 1e-3),  # VT
+])
+def test_taylor_maccoll_from_surface_mach(M1, cone_mach, gam, theta_shock, theta_cone,
+                                          rtol_shock, rtol_cone):
+    theta, vr, vtheta = cf.taylor_maccoll_from_surface_mach(
+        M1=M1, cone_mach=cone_mach, gam=gam)
+    theta = np.degrees(theta)
+    v = cf.nondimensional_velocity_from_components(vr, vtheta)
+    _ = cf.mach_from_nondimensional_velocity(v, gam=gam)
+    assert theta[0] == pytest.approx(theta_shock, rel=rtol_shock)
+    assert theta[-1] == pytest.approx(theta_cone, rel=rtol_cone)
