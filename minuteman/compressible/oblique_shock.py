@@ -154,8 +154,8 @@ def deflection_angle(M1: float, beta: float, gam: float = 1.4):
     """
     check_shock_angle(beta, M1)
     return np.atan(
-        2/np.tan(beta) * (((M1 * np.sin(beta)) ** 2 - 1) /
-                          (M1**2 * (gam + np.cos(2 * beta)) + 2))
+        2.0 / np.tan(beta) * (((M1 * np.sin(beta)) ** 2 - 1.0) /
+                              (M1**2 * (gam + np.cos(2 * beta)) + 2.0))
     )
 
 
