@@ -72,11 +72,10 @@ def specific_heat_constant_pressure(
     Returns:
         ndarray: specific heat at constant pressure
     """
-    rgas = np.atleast_1d(gas_constant)
     gam = np.atleast_1d(specific_heat_ratio)
     return gam * specific_heat_constant_volume(
         specific_heat_ratio=gam,
-        gas_constant=rgas,
+        gas_constant=gas_constant,
     )
 
 
@@ -94,9 +93,8 @@ def specific_heat_constant_volume(
     Returns:
         ndarray: specific heat at constant volume
     """
-    rgas = np.atleast_1d(gas_constant)
     gam = np.atleast_1d(specific_heat_ratio)
-    return rgas / (gam - 1.0)
+    return gas_constant / (gam - 1.0)
 
 
 def entropy_state(pressure: ut.ndarray | float,
@@ -114,12 +112,9 @@ def entropy_state(pressure: ut.ndarray | float,
     Returns:
         ut.ndarray: entropy
     """
-    p = np.atleast_1d(pressure)
-    rho = np.atleast_1d(density)
     gam = np.atleast_1d(specific_heat_ratio)
-    rgas = np.atleast_1d(gas_constant)
-    return np.log(p / rho**gam) * specific_heat_constant_volume(
-        specific_heat_ratio=gam, gas_constant=rgas)
+    return np.log(pressure / density**gam) * specific_heat_constant_volume(
+        specific_heat_ratio=gam, gas_constant=gas_constant)
 
 
 def entropy(t21: float = None, p21: float = None, v21: float = None,
