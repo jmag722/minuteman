@@ -8,6 +8,8 @@ temperatures where O2 and N2 vibrational motion/excitation becomes
 important, the gas is no longer calorically perfect.
 """
 
+from dataclasses import dataclass
+
 import numpy as np
 import scipy.constants as scc
 
@@ -190,53 +192,121 @@ def entropy_change_pv(
     )
 
 
-def isentropic_process(p21: float = None, t21: float = None, r21: float = None,
-                       a21: float = None, gam: float = 1.4):
+@dataclass
+class IsentropicProcessResult:
+    """The result of an isentropic process, containing the ratios
+    between states 1 (initial) and 2 (final)
     """
-    Returns the state of an isentropic process.
+    temperature_ratio: ut.ndarray
+    """Temperature ratio, T2/T1"""
+    pressure_ratio: ut.ndarray
+    """Pressure ratio, p2/p1"""
+    density_ratio: ut.ndarray
+    """Density ratio, rho2/rho1"""
+    speed_of_sound_ratio: ut.ndarray
+    """Speed of sound ratio, a2/a1"""
+    specific_heat_ratio: ut.ndarray
+    """Ratio of specific heats, gamma"""
 
-    Parameters
-    ----------
-    p21 : float, optional
-        pressure ratio p2/p1, by default None
-    t21 : float, optional
-        temperature ratio T2/T1, by default None
-    r21 : float, optional
-        density ratio rho2/rho1, by default None
-    a21 : float, optional
-        speed of sound ratio a2/a1, by default None
-    gam : float, optional
-        ratio of specific heats gam, by default 1.4
 
-    Returns
-    -------
-    dict
-        table of p2/p1, t2/t1, rho2/rho1, a2/a1, and gam
+def isentropic_process_from_temperature(
+        temperature_ratio: ut.ndarray | float,
+        specific_heat_ratio: ut.ndarray | float) -> IsentropicProcessResult:
+    """Compute the state change of an isentropic process from the change
+    in temperature.
 
-    Raises
-    ------
-    ValueError
-        Incorrect or insufficient inputs supplied.
+    Args:
+        temperature_ratio (ut.ndarray | float): temperature ratio, T2/T1
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicProcessResult: complete state change of the isentropic
+            process
     """
-    if p21 is not None:
-        t21 = p21**((gam-1)/gam)
-        r21 = p21**(1/gam)
-        a21 = p21**((gam-1)/gam/2)
-    elif t21 is not None:
-        p21 = t21**(gam/(gam-1))
-        r21 = t21**(1/(gam-1))
-        a21 = t21**0.5
-    elif r21 is not None:
-        p21 = r21**gam
-        t21 = r21**(gam-1)
-        a21 = r21**((gam-1)/2)
-    elif a21 is not None:
-        p21 = a21**(2*gam/(gam-1))
-        t21 = a21*a21
-        r21 = a21**(2/(gam-1))
-    else:
-        raise ValueError("Supply either p2/p1, T2/T1, rho2/rho1, or a2/a1.")
-    return {"p21": p21, "t21": t21, "r21": r21, "a21": a21, "gam": gam}
+    t21 = np.atleast_1d(temperature_ratio)
+    gam = specific_heat_ratio
+    return IsentropicProcessResult(
+        temperature_ratio=t21,
+        pressure_ratio=t21**(gam / (gam - 1)),
+        density_ratio=t21**(1 / (gam - 1)),
+        speed_of_sound_ratio=t21**0.5,
+        specific_heat_ratio=gam
+    )
+
+
+def isentropic_process_from_pressure(
+        pressure_ratio: ut.ndarray | float,
+        specific_heat_ratio: ut.ndarray | float) -> IsentropicProcessResult:
+    """Compute the state change of an isentropic process from the change
+    in pressure.
+
+    Args:
+        pressure_ratio (ut.ndarray | float): pressure ratio, p2/p1
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicProcessResult: complete state change of the isentropic
+            process
+    """
+    p21 = np.atleast_1d(pressure_ratio)
+    gam = specific_heat_ratio
+    return IsentropicProcessResult(
+        temperature_ratio=p21**((gam - 1) / gam),
+        pressure_ratio=p21,
+        density_ratio=p21**(1 / gam),
+        speed_of_sound_ratio=p21**((gam - 1) / (2 * gam)),
+        specific_heat_ratio=gam
+    )
+
+
+def isentropic_process_from_density(
+        density_ratio: ut.ndarray | float,
+        specific_heat_ratio: ut.ndarray | float) -> IsentropicProcessResult:
+    """Compute the state change of an isentropic process from the change
+    in density.
+
+    Args:
+        density_ratio (ut.ndarray | float): density ratio, rho2/rho1
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicProcessResult: complete state change of the isentropic
+            process
+    """
+    r21 = np.atleast_1d(density_ratio)
+    gam = specific_heat_ratio
+    return IsentropicProcessResult(
+        temperature_ratio=r21**(gam - 1),
+        pressure_ratio=r21**gam,
+        density_ratio=r21,
+        speed_of_sound_ratio=r21**((gam - 1) / 2),
+        specific_heat_ratio=gam
+    )
+
+
+def isentropic_process_from_speed_of_sound(
+        speed_of_sound_ratio: ut.ndarray | float,
+        specific_heat_ratio: ut.ndarray | float) -> IsentropicProcessResult:
+    """Compute the state change of an isentropic process from the change
+    in speed of sound.
+
+    Args:
+        speed_of_sound_ratio (ut.ndarray | float): speed of sound ratio, a2/a1
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicProcessResult: complete state change of the isentropic
+            process
+    """
+    a21 = np.atleast_1d(speed_of_sound_ratio)
+    gam = specific_heat_ratio
+    return IsentropicProcessResult(
+        temperature_ratio=a21**2,
+        pressure_ratio=a21**(2 * gam / (gam - 1)),
+        density_ratio=a21**(2 / (gam - 1)),
+        speed_of_sound_ratio=a21,
+        specific_heat_ratio=gam
+    )
 
 
 def total_energy(pressure: ut.ndarray | float,

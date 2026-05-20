@@ -92,11 +92,12 @@ def shock_tube(t: float,
     W = moving_shock_speed(p21=p21, a1=a1, gam=gam1)
 
     p34 = p21/p41  # p2/p1 = p3/p1
-    expansion34 = calp.isentropic_process(p21=p34, gam=gam4)
+    expansion34 = calp.isentropic_process_from_pressure(
+        pressure_ratio=p34, specific_heat_ratio=gam4)
     p3 = p34*p4
-    r3 = expansion34["r21"]*r4
-    a3 = expansion34["a21"]*a4
-    T3 = expansion34["t21"]*T4
+    r3 = expansion34.density_ratio[0]*r4
+    a3 = expansion34.speed_of_sound_ratio[0]*a4
+    T3 = expansion34.temperature_ratio[0]*T4
     u3 = u2
 
     # critical positions
@@ -147,10 +148,11 @@ def shock_tube(t: float,
 
     u5 = velocity_expansion_fan(a4, x_arr[region5], t, gam4)
     a5 = sound_speed_expansion_fan(a4, u5, gam4)
-    expansion54 = calp.isentropic_process(a21=a5/a4, gam=gam4)
-    p5 = expansion54["p21"] * p4
-    r5 = expansion54["r21"] * r4
-    T5 = expansion54["t21"] * T4
+    expansion54 = calp.isentropic_process_from_speed_of_sound(
+        speed_of_sound_ratio=a5/a4, specific_heat_ratio=gam4)
+    p5 = expansion54.pressure_ratio[0] * p4
+    r5 = expansion54.density_ratio[0] * r4
+    T5 = expansion54.temperature_ratio[0] * T4
 
     assign_regions(u_arr, u4, u5, u3, u2, u1)
     assign_regions(a_arr, a4, a5, a3, a2, a1)

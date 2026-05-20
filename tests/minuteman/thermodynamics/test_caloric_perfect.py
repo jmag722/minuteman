@@ -57,30 +57,92 @@ def test_entropy_pv():
     np.testing.assert_allclose(actual, expected)
 
 
-class TestIsentropicRelations:
-    def test_p(self, check_dicts):
-        actual = calp.isentropic_process(p21=1.2)
-        expected = {"p21": 1.2, "t21": 1.053472524, "r21": 1.139089983,
-                    "a21": 1.026388096, "gam": 1.4}
-        check_dicts(actual, expected)
+def test_isentropic_process_from_temperature():
+    actual = calp.isentropic_process_from_temperature(
+        temperature_ratio=0.7, specific_heat_ratio=1.35)
+    expected = calp.IsentropicProcessResult(
+        temperature_ratio=np.array([0.7]),
+        pressure_ratio=np.array([0.2526509942]),
+        density_ratio=np.array([0.3609299917]),
+        speed_of_sound_ratio=np.array([0.8366600265]),
+        specific_heat_ratio=np.array([1.35])
+    )
+    np.testing.assert_allclose(actual.temperature_ratio,
+                               expected.temperature_ratio, rtol=0.0)
+    np.testing.assert_allclose(actual.pressure_ratio,
+                               expected.pressure_ratio)
+    np.testing.assert_allclose(actual.density_ratio,
+                               expected.density_ratio)
+    np.testing.assert_allclose(actual.speed_of_sound_ratio,
+                               expected.speed_of_sound_ratio)
+    np.testing.assert_allclose(actual.specific_heat_ratio,
+                               expected.specific_heat_ratio, rtol=0.0)
 
-    def test_a(self, check_dicts):
-        actual = calp.isentropic_process(a21=1.125)
-        expected = {"p21": 2.280697346, "r21": 1.802032471, "t21": 1.265625,
-                    "a21": 1.125, "gam": 1.4}
-        check_dicts(actual, expected)
 
-    def test_r(self, check_dicts):
-        actual = calp.isentropic_process(r21=2, gam=1.3)
-        expected = {"p21": 2.462288827, "r21": 2, "t21": 1.231144413,
-                    "a21": 1.109569472, "gam": 1.3}
-        check_dicts(actual, expected)
+def test_isentropic_process_from_pressure():
+    actual = calp.isentropic_process_from_pressure(
+        pressure_ratio=1.2, specific_heat_ratio=1.4)
+    expected = calp.IsentropicProcessResult(
+        temperature_ratio=np.array([1.053472524]),
+        pressure_ratio=np.array([1.2]),
+        density_ratio=np.array([1.139089983]),
+        speed_of_sound_ratio=np.array([1.026388096]),
+        specific_heat_ratio=np.array([1.4])
+    )
+    np.testing.assert_allclose(actual.temperature_ratio,
+                               expected.temperature_ratio)
+    np.testing.assert_allclose(actual.pressure_ratio,
+                               expected.pressure_ratio, rtol=0.0)
+    np.testing.assert_allclose(actual.density_ratio,
+                               expected.density_ratio)
+    np.testing.assert_allclose(actual.speed_of_sound_ratio,
+                               expected.speed_of_sound_ratio)
+    np.testing.assert_allclose(actual.specific_heat_ratio,
+                               expected.specific_heat_ratio, rtol=0.0)
 
-    def test_t(self, check_dicts):
-        actual = calp.isentropic_process(t21=0.7, gam=1.35)
-        expected = {"p21": 0.2526509942, "r21": 0.3609299917, "t21": 0.7,
-                    "a21": 0.8366600265, "gam": 1.35}
-        check_dicts(actual, expected)
+
+def test_isentropic_process_from_density():
+    actual = calp.isentropic_process_from_density(
+        density_ratio=2, specific_heat_ratio=1.3)
+    expected = calp.IsentropicProcessResult(
+        temperature_ratio=np.array([1.231144413]),
+        pressure_ratio=np.array([2.462288827]),
+        density_ratio=np.array([2]),
+        speed_of_sound_ratio=np.array([1.109569472]),
+        specific_heat_ratio=np.array([1.3])
+    )
+    np.testing.assert_allclose(actual.temperature_ratio,
+                               expected.temperature_ratio)
+    np.testing.assert_allclose(actual.pressure_ratio,
+                               expected.pressure_ratio)
+    np.testing.assert_allclose(actual.density_ratio,
+                               expected.density_ratio, rtol=0.0)
+    np.testing.assert_allclose(actual.speed_of_sound_ratio,
+                               expected.speed_of_sound_ratio)
+    np.testing.assert_allclose(actual.specific_heat_ratio,
+                               expected.specific_heat_ratio, rtol=0.0)
+
+
+def test_isentropic_process_from_speed_of_sound():
+    actual = calp.isentropic_process_from_speed_of_sound(
+        speed_of_sound_ratio=1.125, specific_heat_ratio=1.4)
+    expected = calp.IsentropicProcessResult(
+        temperature_ratio=np.array([1.265625]),
+        pressure_ratio=np.array([2.280697346]),
+        density_ratio=np.array([1.802032471]),
+        speed_of_sound_ratio=np.array([1.125]),
+        specific_heat_ratio=np.array([1.4])
+    )
+    np.testing.assert_allclose(actual.temperature_ratio,
+                               expected.temperature_ratio)
+    np.testing.assert_allclose(actual.pressure_ratio,
+                               expected.pressure_ratio)
+    np.testing.assert_allclose(actual.density_ratio,
+                               expected.density_ratio)
+    np.testing.assert_allclose(actual.speed_of_sound_ratio,
+                               expected.speed_of_sound_ratio, rtol=0.0)
+    np.testing.assert_allclose(actual.specific_heat_ratio,
+                               expected.specific_heat_ratio, rtol=0.0)
 
 
 def test_entropy_state():

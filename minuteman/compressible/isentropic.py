@@ -129,12 +129,14 @@ def lookup_table(
         }
 
     elif (ac.is1known(p0_ratio, [M, r0_ratio, T0_ratio, a0_ratio, area_ratio])):
-        T0_ratio = calp.isentropic_process(p21=p0_ratio, gam=gam)["t21"]
+        T0_ratio = calp.isentropic_process_from_pressure(
+            pressure_ratio=p0_ratio, specific_heat_ratio=gam).temperature_ratio
         M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
         return lookup_table(M=M, gam=gam)
 
     elif (ac.is1known(r0_ratio, [p0_ratio, M, T0_ratio, a0_ratio, area_ratio])):
-        T0_ratio = calp.isentropic_process(r21=r0_ratio, gam=gam)["t21"]
+        T0_ratio = calp.isentropic_process_from_density(
+            density_ratio=r0_ratio, specific_heat_ratio=gam).temperature_ratio
         M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
         return lookup_table(M=M, gam=gam)
 
@@ -143,7 +145,9 @@ def lookup_table(
         return lookup_table(M=M, gam=gam)
 
     elif (ac.is1known(a0_ratio, [p0_ratio, r0_ratio, T0_ratio, M, area_ratio])):
-        T0_ratio = calp.isentropic_process(a21=a0_ratio, gam=gam)["t21"]
+        T0_ratio = calp.isentropic_process_from_speed_of_sound(
+            speed_of_sound_ratio=a0_ratio,
+            specific_heat_ratio=gam).temperature_ratio
         M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
         return lookup_table(M=M, gam=gam)
 
