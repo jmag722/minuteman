@@ -60,7 +60,7 @@ gas_constant_air_imperial_slug = (
 
 def specific_heat_constant_pressure(
         specific_heat_ratio: ut.ndarray | float,
-        gas_constant: ut.ndarray | float) -> ut.ndarray | float:
+        gas_constant: ut.ndarray | float) -> ut.ndarray:
     """Computes the specific heat at constant pressure.
 
     Valid for perfect (thermally & calorically) gases.
@@ -70,17 +70,19 @@ def specific_heat_constant_pressure(
         gas_constant (ndarray | float): specific gas constant
 
     Returns:
-        ndarray | float: specific heat at constant pressure
+        ndarray: specific heat at constant pressure
     """
-    return specific_heat_ratio * specific_heat_constant_volume(
-        specific_heat_ratio=specific_heat_ratio,
-        gas_constant=gas_constant
+    rgas = np.atleast_1d(gas_constant)
+    gam = np.atleast_1d(specific_heat_ratio)
+    return gam * specific_heat_constant_volume(
+        specific_heat_ratio=gam,
+        gas_constant=rgas,
     )
 
 
 def specific_heat_constant_volume(
         specific_heat_ratio: ut.ndarray | float,
-        gas_constant: ut.ndarray | float) -> ut.ndarray | float:
+        gas_constant: ut.ndarray | float) -> ut.ndarray:
     """Computes the specific heat at constant volume.
 
     Valid for perfect (thermally & calorically) gases.
@@ -90,15 +92,17 @@ def specific_heat_constant_volume(
         gas_constant (ndarray | float): specific gas constant
 
     Returns:
-        ndarray | float: specific heat at constant volume
+        ndarray: specific heat at constant volume
     """
-    return gas_constant / (specific_heat_ratio - 1.0)
+    rgas = np.atleast_1d(gas_constant)
+    gam = np.atleast_1d(specific_heat_ratio)
+    return rgas / (gam - 1.0)
 
 
 def entropy_state(pressure: ut.ndarray | float,
                   density: ut.ndarray | float,
                   specific_heat_ratio: ut.ndarray | float,
-                  gas_constant: ut.ndarray | float) -> ut.ndarray | float:
+                  gas_constant: ut.ndarray | float) -> ut.ndarray:
     """Compute entropy state of a calorically perfect gas.
 
     Args:
@@ -108,11 +112,14 @@ def entropy_state(pressure: ut.ndarray | float,
         gas_constant (ut.ndarray | float): specific gas constant
 
     Returns:
-        ut.ndarray | float: entropy
+        ut.ndarray: entropy
     """
-    gam = specific_heat_ratio
-    return np.log(pressure / density**gam) * specific_heat_constant_volume(
-        specific_heat_ratio=gam, gas_constant=gas_constant)
+    p = np.atleast_1d(pressure)
+    rho = np.atleast_1d(density)
+    gam = np.atleast_1d(specific_heat_ratio)
+    rgas = np.atleast_1d(gas_constant)
+    return np.log(p / rho**gam) * specific_heat_constant_volume(
+        specific_heat_ratio=gam, gas_constant=rgas)
 
 
 def entropy(t21: float = None, p21: float = None, v21: float = None,

@@ -1,4 +1,6 @@
+import numpy as np
 import pytest
+
 import minuteman.thermodynamics.caloric_perfect as calp
 
 
@@ -66,9 +68,11 @@ class TestIsentropicRelations:
 
 
 def test_entropy_state():
-    assert calp.entropy_state(
+    actual = calp.entropy_state(
         pressure=100, density=2.5, specific_heat_ratio=1.3, gas_constant=200
-    ) == pytest.approx(2275.9948230344603)
+    )
+    expected = np.array([2275.9948230344603])
+    np.testing.assert_allclose(actual, expected)
 
 
 def test_total_energy():
