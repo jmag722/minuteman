@@ -117,51 +117,77 @@ def entropy_state(pressure: ut.ndarray | float,
         specific_heat_ratio=gam, gas_constant=gas_constant)
 
 
-def entropy(t21: float = None, p21: float = None, v21: float = None,
-            cp: float = None, cv: float = None, R: float = gas_constant_air_si, s1: float = 0.0):
+def entropy_change_tp(temperature_ratio: ut.ndarray | float,
+                      pressure_ratio: ut.ndarray | float,
+                      specific_heat_constant_pressure: ut.ndarray | float,
+                      gas_constant: ut.ndarray | float) -> ut.ndarray:
+    """Compute the change in entropy for a known change in temperature and
+    pressure.
+
+    Args:
+        temperature_ratio (ut.ndarray | float): temperature ratio, T2/T1
+        pressure_ratio (ut.ndarray | float): pressure ratio, p2/p1
+        specific_heat_constant_pressure (ut.ndarray | float): specific heat at
+            constant pressure, cp
+        gas_constant (ut.ndarray | float): specific gas constant R
+
+    Returns:
+        ut.ndarray: change in entropy, s2-s1
     """
-    Computes the change in entropy for a calorically perfect gas.
+    return (
+        specific_heat_constant_pressure *
+        np.log(temperature_ratio) - gas_constant * np.log(pressure_ratio)
+    )
 
-    Parameters
-    ----------
-    t21 : float, optional
-        temperature ratio T2/T1, by default None
-    p21 : float, optional
-        pressure ratio p2/p1, by default None
-    v21 : float, optional
-        specific volume ratio v2/v1, by default None
-    cp : float, optional
-        specific heat (constant pressure), by default None
-    cv : float, optional
-        specific heat (constant volume), by default None
-    R : float, optional
-        specific gas constant, by default gas_constant_air_si
-    s1 : float, optional
-        entropy at state 1, by default 0.0
 
-    Returns
-    -------
-    float
-        entropy change ds if s1==0.0 else entropy at state 2 (s2)
+def entropy_change_tv(temperature_ratio: ut.ndarray | float,
+                      specific_volume_ratio: ut.ndarray | float,
+                      specific_heat_constant_volume: ut.ndarray | float,
+                      gas_constant: ut.ndarray | float) -> ut.ndarray:
+    """Compute the change in entropy for a known change in temperature and
+    specific volume.
 
-    Raises
-    ------
-    ValueError
-        Incorrect or insufficient inputs supplied
+    Args:
+        temperature_ratio (ut.ndarray | float): temperature ratio, T2/T1
+        specific_volume_ratio (ut.ndarray | float): specific volume ratio, v2/v1
+        specific_heat_constant_volume (ut.ndarray | float): specific heat at
+            constant volume, cv
+        gas_constant (ut.ndarray | float): specific gas constant, R
+
+    Returns:
+        ut.ndarray: change in entropy, s2-s1
     """
-    if all(var is not None for var in [t21, p21, cp, R]):
-        expr = cp*np.log(t21) - R * np.log(p21)
-    elif all(var is not None for var in [t21, v21, cv, R]):
-        expr = cv*np.log(t21) + R * np.log(v21)
-    elif all(var is not None for var in [p21, v21, cp, cv]):
-        expr = cv*np.log(p21) + cp*np.log(v21)
-    else:
-        error_msg = "Must specify one of the following: \n\
-                1) T2/T1, v2/v1, cp, R, OR\n\
-                2) T2/T1, v2/v1, cv, R, OR\n\
-                3) p2/p1, v2/v1, cp, cv"
-        raise ValueError(error_msg)
-    return s1 + expr  # if s1==0, returns (s2-s1), else s2
+    return (
+        specific_heat_constant_volume *
+        np.log(temperature_ratio) + gas_constant *
+        np.log(specific_volume_ratio)
+    )
+
+
+def entropy_change_pv(
+        pressure_ratio: ut.ndarray | float,
+        specific_volume_ratio: ut.ndarray | float,
+        specific_heat_constant_pressure: ut.ndarray | float,
+        specific_heat_constant_volume: ut.ndarray | float) -> ut.ndarray:
+    """Compute the change in entropy for a known change in pressure and
+    specific volume.
+
+    Args:
+        pressure_ratio (ut.ndarray | float): pressure ratio, p2/p1
+        specific_volume_ratio (ut.ndarray | float): specific volume ratio, v2/v1
+        specific_heat_constant_pressure (ut.ndarray | float): specific heat
+            of constant pressure, cp
+        specific_heat_constant_volume (ut.ndarray | float): specific heat
+            of constant volume, cv
+
+    Returns:
+        ut.ndarray: change in entropy, s2-s1
+    """
+    return (
+        specific_heat_constant_volume *
+        np.log(pressure_ratio) + specific_heat_constant_pressure *
+        np.log(specific_volume_ratio)
+    )
 
 
 def isentropic_process(p21: float = None, t21: float = None, r21: float = None,

@@ -24,21 +24,37 @@ def test_gas_constant_air():
         1716.57, rel=1e-5)
 
 
-class TestEntropy:
-    def test_entropy_PT(self):
-        actual = calp.entropy(t21=2, p21=1.5, cp=1.3, R=287)
-        expected = -115.4673947
-        assert actual == pytest.approx(expected)
+def test_entropy_change_tp():
+    actual = calp.entropy_change_tp(
+        temperature_ratio=2,
+        pressure_ratio=1.5,
+        specific_heat_constant_pressure=1.3,
+        gas_constant=287
+    )
+    expected = np.array([-115.4673947])
+    np.testing.assert_allclose(actual, expected)
 
-    def test_entropy_TV(self):
-        actual = calp.entropy(t21=11, v21=0.1, cv=0.9, R=300, s1=1000)
-        expected = 311.3825778
-        assert actual == pytest.approx(expected)
 
-    def test_entropy_PV(self):
-        actual = calp.entropy(p21=3, v21=0.5, cp=25, cv=1.4)
-        expected = -15.79062231
-        assert actual == pytest.approx(expected)
+def test_entropy_change_tv():
+    actual = calp.entropy_change_tv(
+        temperature_ratio=11,
+        specific_volume_ratio=0.1,
+        specific_heat_constant_volume=0.9,
+        gas_constant=300
+    )
+    expected = np.array([-688.6174222])
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_entropy_pv():
+    actual = calp.entropy_change_pv(
+        pressure_ratio=3,
+        specific_volume_ratio=0.5,
+        specific_heat_constant_pressure=25,
+        specific_heat_constant_volume=1.4
+    )
+    expected = np.array([-15.79062231])
+    np.testing.assert_allclose(actual, expected)
 
 
 class TestIsentropicRelations:
