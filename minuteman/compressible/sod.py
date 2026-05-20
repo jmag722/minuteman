@@ -166,8 +166,10 @@ def shock_tube(t: float,
     e_arr[:] = calp.specific_heat_constant_volume(
         specific_heat_ratio=gam_arr, gas_constant=Rgas_arr) * \
         T_arr  # specific internal energy = cv*T
-    h_arr[:] = calp.specific_enthalpy(e=e_arr, p=p_arr, rho=r_arr)
-    Et_arr[:] = calp.total_energy(p=p_arr, rho=r_arr, v=u_arr, gam=gam_arr)
+    h_arr[:] = calp.specific_enthalpy(
+        specific_internal_energy=e_arr, pressure=p_arr, density=r_arr)
+    Et_arr[:] = calp.total_energy(
+        pressure=p_arr, density=r_arr, speed=u_arr, specific_heat_ratio=gam_arr)
 
     POS_NAME = "position"
     answer = {

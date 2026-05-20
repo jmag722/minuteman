@@ -218,45 +218,39 @@ def isentropic_process(p21: float = None, t21: float = None, r21: float = None,
     return {"p21": p21, "t21": t21, "r21": r21, "a21": a21, "gam": gam}
 
 
-def total_energy(p, rho, v, gam=1.4):
+def total_energy(pressure: ut.ndarray | float,
+                 density: ut.ndarray | float,
+                 speed: ut.ndarray | float,
+                 specific_heat_ratio: ut.ndarray | float) -> ut.ndarray:
+    """Compute total energy per unit volume
+
+    Args:
+        pressure (ut.ndarray | float): pressure
+        density (ut.ndarray | float): density
+        speed (ut.ndarray | float): velocity magnitude (sign irrelevant)
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray: total energy per unit volume
     """
-    Compute total energy, in units of energy/unit volume.
+    pressure = np.atleast_1d(pressure)
+    return pressure / (specific_heat_ratio - 1) + 0.5 * density * speed**2
 
-    Parameters
-    ----------
-    p : float | ArrayLike
-        pressure [Pa]
-    rho : float | ArrayLike
-        density [kg/m3]
-    v : float | ArrayLike
-        speed
-    gam : float, float | ArrayLike
-        ratio of specific heats, by default 1.4
 
-    Returns
-    -------
-    float | ArrayLike
-        total energy in volumetric units
+def specific_enthalpy(
+        specific_internal_energy: ut.ndarray | float,
+        pressure: ut.ndarray | float,
+        density: ut.ndarray | float) -> ut.ndarray:
+    """Compute specific enthalpy (per unit mass)
+
+    Args:
+        specific_internal_energy (ut.ndarray | float): specific internal
+            energy
+        pressure (ut.ndarray | float): pressure
+        density (ut.ndarray | float): density
+
+    Returns:
+        ut.ndarray: specific enthalpy
     """
-    return p/(gam-1) + 0.5*rho*v**2
-
-
-def specific_enthalpy(e, p, rho):
-    """
-    Compute specific enthalpy, in units of energy per unit mass
-
-    Parameters
-    ----------
-    e : float | ArrayLike
-        specific internal energy [energy/mass]
-    p : float | ArrayLike
-        pressure
-    rho : float | ArrayLike
-        density [mass/volume]
-
-    Returns
-    -------
-    float | ArrayLike
-        specific enthalpy
-    """
-    return e + p/rho
+    e = np.atleast_1d(specific_internal_energy)
+    return e + pressure / density

@@ -76,9 +76,14 @@ def test_entropy_state():
 
 
 def test_total_energy():
-    assert calp.total_energy(
-        100, 1.2, 5000, 1.3) == pytest.approx(15000333.333333334)
+    np.testing.assert_allclose(
+        calp.total_energy(100, 1.2, 5000, 1.3),
+        np.array([15000333.333333334])
+    )
 
 
 def test_specific_enthalpy():
-    assert calp.specific_enthalpy(100, 1e4, 0.8) == pytest.approx(12600)
+    np.testing.assert_equal(
+        calp.specific_enthalpy(100, 1e4, 0.8),
+        np.array([12600])
+    )
