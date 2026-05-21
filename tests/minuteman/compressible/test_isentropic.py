@@ -2,15 +2,15 @@ import numpy as np
 import minuteman.compressible.isentropic as isen
 
 
-def test_speed_of_sound_from_RT():
-    actual = isen.speed_of_sound_from_RT(
+def test_speed_of_sound_from_temperature():
+    actual = isen.speed_of_sound_from_temperature(
         temperature=300, gas_constant=287, specific_heat_ratio=1.4)
     expected = np.array([347.188709494])
     np.testing.assert_allclose(actual, expected)
 
 
-def test_speed_of_sound_from_pr():
-    actual = isen.speed_of_sound_from_pr(
+def test_speed_of_sound_from_pressure():
+    actual = isen.speed_of_sound_from_pressure(
         specific_heat_ratio=1.1, pressure=1e5, density=1.2)
     expected = 302.76503541
     np.testing.assert_allclose(actual, expected)
@@ -20,51 +20,85 @@ def test_mach_number():
     np.testing.assert_equal(isen.mach_number(1, 4), np.array([0.25]))
 
 
-def test_lookup_table_mach(check_dicts):
-    actual = isen.lookup_table(M=2.0, gam=1.4)
-    expected = {
-        "M": 2.0, "p0_ratio": 7.824, "T0_ratio": 1.8,
-        "r0_ratio": 4.347, "a0_ratio": 1.342,
-        "area_ratio": 1.687, "gam": 1.4
-    }
-    check_dicts(actual, expected, rtol=1e-3)
+def compare_tables(actual, expected, **kwargs):
+    np.testing.assert_allclose(actual.mach, expected.mach, **kwargs)
+    np.testing.assert_allclose(
+        actual.temperature, expected.temperature, **kwargs)
+    np.testing.assert_allclose(
+        actual.temperature, expected.temperature, **kwargs)
+    np.testing.assert_allclose(actual.pressure, expected.pressure, **kwargs)
+    np.testing.assert_allclose(actual.density, expected.density, **kwargs)
+    np.testing.assert_allclose(
+        actual.speed_of_sound, expected.speed_of_sound, **kwargs)
+    np.testing.assert_allclose(
+        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs)
 
 
-def test_lookup_table_T(check_dicts):
-    actual = isen.lookup_table(T0_ratio=1.008, gam=1.4)
-    expected = {
-        "M": 0.2, "p0_ratio": 1.028, "T0_ratio": 1.008,
-        "r0_ratio": 1.02, "a0_ratio": 1.00399203184,
-        "area_ratio": 2.964, "gam": 1.4
-    }
-    check_dicts(actual, expected, rtol=1e-3)
+def test_lookup_table_by_mach():
+    actual = isen.lookup_table_by_mach(2.0, 1.4)
+    expected = isen.IsentropicFlowTable(
+        mach=np.array([2.0]),
+        temperature=np.array([1.8]),
+        pressure=np.array([7.824]),
+        density=np.array([4.347]),
+        speed_of_sound=np.array([1.342]),
+        area_ratio=np.array([1.687]),
+        specific_heat_ratio=np.array([1.4])
+    )
+    compare_tables(actual, expected, rtol=1e-3)
 
 
-def test_lookup_table_area(check_dicts):
-    actual = isen.lookup_table(area_ratio=1.094, gam=1.4)
-    expected = {
-        "M": 1.360, "p0_ratio": 3.00932891965, "T0_ratio": 1.3698630137,
-        "r0_ratio": 2.19669178218, "a0_ratio": 1.17041147196,
-        "area_ratio": 1.094, "gam": 1.4
-    }
-    check_dicts(actual, expected, rtol=1e-4)
+def test_lookup_table_by_temperature():
+    actual = isen.lookup_table_by_temperature(1.008, 1.4)
+    expected = isen.IsentropicFlowTable(
+        mach=np.array([0.2]),
+        temperature=np.array([1.008]),
+        pressure=np.array([1.028]),
+        density=np.array([1.02]),
+        speed_of_sound=np.array([1.00399203184]),
+        area_ratio=np.array([2.964]),
+        specific_heat_ratio=np.array([1.4])
+    )
+    compare_tables(actual, expected, rtol=1e-3)
 
 
-def test_lookup_table_area2(check_dicts):
-    actual = isen.lookup_table(area_ratio=3.1, gam=1.3, is_supersonic=False)
-    expected = {
-        "M": 0.193, "p0_ratio": 1.02438024995, "T0_ratio": 1.0060362173,
-        "r0_ratio": 1.01871377199, "a0_ratio": 1.00301356785,
-        "area_ratio": 3.1, "gam": 1.3
-    }
-    check_dicts(actual, expected, rtol=1e-3)
+def test_lookup_table_by_area_supersonic():
+    actual = isen.lookup_table_by_area_ratio(1.094, 1.4, mach_guess=2.0)
+    expected = isen.IsentropicFlowTable(
+        mach=np.array([1.36]),
+        temperature=np.array([1.3698630137]),
+        pressure=np.array([3.00932891965]),
+        density=np.array([2.19669178218]),
+        speed_of_sound=np.array([1.17041147196]),
+        area_ratio=np.array([1.094]),
+        specific_heat_ratio=np.array([1.4])
+    )
+    compare_tables(actual, expected, rtol=1e-4)
 
 
-def test_lookup_table_p(check_dicts):
-    actual = isen.lookup_table(p0_ratio=39.59, gam=1.4)
-    expected = {
-        "M": 3.05, "p0_ratio": 39.59, "T0_ratio": 2.860,
-        "r0_ratio": 13.84, "a0_ratio": 1.69115345253,
-        "area_ratio": 4.441, "gam": 1.4
-    }
-    check_dicts(actual, expected, rtol=1e-3)
+def test_lookup_table_by_area_subsonic():
+    actual = isen.lookup_table_by_area_ratio(3.1, 1.3, mach_guess=0.2)
+    expected = isen.IsentropicFlowTable(
+        mach=np.array([0.193]),
+        temperature=np.array([1.0060362173]),
+        pressure=np.array([1.02438024995]),
+        density=np.array([1.01871377199]),
+        speed_of_sound=np.array([1.00301356785]),
+        area_ratio=np.array([3.1]),
+        specific_heat_ratio=np.array([1.3])
+    )
+    compare_tables(actual, expected, rtol=1e-3)
+
+
+def test_lookup_table_by_pressure():
+    actual = isen.lookup_table_by_pressure(39.59, 1.4)
+    expected = isen.IsentropicFlowTable(
+        mach=np.array([3.05]),
+        temperature=np.array([2.860]),
+        pressure=np.array([39.59]),
+        density=np.array([13.84]),
+        speed_of_sound=np.array([1.69115345253]),
+        area_ratio=np.array([4.441]),
+        specific_heat_ratio=np.array([1.4])
+    )
+    compare_tables(actual, expected, rtol=1e-3)

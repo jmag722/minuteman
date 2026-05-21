@@ -221,8 +221,8 @@ def total_pressure2(M2, M1=1.0, p01=1.0, gam: float = 1.4):
     """
     return p01 * (
         pressure2(M2=M2, M1=M1, p1=1.0, gam=gam)
-        * isen.total_pressure(M=M2, p=1.0, gam=gam)
-        / isen.total_pressure(M=M1, p=1.0, gam=gam)
+        * isen.total_pressure_ratio(mach=M2, specific_heat_ratio=gam)
+        / isen.total_pressure_ratio(mach=M1, specific_heat_ratio=gam)
     )
 
 
@@ -249,8 +249,8 @@ def total_temperature2(M2, M1=1.0, T01=1.0, gam: float = 1.4):
     return T01 * (
         pressure2(M2=M2, M1=M1, p1=1.0, gam=gam)**2
         * (M2*M2/M1/M1)
-        * isen.total_temperature(M=M2, T=1.0, gam=gam)
-        / isen.total_temperature(M=M1, T=1.0, gam=gam)
+        * isen.total_temperature_ratio(mach=M2, specific_heat_ratio=gam)
+        / isen.total_temperature_ratio(mach=M1, specific_heat_ratio=gam)
     )
 
 

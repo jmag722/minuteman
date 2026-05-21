@@ -11,9 +11,9 @@ def test_solve_p21():
     p1 = 1e4
     r4 = 1
     r1 = .125
-    a4 = isen.speed_of_sound_from_pr(
+    a4 = isen.speed_of_sound_from_pressure(
         specific_heat_ratio=gam4, pressure=p4, density=r4)
-    a1 = isen.speed_of_sound_from_pr(
+    a1 = isen.speed_of_sound_from_pressure(
         specific_heat_ratio=gam1, pressure=p1, density=r1)
     actual = sod.solve_p21(p41=p4/p1, a41=a4/a1, gam4=gam4, gam1=gam1)
     assert actual == pytest.approx(3.0313017805065474)

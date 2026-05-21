@@ -3,16 +3,25 @@ Compressible, inviscid flow relations.
 
 These functions are basic definitions pertaining to 1-,2-, and 3-D
 compressible, inviscid flow.
+
+Total or stagnation quantities (total temperature, for instance) are the
+values that would exist if the flow were isentropically brought to rest.
+Total quantities remain constant where flowfield is isentropic
+(adiabatic and reversible).
 """
+
+from dataclasses import dataclass
+
 import numpy as np
 from scipy.optimize import fsolve
 
 import minuteman.thermodynamics.caloric_perfect as calp
-import minuteman.utils.arg_checks as ac
 import minuteman.utils.types as ut
 
 
-def mach_number(velocity: ut.ndarray | float, speed_of_sound: ut.ndarray | float) -> ut.ndarray:
+def mach_number(
+    velocity: ut.ndarray | float, speed_of_sound: ut.ndarray | float
+) -> ut.ndarray:
     """Compute Mach number
 
     Args:
@@ -25,9 +34,11 @@ def mach_number(velocity: ut.ndarray | float, speed_of_sound: ut.ndarray | float
     return np.atleast_1d(velocity) / speed_of_sound
 
 
-def speed_of_sound_from_RT(gas_constant: ut.ndarray | float,
-                           temperature: ut.ndarray | float,
-                           specific_heat_ratio: ut.ndarray | float) -> ut.ndarray:
+def speed_of_sound_from_temperature(
+    gas_constant: ut.ndarray | float,
+    temperature: ut.ndarray | float,
+    specific_heat_ratio: ut.ndarray | float,
+) -> ut.ndarray:
     """Compute the speed of sound from the gas constant (R) and temperature (T)
 
     Args:
@@ -39,12 +50,14 @@ def speed_of_sound_from_RT(gas_constant: ut.ndarray | float,
         ut.ndarray: speed of sound
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    return (gam * gas_constant * temperature)**0.5
+    return (gam * gas_constant * temperature) ** 0.5
 
 
-def speed_of_sound_from_pr(pressure: ut.ndarray | float,
-                           density: ut.ndarray | float,
-                           specific_heat_ratio: ut.ndarray | float) -> ut.ndarray:
+def speed_of_sound_from_pressure(
+    pressure: ut.ndarray | float,
+    density: ut.ndarray | float,
+    specific_heat_ratio: ut.ndarray | float,
+) -> ut.ndarray:
     """Compute the speed of sound from the pressure (p) and density (r)
 
     Args:
@@ -56,276 +69,314 @@ def speed_of_sound_from_pr(pressure: ut.ndarray | float,
         ut.ndarray: speed of sound
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    return (gam * pressure / density)**0.5
+    return (gam * pressure / density) ** 0.5
 
 
-def lookup_table(
-        M: float = None, p0_ratio: float = None, r0_ratio: float = None,
-        T0_ratio: float = None, a0_ratio: float = None,
-        area_ratio: float = None, gam: float = 1.4,
-        is_supersonic: bool = True):
+@dataclass
+class IsentropicFlowTable:
+    """Isentropic flow table, containing various isentropic parameters
+    for a given Mach number and specific heat ratio
     """
-    Provides all isentropic flow variables for a given input.
 
-    Equivalent to a line from lookup tables for isentropic, calorically
-    perfect gases (1D and quasi-1D). Function is recursive.
+    mach: ut.ndarray
+    """Mach number"""
+    temperature: ut.ndarray
+    """total temperature ratio, T0/T"""
+    pressure: ut.ndarray
+    """total pressure ratio, p0/p"""
+    density: ut.ndarray
+    """total density ratio, rho0/rho"""
+    speed_of_sound: ut.ndarray
+    """total speed of sound ratio, a0/a"""
+    area_ratio: ut.ndarray
+    """area ratio, A/A*"""
+    specific_heat_ratio: ut.ndarray
+    """ratio of specific heats, gamma"""
 
-    Parameters
-    ----------
-    M : float, optional
-        Mach number, by default None
-    p0_ratio : float, optional
-        total pressure ratio p0/p, by default None
-    r0_ratio : float, optional
-        total density ratio rho0/rho, by default None
-    T0_ratio : float, optional
-        total temperature ratio T0/T, by default None
-    a0_ratio : float, optional
-        total speed of sound ratio a0/a, by default None
-    area_ratio : float, optional
-        area ratio wrt sonic condition A/A*, by default None
-    gam : float, optional
-        ratio of specific heats gamma, by default 1.4
-    is_supersonic : bool, optional
-        For given A/A*, initialize guess of Mach number with either supersonic
-        or subsonic, by default True
 
-    Returns
-    -------
-    dict
-        all unspecified isentropic flow parameters for a given input
+def lookup_table_by_mach(
+    mach: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+) -> IsentropicFlowTable:
+    """Lookup the isentropic flow table based on Mach number
 
-    Raises
-    ------
-    ValueError
-        Incorrect or inconsistent inputs specified.
+    Args:
+        mach (ut.ndarray | float): Mach number, M
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicFlowTable: isentropic flow table result
     """
-    if (ac.is1known(M, [p0_ratio, r0_ratio, T0_ratio, a0_ratio, area_ratio])):
-        p0_ratio = total_pressure(M=M, p=1.0, gam=gam)
-        r0_ratio = total_density(M=M, rho=1.0, gam=gam)
-        T0_ratio = total_temperature(M=M, T=1.0, gam=gam)
-        a0_ratio = total_speed_sound(M=M, a=1.0, gam=gam)
-        area_ratio = area_mach_relation(M=M, gam=gam)
-        return {
-            "p0_ratio": p0_ratio,
-            "r0_ratio": r0_ratio,
-            "T0_ratio": T0_ratio,
-            "a0_ratio": a0_ratio,
-            "area_ratio": area_ratio,
-            "M": M,
-            "gam": gam
-        }
-
-    elif (ac.is1known(p0_ratio, [M, r0_ratio, T0_ratio, a0_ratio, area_ratio])):
-        T0_ratio = calp.isentropic_process_from_pressure(
-            pressure_ratio=p0_ratio, specific_heat_ratio=gam).temperature_ratio
-        M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
-        return lookup_table(M=M, gam=gam)
-
-    elif (ac.is1known(r0_ratio, [p0_ratio, M, T0_ratio, a0_ratio, area_ratio])):
-        T0_ratio = calp.isentropic_process_from_density(
-            density_ratio=r0_ratio, specific_heat_ratio=gam).temperature_ratio
-        M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
-        return lookup_table(M=M, gam=gam)
-
-    elif (ac.is1known(T0_ratio, [p0_ratio, r0_ratio, M, a0_ratio, area_ratio])):
-        M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
-        return lookup_table(M=M, gam=gam)
-
-    elif (ac.is1known(a0_ratio, [p0_ratio, r0_ratio, T0_ratio, M, area_ratio])):
-        T0_ratio = calp.isentropic_process_from_speed_of_sound(
-            speed_of_sound_ratio=a0_ratio,
-            specific_heat_ratio=gam).temperature_ratio
-        M = mach_from_temperature_ratio(T0_ratio=T0_ratio, gam=gam)
-        return lookup_table(M=M, gam=gam)
-
-    elif (ac.is1known(area_ratio, [p0_ratio, r0_ratio, T0_ratio, a0_ratio, M])):
-        M = area_mach_relation(area_ratio=area_ratio, gam=gam,
-                               is_supersonic=is_supersonic)
-        return lookup_table(M=M, gam=gam)
-
-    else:  # over or under-specified
-        raise ValueError("Specify Mach number, p0/p, rho0/rho, "
-                         "T0/T, a0/a, or A/A*.")
-
-
-def total_temperature(M=1.0, T=1.0, gam: float = 1.4):
-    """
-    Computes the stagnation or total temperature T0.
-
-    T0 is the temperature that would exist if the flow were adiabatically
-    brought to rest. T0 remains constant where flowfield is adiabatic.
-
-    Parameters
-    ----------
-    M : Any, optional
-        Mach number, by default 1.0
-    T : Any, optional
-        static temperature, by default 1.0
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-
-    Returns
-    -------
-    Any
-        T0: stagnation temperature AND
-
-      T0/T: stagnation temperature ratio if `T`==1.0 AND
-
-     T0/T*: stagnation temperature ratio (sonic) if `T`==1.0 and `M`==1.0
-    """
-    return T*(1 + (gam-1)/2 * M*M)
-
-
-def mach_from_temperature_ratio(T0_ratio, gam: float = 1.4):
-    """
-    Computes the Mach number from total temperature ratio T0/T.
-
-    This function is the inverse of `total_temperature`.
-
-    Parameters
-    ----------
-    T0_ratio : Any
-        total temperature ratio
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-
-    Returns
-    -------
-    Any
-        Mach number
-    """
-    return (2/(gam-1) * (T0_ratio - 1))**0.5
-
-
-def total_pressure(M=1.0, p=1.0, gam: float = 1.4):
-    """
-    Computes the stagnation or total pressure p0.
-
-    p0 is the pressure that would exist if the flow were isentropically
-    brought to rest. p0 remains constant where flowfield is isentropic.
-
-    Parameters
-    ----------
-    M : Any, optional
-        Mach number, by default 1.0
-    p : Any, optional
-        static pressure, by default 1.0
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-
-    Returns
-    -------
-    Any
-        p0: stagnation pressure AND
-
-        p0/p: stagnation pressure ratio if `p`==1.0 AND
-
-       p0/p*: stagnation pressure ratio (sonic) if `p`==1.0 and `M`==1.0
-    """
-    return p*total_temperature(M=M, T=1.0, gam=gam)**(gam/(gam-1))
-
-
-def total_density(M=1.0, rho=1.0, gam: float = 1.4):
-    """
-    Computes the stagnation or total density rho0.
-
-    rho0 is the density that would exist if the flow were isentropically
-    brought to rest. rho0 remains constant where flowfield is isentropic.
-
-    Parameters
-    ----------
-    M : Any, optional
-        Mach number, by default 1.0
-    rho : Any, optional
-        static density, by default 1.0
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-
-    Returns
-    -------
-    Any
-        rho0: stagnation density AND
-
-    rho0/rho: stagnation density ratio if `rho`==1.0 AND
-
-    rho0/rho*: stagnation density ratio (sonic) if `rho`==1.0 and `M`==1.0
-    """
-    return rho*total_temperature(M=M, T=1.0, gam=gam)**(1/(gam-1))
-
-
-def total_speed_sound(M=1.0, a=1.0, gam: float = 1.4):
-    """
-    Computes the stagnation or total speed of sound a0.
-
-    a0 is the speed of sound that would exist if the flow were adiabatically
-    brought to rest. a0 remains constant where flowfield is adiabatic.
-
-    Parameters
-    ----------
-    M : Any, optional
-        Mach number, by default 1.0
-    a : Any, optional
-        static speed of sound, by default 1.0
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-
-    Returns
-    -------
-    Any
-        a0: stagnation speed of sound AND
-
-      a0/a: stagnation speed of sound ratio if `a`==1.0 AND
-
-     a0/a*: stagnation speed of sound ratio (sonic) if `a`==1.0 and `M`==1.0
-    """
-    return a*(total_temperature(M=M, T=1.0, gam=gam))**0.5
-
-
-def area_mach_relation(area_ratio: float = None, M: float = None, gam: float = 1.4,
-                       is_supersonic: bool = True):
-    """
-    Computes the area ratio A/A* or Mach number in an isentropic process.
-
-    The equation assumes isentropic flow for a calorically perfect gas.
-
-    Parameters
-    ----------
-    area_ratio : float, optional
-        Area ratio A/A* of any location in duct wrt sonic throat area,
-            by default None
-    M : float, optional
-        Mach number, by default None
-    gam : float, optional
-        ratio of specific heats gamma, by default 1.4
-    is_supersonic : bool, optional
-        if `M` is unknown, is flow supersonic or subsonic, by default True
-
-    Returns
-    -------
-    float
-        area ratio A/A* OR
-
-        Mach number M
-
-    Raises
-    ------
-    ValueError
-        Both A/A* and M specified, or neither are specified
-    """
-    guess_mach = True if M is None and area_ratio is not None else False
-
-    def func(_m): return (
-        _m**-2 * (
-            2/(gam+1)*total_temperature(M=_m, T=1.0, gam=gam)
-        )**((gam+1)/(gam-1))
+    gam = np.atleast_1d(specific_heat_ratio)
+    p0_ratio = total_pressure_ratio(mach=mach, specific_heat_ratio=gam)
+    r0_ratio = total_density_ratio(mach=mach, specific_heat_ratio=gam)
+    t0_ratio = total_temperature_ratio(mach=mach, specific_heat_ratio=gam)
+    a0_ratio = total_speed_of_sound_ratio(mach=mach, specific_heat_ratio=gam)
+    area_ratio = area_mach_relation(mach=mach, specific_heat_ratio=gam)
+    return IsentropicFlowTable(
+        mach=mach,
+        temperature=t0_ratio,
+        pressure=p0_ratio,
+        density=r0_ratio,
+        speed_of_sound=a0_ratio,
+        area_ratio=area_ratio,
+        specific_heat_ratio=gam,
     )
-    if guess_mach:
-        mach_guess = 2.0 if is_supersonic else 0.2
-        def compute_mach(_m, _Aratio): return (_Aratio**2 - func(_m))
-        return fsolve(compute_mach, mach_guess, area_ratio)[0]
-    elif not guess_mach:
-        return func(M)**0.5
 
-    else:
-        raise ValueError("Specify either A/A* or M, not both.")
+
+def lookup_table_by_temperature(
+    temperature_ratio: ut.ndarray | float,
+    specific_heat_ratio: ut.ndarray | float,
+) -> IsentropicFlowTable:
+    """Lookup the isentropic flow table based on total temperature ratio
+
+    Args:
+        temperature_ratio (ut.ndarray | float): total temperature ratio, T0/T
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicFlowTable: isentropic flow table result
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    mach = mach_from_temperature(
+        temperature_ratio=temperature_ratio, specific_heat_ratio=gam
+    )
+    return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
+
+
+def lookup_table_by_pressure(
+    pressure_ratio: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+) -> IsentropicFlowTable:
+    """Lookup the isentropic flow table based on total pressure ratio
+
+    Args:
+        pressure_ratio (ut.ndarray | float): total pressure ratio, p0/p
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicFlowTable: isentropic flow table result
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    t0_ratio = calp.isentropic_process_from_pressure(
+        pressure_ratio=pressure_ratio, specific_heat_ratio=gam
+    ).temperature_ratio
+    return lookup_table_by_temperature(
+        temperature_ratio=t0_ratio, specific_heat_ratio=specific_heat_ratio
+    )
+
+
+def lookup_table_by_density(
+    density_ratio: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+) -> IsentropicFlowTable:
+    """Lookup the isentropic flow table based on total density ratio
+
+    Args:
+        density_ratio (ut.ndarray | float): total density ratio, rho0/rho
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicFlowTable: isentropic flow table result
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    t0_ratio = calp.isentropic_process_from_density(
+        density_ratio=density_ratio, specific_heat_ratio=gam
+    ).temperature_ratio
+    return lookup_table_by_temperature(
+        temperature_ratio=t0_ratio, specific_heat_ratio=specific_heat_ratio
+    )
+
+
+def lookup_table_by_speed_of_sound(
+    speed_of_sound_ratio: ut.ndarray | float,
+    specific_heat_ratio: ut.ndarray | float,
+) -> IsentropicFlowTable:
+    """Lookup the isentropic flow table based on total speed of sound ratio
+
+    Args:
+        speed_of_sound_ratio (ut.ndarray | float): total speed of sound ratio,
+            a0/a
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+
+    Returns:
+        IsentropicFlowTable: isentropic flow table result
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    t0_ratio = calp.isentropic_process_from_speed_of_sound(
+        speed_of_sound_ratio=speed_of_sound_ratio, specific_heat_ratio=gam
+    ).temperature_ratio
+    return lookup_table_by_temperature(
+        temperature_ratio=t0_ratio, specific_heat_ratio=specific_heat_ratio
+    )
+
+
+def lookup_table_by_area_ratio(
+    area_ratio: ut.ndarray | float,
+    specific_heat_ratio: ut.ndarray | float,
+    mach_guess: ut.ndarray | float,
+) -> IsentropicFlowTable:
+    """Lookup the isentropic flow table based on area ratio
+
+    Args:
+        area_ratio (ut.ndarray | float): area ratio, A/A*
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        mach_guess (ut.ndarray | float): Guess for the Mach number.
+            For supersonic flow: choose value > 1 (2.0 is good)
+            For subsonic flow: choose value > 1 (0.2 is good)
+
+    Returns:
+        IsentropicFlowTable: isentropic flow table result
+    """
+    aratios = np.atleast_1d(area_ratio)
+    mguess = (
+        np.zeros_like(area_ratio) + mach_guess
+        if np.isscalar(mach_guess)
+        else mach_guess
+    )
+    gam = (
+        np.zeros_like(area_ratio) + specific_heat_ratio
+        if np.isscalar(specific_heat_ratio)
+        else specific_heat_ratio
+    )
+
+    mach = np.empty_like(aratios)
+    for i in range(aratios.size):
+        mach.flat[i] = mach_from_area_ratio(
+            area_ratio=aratios.flat[i],
+            specific_heat_ratio=gam.flat[i],
+            mach_guess=mguess.flat[i],
+        )
+    return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
+
+
+def total_temperature_ratio(
+    mach: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+) -> ut.ndarray:
+    """Computes the stagnation or total temperature ratio, T0/T
+
+    Args:
+        mach (ut.ndarray | float): Mach number
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray: total temperature ratio
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    return 1 + 0.5 * (gam - 1) * mach**2
+
+
+def mach_from_temperature(
+    temperature_ratio: ut.ndarray | float,
+    specific_heat_ratio: ut.ndarray | float,
+) -> ut.ndarray:
+    """Computes the Mach number from total temperature ratio T0/T
+
+    Args:
+        temperature_ratio (ut.ndarray | float): total temperature ratio
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray | float: _description_
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    return (2.0 / (gam - 1) * (temperature_ratio - 1)) ** 0.5
+
+
+def total_pressure_ratio(
+    mach: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+) -> ut.ndarray:
+    """Computes the stagnation or total pressure ratio, p0/p
+
+    Args:
+        mach (ut.ndarray | float): Mach number
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray: total pressure ratio
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    return total_temperature_ratio(mach=mach, specific_heat_ratio=gam) ** (
+        gam / (gam - 1)
+    )
+
+
+def total_density_ratio(
+    mach: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+) -> ut.ndarray:
+    """Computes the stagnation or total density ratio, rho0/rho
+
+    Args:
+        mach (ut.ndarray | float): Mach number
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray: total density ratio
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    return total_temperature_ratio(mach=mach, specific_heat_ratio=gam) ** (
+        1.0 / (gam - 1)
+    )
+
+
+def total_speed_of_sound_ratio(
+    mach: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+) -> ut.ndarray:
+    """Computes the stagnation or total speed of sound ratio, a0/a
+
+    Args:
+        mach (ut.ndarray | float): Mach number
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray: total speed of sound ratio
+    """
+    gam = np.atleast_1d(specific_heat_ratio)
+    return (total_temperature_ratio(mach=mach, specific_heat_ratio=gam)) ** 0.5
+
+
+def _area_mach_relation_sqr(m, gam):
+    return m**-2 * (
+        2.0
+        / (gam + 1)
+        * total_temperature_ratio(mach=m, specific_heat_ratio=gam)
+    ) ** ((gam + 1) / (gam - 1))
+
+
+def area_mach_relation(
+    mach: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+) -> ut.ndarray:
+    """Computes the area ratio A/A* for an isentropic nozzle.
+
+    This is the standard area-Mach number relation
+
+    Args:
+        mach (ut.ndarray | float): Mach number
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray: area ratio A/A*
+    """
+    return _area_mach_relation_sqr(m=mach, gam=specific_heat_ratio) ** 0.5
+
+
+def mach_from_area_ratio(
+    area_ratio: float, specific_heat_ratio: float, mach_guess: float
+) -> float:
+    """Compute the Mach number for a known area ratio, A/A*
+
+    Args:
+        area_ratio (float): area ratio
+        specific_heat_ratio (float): ratio of specific heats
+        mach_guess (float): Guess for the Mach number.
+            A value above unity is suitable for supersonic Mach (2.0 is good).
+            If a subsonic Mach solution is desired, set to a value below
+            unity (0.2 is a good default)
+
+    Returns:
+        float: supersonic or subsonic Mach solution for a given area ratio
+    """
+
+    def compute_mach(m, aratio, gam):
+        return aratio**2 - _area_mach_relation_sqr(m=m, gam=gam)
+
+    return fsolve(compute_mach, mach_guess, (area_ratio, specific_heat_ratio))[
+        0
+    ]

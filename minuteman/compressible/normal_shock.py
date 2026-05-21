@@ -60,7 +60,7 @@ def lookup_table(M1: float = None, p21: float = None, r21: float = None,
             "T21": temperature2(M1=M1, T1=1.0, gam=gam),
             "p02_p01": total_pressure2(M1=M1, p01=1.0, gam=gam),
             "p02_p1": (total_pressure2(M1=M1, p01=1.0, gam=gam)
-                       * isen.total_pressure(M=M1, p=1.0, gam=gam))
+                       * isen.total_pressure_ratio(mach=M1, specific_heat_ratio=gam))
         }
     elif ac.is1known(p21, [M1, r21, T21, p02_p01, p02_p1, M2]):
         M1 = mach_1(p21=p21, gam=gam)
@@ -151,7 +151,7 @@ def mach_1(p21: float = None, r21: float = None, T21: float = None, p02_p01: flo
         def func(M1, p02_p1, gam): return (
             p02_p1
             - total_pressure2(M1=M1, p01=1.0, gam=gam)
-            * isen.total_pressure(M1, p=1.0, gam=gam)
+            * isen.total_pressure_ratio(mach=M1, specific_heat_ratio=gam)
         )
         M1 = fsolve(func, 2.0, args=(p02_p1, gam))[0]
     else:
