@@ -31,6 +31,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "flake8", # TODO: remove once refactor complete
   "pyrefly",
   "pytest",
   "pytest-cov",
