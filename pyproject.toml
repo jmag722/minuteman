@@ -6,19 +6,23 @@ build-backend = "setuptools.build_meta"
 name = "minuteman"
 version = "0.0.1"
 authors = [
-    {name = "Jared Magnusson", email = "jmag722@gmail.com"},
+  {name = "Jared Magnusson", email = "jmag722@gmail.com"},
 ]
 description = "Python library for solving engineering problems."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
 keywords = [
-    "minuteman", "python", "physics", "physics", "science", "engineering",
-    "toolkit"
+  "aerospace",
+  "engineering",
+  "minuteman",
+  "physics",
+  "science",
+  "toolkit"
 ]
 classifiers = [
-    "Programming Language :: Python :: 3 :: Only",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: OS Independent",
 ]
 dependencies = [
   "numpy >= 2",
@@ -35,7 +39,7 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = [
-    "--import-mode=importlib",
+  "--import-mode=importlib",
 ]
 pythonpath = [
   "."
