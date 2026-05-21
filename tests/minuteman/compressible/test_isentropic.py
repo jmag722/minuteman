@@ -1,18 +1,23 @@
-import pytest
+import numpy as np
 import minuteman.compressible.isentropic as isen
 
 
-def test_speed_sound():
-    actual = isen.speed_sound(T=300, R=287, gam=1.4)
-    expected = 347.188709494
-    assert actual == pytest.approx(expected)
-    actual = isen.speed_sound(gam=1.1, p=1e5, rho=1.2)
+def test_speed_of_sound_from_RT():
+    actual = isen.speed_of_sound_from_RT(
+        temperature=300, gas_constant=287, specific_heat_ratio=1.4)
+    expected = np.array([347.188709494])
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_speed_of_sound_from_pr():
+    actual = isen.speed_of_sound_from_pr(
+        specific_heat_ratio=1.1, pressure=1e5, density=1.2)
     expected = 302.76503541
-    assert actual == pytest.approx(expected)
+    np.testing.assert_allclose(actual, expected)
 
 
-def test_mach():
-    assert isen.mach(1, 4) == pytest.approx(0.25)
+def test_mach_number():
+    np.testing.assert_equal(isen.mach_number(1, 4), np.array([0.25]))
 
 
 def test_lookup_table_mach(check_dicts):

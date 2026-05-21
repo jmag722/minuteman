@@ -4,71 +4,59 @@ Compressible, inviscid flow relations.
 These functions are basic definitions pertaining to 1-,2-, and 3-D
 compressible, inviscid flow.
 """
+import numpy as np
 from scipy.optimize import fsolve
+
 import minuteman.thermodynamics.caloric_perfect as calp
 import minuteman.utils.arg_checks as ac
+import minuteman.utils.types as ut
 
 
-def mach(u, a):
+def mach_number(velocity: ut.ndarray | float, speed_of_sound: ut.ndarray | float) -> ut.ndarray:
+    """Compute Mach number
+
+    Args:
+        velocity (ut.ndarray | float): velocity
+        speed_of_sound (ut.ndarray | float): speed of sound
+
+    Returns:
+        ut.ndarray: Mach number
     """
-    Compute Mach number
+    return np.atleast_1d(velocity) / speed_of_sound
 
-    Parameters
-    ----------
-    u : Any
-        speed
-    a : Any
-        speed of sound
 
-    Returns
-    -------
-    Any
-        Mach Number
+def speed_of_sound_from_RT(gas_constant: ut.ndarray | float,
+                           temperature: ut.ndarray | float,
+                           specific_heat_ratio: ut.ndarray | float) -> ut.ndarray:
+    """Compute the speed of sound from the gas constant (R) and temperature (T)
+
+    Args:
+        gas_constant (ut.ndarray | float): gas constant
+        temperature (ut.ndarray | float): temperature
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray: speed of sound
     """
-    return u/a
+    gam = np.atleast_1d(specific_heat_ratio)
+    return (gam * gas_constant * temperature)**0.5
 
 
-def speed_sound(T=None, R: float = None, rho=None, p=None, gam: float = 1.4):
+def speed_of_sound_from_pr(pressure: ut.ndarray | float,
+                           density: ut.ndarray | float,
+                           specific_heat_ratio: ut.ndarray | float) -> ut.ndarray:
+    """Compute the speed of sound from the pressure (p) and density (r)
+
+    Args:
+        pressure (ut.ndarray | float): pressure
+        density (ut.ndarray | float): density
+        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+
+    Returns:
+        ut.ndarray: speed of sound
     """
-    Compute the speed of sound.
-
-    Specify only (gamma,R,T) or only (gamma,p,rho).
-
-    Definition of speed of sound for a perfect (thermally+calorically) gas.
-    Relation is invalid for chemically reacting and real gases.
-
-    Parameters
-    ----------
-    T : Any, optional
-        temperature, by default None.
-    R : float, optional
-        specific gas constant, by default None.
-    rho : Any, optional
-        density, by default None.
-    p : Any, optional
-        pressure, by default None.
-    gam : float, optional
-        ratio of specific heats gamma, by default 1.4
-
-    Returns
-    -------
-    Any
-        speed of sound
-
-    Raises
-    ------
-    ValueError
-        If either (gamm, R, T) is not specified OR if (gamma, p, rho)
-        is not specified.
-    """
-    solve_with_RT = (all(v is not None for v in [T, R])
-                     and all(v2 is None for v2 in [p, rho]))
-    if solve_with_RT:
-        return (gam * R * T)**0.5
-    elif not solve_with_RT:
-        return (gam * p / rho)**0.5
-    else:
-        raise ValueError("Specify only (gamma,R,T) or only (gamma,p,rho).")
+    gam = np.atleast_1d(specific_heat_ratio)
+    return (gam * pressure / density)**0.5
 
 
 def lookup_table(

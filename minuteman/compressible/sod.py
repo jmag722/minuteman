@@ -72,21 +72,24 @@ def shock_tube(t: float,
     p4 = p_driver
     r4 = rho_driver
     gam4 = gam_driver
-    a4 = isen.speed_sound(gam=gam4, p=p4, rho=r4)
+    a4 = isen.speed_of_sound_from_pr(
+        specific_heat_ratio=gam4, pressure=p4, density=r4)[0]
     T4 = p4/(r4*R_driver)
     u4 = 0.
 
     p1 = p_driven
     r1 = rho_driven
     gam1 = gam_driven
-    a1 = isen.speed_sound(gam=gam1, p=p1, rho=r1)
+    a1 = isen.speed_of_sound_from_pr(
+        specific_heat_ratio=gam1, pressure=p1, density=r1)[0]
     T1 = p1/(r1*R_driven)
     u1 = 0.
 
     p21 = solve_p21(p41=p41, a41=a4/a1, gam4=gam4, gam1=gam1)
     p2 = p21*p1
     r2 = moving_shock_density_ratio(p21=p21, gam=gam1)*r1
-    a2 = isen.speed_sound(gam=gam1, p=p2, rho=r2)
+    a2 = isen.speed_of_sound_from_pr(
+        specific_heat_ratio=gam1, pressure=p2, density=r2)[0]
     T2 = moving_shock_temperature_ratio(p21=p21, gam=gam1)*T1
     u2 = contact_surface_speed(p21=p21, a1=a1, gam1=gam1)  # u2=u3=V=u_piston
     W = moving_shock_speed(p21=p21, a1=a1, gam=gam1)
@@ -164,7 +167,7 @@ def shock_tube(t: float,
     s_arr[:] = calp.entropy_state(pressure=p_arr, density=r_arr,
                                   specific_heat_ratio=gam_arr,
                                   gas_constant=Rgas_arr)
-    m_arr[:] = isen.mach(u_arr, a_arr)
+    m_arr[:] = isen.mach_number(velocity=u_arr, speed_of_sound=a_arr)
     e_arr[:] = calp.specific_heat_constant_volume(
         specific_heat_ratio=gam_arr, gas_constant=Rgas_arr) * \
         T_arr  # specific internal energy = cv*T
