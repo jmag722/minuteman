@@ -45,6 +45,15 @@ pythonpath = [
   "."
 ]
 
+[tool.ruff]
+line-length = 79
+indent-width = 4
+lint.fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
 [project.urls]
 "Homepage" = "https://github.com/jmag722/minuteman"
 "Bug Reports" = "https://github.com/jmag722/minuteman/issues"
