@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
-import minuteman.compressible.oblique_shock as obs
+import minuteman.cpg.oblique_shock as obs
 
 
 def nondimensional_velocity_from_mach(M: float, gam: float):

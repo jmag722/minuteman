@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from scipy.optimize import fsolve
-import minuteman.compressible.isentropic_flow as isentropic_flow
+import minuteman.cpg.isentropic_flow as isentropic_flow
 import minuteman.utils.types as ut
 
 

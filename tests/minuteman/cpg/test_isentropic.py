@@ -1,5 +1,5 @@
 import numpy as np
-import minuteman.compressible.isentropic_flow as isentropic_flow
+import minuteman.cpg.isentropic_flow as isentropic_flow
 
 
 def test_speed_of_sound_from_temperature():

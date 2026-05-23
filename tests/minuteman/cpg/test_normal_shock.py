@@ -1,6 +1,6 @@
 import numpy as np
-import minuteman.compressible.normal_shock as normal_shock
-from minuteman.compressible.normal_shock import NormalShockTable
+import minuteman.cpg.normal_shock as normal_shock
+from minuteman.cpg.normal_shock import NormalShockTable
 
 
 def compare_tables(actual: NormalShockTable, expected: NormalShockTable,

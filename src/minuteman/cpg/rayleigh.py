@@ -7,7 +7,7 @@ Additional notes: https://kyleniemeyer.github.io/gas-dynamics-notes/compressible
 import numpy as np
 from scipy.optimize import fsolve
 
-import minuteman.compressible.isentropic_flow as isentropic_flow
+import minuteman.cpg.isentropic_flow as isentropic_flow
 import minuteman.utils.arg_checks as ac
 
 

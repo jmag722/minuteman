@@ -15,7 +15,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize import fsolve
 
-import minuteman.thermodynamics.caloric_perfect as calp
+import minuteman.cpg.thermo as thermo
 import minuteman.utils.types as ut
 
 
@@ -156,7 +156,7 @@ def lookup_table_by_pressure(
         IsentropicFlowTable: isentropic flow table result
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    t0_ratio = calp.isentropic_process_from_pressure(
+    t0_ratio = thermo.isentropic_process_from_pressure(
         pressure_ratio=pressure_ratio, specific_heat_ratio=gam
     ).temperature_ratio
     return lookup_table_by_temperature(
@@ -177,7 +177,7 @@ def lookup_table_by_density(
         IsentropicFlowTable: isentropic flow table result
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    t0_ratio = calp.isentropic_process_from_density(
+    t0_ratio = thermo.isentropic_process_from_density(
         density_ratio=density_ratio, specific_heat_ratio=gam
     ).temperature_ratio
     return lookup_table_by_temperature(
@@ -200,7 +200,7 @@ def lookup_table_by_speed_of_sound(
         IsentropicFlowTable: isentropic flow table result
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    t0_ratio = calp.isentropic_process_from_speed_of_sound(
+    t0_ratio = thermo.isentropic_process_from_speed_of_sound(
         speed_of_sound_ratio=speed_of_sound_ratio, specific_heat_ratio=gam
     ).temperature_ratio
     return lookup_table_by_temperature(

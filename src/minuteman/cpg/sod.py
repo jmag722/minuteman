@@ -1,13 +1,13 @@
 import numpy as np
 from scipy.optimize import fsolve
-import minuteman.thermodynamics.caloric_perfect as calp
-import minuteman.compressible.isentropic_flow as isentropic_flow
+import minuteman.cpg.thermo as thermo
+import minuteman.cpg.isentropic_flow as isentropic_flow
 
 
 def shock_tube(t: float,
                p_driver: float, p_driven: float, rho_driver: float, rho_driven: float,
                gam_driver: float = 1.4, gam_driven: float = 1.4,
-               R_driver: float = calp.gas_constant_air_si, R_driven: float = calp.gas_constant_air_si,
+               R_driver: float = thermo.gas_constant_air_si, R_driven: float = thermo.gas_constant_air_si,
                left_driver: bool = True, tube_length: float = 20.0, positions: np.ndarray = None):
     """
     Computes Sod shock tube problem. Both gases initially stagnant, with the contact
@@ -30,9 +30,9 @@ def shock_tube(t: float,
     gam_driven : float, optional
         driven gas heat capacity ratio gamma, by default 1.4
     R_driver : float, optional
-        driver gas constant, by default calp.gas_constant_air_si
+        driver gas constant, by default thermo.gas_constant_air_si
     R_driven : float, optional
-        driven gas constant, by default calp.gas_constant_air_si
+        driven gas constant, by default thermo.gas_constant_air_si
     left_driver : bool, optional
         driver gas starts on left hand side rather than the right, by default True
     tube_length : float, optional
@@ -95,7 +95,7 @@ def shock_tube(t: float,
     W = moving_shock_speed(p21=p21, a1=a1, gam=gam1)
 
     p34 = p21/p41  # p2/p1 = p3/p1
-    expansion34 = calp.isentropic_process_from_pressure(
+    expansion34 = thermo.isentropic_process_from_pressure(
         pressure_ratio=p34, specific_heat_ratio=gam4)
     p3 = p34*p4
     r3 = expansion34.density_ratio[0]*r4
@@ -151,7 +151,7 @@ def shock_tube(t: float,
 
     u5 = velocity_expansion_fan(a4, x_arr[region5], t, gam4)
     a5 = sound_speed_expansion_fan(a4, u5, gam4)
-    expansion54 = calp.isentropic_process_from_speed_of_sound(
+    expansion54 = thermo.isentropic_process_from_speed_of_sound(
         speed_of_sound_ratio=a5/a4, specific_heat_ratio=gam4)
     p5 = expansion54.pressure_ratio[0] * p4
     r5 = expansion54.density_ratio[0] * r4
@@ -164,17 +164,17 @@ def shock_tube(t: float,
     assign_regions(T_arr, T4, T5, T3, T2, T1)
     assign_regions(gam_arr, gam4, gam4, gam4, gam1, gam1)
     assign_regions(Rgas_arr, R_driver, R_driver, R_driver, R_driven, R_driven)
-    s_arr[:] = calp.entropy_state(pressure=p_arr, density=r_arr,
-                                  specific_heat_ratio=gam_arr,
-                                  gas_constant=Rgas_arr)
+    s_arr[:] = thermo.entropy_state(pressure=p_arr, density=r_arr,
+                                    specific_heat_ratio=gam_arr,
+                                    gas_constant=Rgas_arr)
     m_arr[:] = isentropic_flow.mach_number(
         velocity=u_arr, speed_of_sound=a_arr)
-    e_arr[:] = calp.specific_heat_constant_volume(
+    e_arr[:] = thermo.specific_heat_constant_volume(
         specific_heat_ratio=gam_arr, gas_constant=Rgas_arr) * \
         T_arr  # specific internal energy = cv*T
-    h_arr[:] = calp.specific_enthalpy(
+    h_arr[:] = thermo.specific_enthalpy(
         specific_internal_energy=e_arr, pressure=p_arr, density=r_arr)
-    Et_arr[:] = calp.total_energy(
+    Et_arr[:] = thermo.total_energy(
         pressure=p_arr, density=r_arr, speed=u_arr, specific_heat_ratio=gam_arr)
 
     POS_NAME = "position"

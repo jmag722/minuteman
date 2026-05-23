@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-import minuteman.compressible.isentropic_flow as isentropic_flow
-import minuteman.compressible.sod as sod
+import minuteman.cpg.isentropic_flow as isentropic_flow
+import minuteman.cpg.sod as sod
 
 
 def test_solve_p21():

@@ -1,5 +1,5 @@
 import pytest
-import minuteman.compressible.rayleigh as ray
+import minuteman.cpg.rayleigh as ray
 
 
 def test_lookup_table_M_supersonic():

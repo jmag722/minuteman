@@ -1,7 +1,7 @@
 
 import numpy as np
 import pytest
-import minuteman.compressible.oblique_shock as obs
+import minuteman.cpg.oblique_shock as obs
 
 
 @pytest.mark.parametrize("M1, beta, expected", [

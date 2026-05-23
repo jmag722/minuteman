@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-import minuteman.compressible.cone_flow as cf
+import minuteman.cpg.cone_flow as cf
 
 
 @pytest.mark.parametrize("M1, shock_angle, gam, theta_c, mach_c, rtol_theta, rtol_mach", [
