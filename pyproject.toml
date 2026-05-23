@@ -43,7 +43,7 @@ addopts = [
   "--import-mode=importlib",
 ]
 pythonpath = [
-  "."
+  "src"
 ]
 
 [tool.ruff]
