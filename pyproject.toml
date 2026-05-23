@@ -54,7 +54,17 @@ lint.fixable = ["ALL"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+docstring-code-format = true
+docstring-code-line-length = 79
 
 [project.urls]
 "Homepage" = "https://github.com/jmag722/minuteman"
 "Bug Reports" = "https://github.com/jmag722/minuteman/issues"
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
+[tool.pyrefly.errors]
+unsupported-operation = false
