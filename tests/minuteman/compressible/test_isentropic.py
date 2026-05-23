@@ -1,23 +1,24 @@
 import numpy as np
-import minuteman.compressible.isentropic as isen
+import minuteman.compressible.isentropic_flow as isentropic_flow
 
 
 def test_speed_of_sound_from_temperature():
-    actual = isen.speed_of_sound_from_temperature(
+    actual = isentropic_flow.speed_of_sound_from_temperature(
         temperature=300, gas_constant=287, specific_heat_ratio=1.4)
     expected = np.array([347.188709494])
     np.testing.assert_allclose(actual, expected)
 
 
 def test_speed_of_sound_from_pressure():
-    actual = isen.speed_of_sound_from_pressure(
+    actual = isentropic_flow.speed_of_sound_from_pressure(
         specific_heat_ratio=1.1, pressure=1e5, density=1.2)
     expected = 302.76503541
     np.testing.assert_allclose(actual, expected)
 
 
 def test_mach_number():
-    np.testing.assert_equal(isen.mach_number(1, 4), np.array([0.25]))
+    np.testing.assert_equal(
+        isentropic_flow.mach_number(1, 4), np.array([0.25]))
 
 
 def compare_tables(actual, expected, **kwargs):
@@ -35,8 +36,8 @@ def compare_tables(actual, expected, **kwargs):
 
 
 def test_lookup_table_by_mach():
-    actual = isen.lookup_table_by_mach(2.0, 1.4)
-    expected = isen.IsentropicFlowTable(
+    actual = isentropic_flow.lookup_table_by_mach(2.0, 1.4)
+    expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([2.0]),
         temperature=np.array([1.8]),
         pressure=np.array([7.824]),
@@ -49,8 +50,8 @@ def test_lookup_table_by_mach():
 
 
 def test_lookup_table_by_temperature():
-    actual = isen.lookup_table_by_temperature(1.008, 1.4)
-    expected = isen.IsentropicFlowTable(
+    actual = isentropic_flow.lookup_table_by_temperature(1.008, 1.4)
+    expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([0.2]),
         temperature=np.array([1.008]),
         pressure=np.array([1.028]),
@@ -63,8 +64,9 @@ def test_lookup_table_by_temperature():
 
 
 def test_lookup_table_by_area_supersonic():
-    actual = isen.lookup_table_by_area_ratio(1.094, 1.4, mach_guess=2.0)
-    expected = isen.IsentropicFlowTable(
+    actual = isentropic_flow.lookup_table_by_area_ratio(
+        1.094, 1.4, mach_guess=2.0)
+    expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([1.36]),
         temperature=np.array([1.3698630137]),
         pressure=np.array([3.00932891965]),
@@ -77,8 +79,9 @@ def test_lookup_table_by_area_supersonic():
 
 
 def test_lookup_table_by_area_subsonic():
-    actual = isen.lookup_table_by_area_ratio(3.1, 1.3, mach_guess=0.2)
-    expected = isen.IsentropicFlowTable(
+    actual = isentropic_flow.lookup_table_by_area_ratio(
+        3.1, 1.3, mach_guess=0.2)
+    expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([0.193]),
         temperature=np.array([1.0060362173]),
         pressure=np.array([1.02438024995]),
@@ -91,8 +94,8 @@ def test_lookup_table_by_area_subsonic():
 
 
 def test_lookup_table_by_pressure():
-    actual = isen.lookup_table_by_pressure(39.59, 1.4)
-    expected = isen.IsentropicFlowTable(
+    actual = isentropic_flow.lookup_table_by_pressure(39.59, 1.4)
+    expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([3.05]),
         temperature=np.array([2.860]),
         pressure=np.array([39.59]),

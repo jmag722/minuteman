@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from scipy.optimize import fsolve
-import minuteman.compressible.isentropic as isentropic
+import minuteman.compressible.isentropic_flow as isentropic_flow
 import minuteman.utils.types as ut
 
 
@@ -61,7 +61,8 @@ def lookup_table_by_upstream_mach(
     p02_p01 = total_pressure_ratio_by_mach(
         mach_upstream=m1, specific_heat_ratio=gam
     )
-    p01_p1 = isentropic.total_pressure_ratio(mach=m1, specific_heat_ratio=gam)
+    p01_p1 = isentropic_flow.total_pressure_ratio(
+        mach=m1, specific_heat_ratio=gam)
     return NormalShockTable(
         mach_upstream=m1,
         mach_downstream=mach_downstream(
@@ -227,7 +228,7 @@ def lookup_table_by_pitot_pressure(
     def pfunc(mguess: float, _p021: float, _g: float):
         return _p021 - total_pressure_ratio_by_mach(
             mach_upstream=mguess, specific_heat_ratio=gam
-        ) * isentropic.total_pressure_ratio(
+        ) * isentropic_flow.total_pressure_ratio(
             mach=mguess, specific_heat_ratio=gam
         )
 
