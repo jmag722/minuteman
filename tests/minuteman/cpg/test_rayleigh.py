@@ -10,7 +10,7 @@ def test_lookup_table_M_supersonic():
     assert actual["r21"] == pytest.approx(0.68750000214)
     assert actual["T02_T01"] == pytest.approx(0.79338842)
     assert actual["p02_p01"] == pytest.approx(1.50309597)
-    assert actual["ds21_R"] == pytest.approx(-1.21757520)
+    assert actual["ds21_R"] == pytest.approx(1.21757520)
 
 
 def test_lookup_table_M_subsonic():
@@ -21,7 +21,7 @@ def test_lookup_table_M_subsonic():
     assert actual["r21"] == pytest.approx(1.01718034902)
     assert actual["T02_T01"] == pytest.approx(0.99971472)
     assert actual["p02_p01"] == pytest.approx(1.00019443)
-    assert actual["ds21_R"] == pytest.approx(-0.00119303, rel=1e-5)
+    assert actual["ds21_R"] == pytest.approx(0.00119303, rel=1e-5)
 
 
 def test_lookup_table_T_supersonic():
@@ -32,7 +32,7 @@ def test_lookup_table_T_supersonic():
     assert actual["r21"] == pytest.approx(0.65987805677)
     assert actual["T02_T01"] == pytest.approx(0.73433035)
     assert actual["p02_p01"] == pytest.approx(1.74485794)
-    assert actual["ds21_R"] == pytest.approx(-1.89479037)
+    assert actual["ds21_R"] == pytest.approx(1.89479037)
 
 
 def test_lookup_table_T_subsonic():
@@ -43,7 +43,7 @@ def test_lookup_table_T_subsonic():
     assert actual["r21"] == pytest.approx(22.9107618951)
     assert actual["T02_T01"] == pytest.approx(0.08539012)
     assert actual["p02_p01"] == pytest.approx(1.24585906)
-    assert actual["ds21_R"] == pytest.approx(-9.71042109)
+    assert actual["ds21_R"] == pytest.approx(9.71042109)
 
 
 def test_lookup_table_p():
@@ -54,7 +54,7 @@ def test_lookup_table_p():
     assert actual["r21"] == pytest.approx(2.33333338)
     assert actual["T02_T01"] == pytest.approx(0.67346938)
     assert actual["p02_p01"] == pytest.approx(1.11905129)
-    assert actual["ds21_R"] == pytest.approx(-1.49607584)
+    assert actual["ds21_R"] == pytest.approx(1.49607584)
 
 
 def test_lookup_table_p2():
@@ -65,7 +65,7 @@ def test_lookup_table_p2():
     assert actual["r21"] == pytest.approx(0.59090909171)
     assert actual["T02_T01"] == pytest.approx(0.52071005)
     assert actual["p02_p01"] == pytest.approx(13.0368330)
-    assert actual["ds21_R"] == pytest.approx(-5.39554689)
+    assert actual["ds21_R"] == pytest.approx(5.39554689)
 
 
 def test_lookup_table_ptot_supersonic():
@@ -76,7 +76,7 @@ def test_lookup_table_ptot_supersonic():
     assert actual["r21"] == pytest.approx(0.56258049823)
     assert actual["T02_T01"] == pytest.approx(0.39545734)
     assert actual["p02_p01"] == pytest.approx(89.9999999)
-    assert actual["ds21_R"] == pytest.approx(-10.0660836)
+    assert actual["ds21_R"] == pytest.approx(10.0660836)
 
 
 def test_lookup_table_ptotsubsonic():
@@ -88,7 +88,7 @@ def test_lookup_table_ptotsubsonic():
     assert actual["r21"] == pytest.approx(5.96341220006)
     assert actual["T02_T01"] == pytest.approx(0.30725879)
     assert actual["p02_p01"] == pytest.approx(1.19999999)
-    assert actual["ds21_R"] == pytest.approx(-4.93834072)
+    assert actual["ds21_R"] == pytest.approx(4.93834072)
 
 
 def test_lookup_table_rho_supersonic():
@@ -100,7 +100,7 @@ def test_lookup_table_rho_supersonic():
     assert actual["r21"] == pytest.approx(3.333333333)
     assert actual["T02_T01"] == pytest.approx(0.50999999)
     assert actual["p02_p01"] == pytest.approx(1.16120326)
-    assert actual["ds21_R"] == pytest.approx(-2.50616270)
+    assert actual["ds21_R"] == pytest.approx(2.50616270)
 
 
 def test_lookup_table_Ttot_supersonic():
@@ -111,7 +111,7 @@ def test_lookup_table_Ttot_supersonic():
     assert actual["r21"] == pytest.approx(0.61257411404)
     assert actual["T02_T01"] == pytest.approx(0.6)
     assert actual["p02_p01"] == pytest.approx(18.8543774)
-    assert actual["ds21_R"] == pytest.approx(-4.46922198)
+    assert actual["ds21_R"] == pytest.approx(4.46922198)
 
 
 def test_lookup_table_Ttot_subsonic():
@@ -123,7 +123,7 @@ def test_lookup_table_Ttot_subsonic():
     assert actual["r21"] == pytest.approx(19.4868337208)
     assert actual["T02_T01"] == pytest.approx(0.09999999)
     assert actual["p02_p01"] == pytest.approx(1.26039890)
-    assert actual["ds21_R"] == pytest.approx(-7.13918354)
+    assert actual["ds21_R"] == pytest.approx(7.13918354)
 
 
 def test_lookup_table_pressure_temperature():
@@ -152,26 +152,26 @@ def test_lookup_table_pressure_temperature():
 
 def test_entropy():
     # specifying (s1-s*)/R
-    ans_sub = ray.lookup_table(ds21_R=-2, M1=1.0, gam=1.4, is_supersonic=False)
+    ans_sub = ray.lookup_table(ds21_R=2, M1=1.0, gam=1.4, is_supersonic=False)
     assert ans_sub["M2"] == pytest.approx(0.43346186)
     assert ans_sub["p21"] == pytest.approx(1.90017003)
     assert ans_sub["T21"] == pytest.approx(0.67840136)
     assert ans_sub["r21"] == pytest.approx(2.80095254794)
     assert ans_sub["T02_T01"] == pytest.approx(0.58657852)
     assert ans_sub["p02_p01"] == pytest.approx(1.14216936)
-    assert ans_sub["ds21_R"] == pytest.approx(-1.99999999)
+    assert ans_sub["ds21_R"] == pytest.approx(1.99999999)
     # specifying (s2-s*)/R
-    ans_sup = ray.lookup_table(ds21_R=-4, M1=1.0, gam=1.4, is_supersonic=True)
+    ans_sup = ray.lookup_table(ds21_R=4, M1=1.0, gam=1.4, is_supersonic=True)
     assert ans_sup["M2"] == pytest.approx(4.03619180)
     assert ans_sup["p21"] == pytest.approx(0.10080991)
     assert ans_sup["T21"] == pytest.approx(0.16555796)
     assert ans_sup["r21"] == pytest.approx(0.6089100727)
     assert ans_sup["T02_T01"] == pytest.approx(0.58747815)
     assert ans_sup["p02_p01"] == pytest.approx(8.48494372)
-    assert ans_sup["ds21_R"] == pytest.approx(-4.00000000)
+    assert ans_sup["ds21_R"] == pytest.approx(4.00000000)
     # confirm direct calculation is same as solving with sonic condition
     my_s21 = ans_sup["ds21_R"] - ans_sub["ds21_R"]  # (s2-s1)/R
-    assert my_s21 == pytest.approx(-2.000000)
+    assert my_s21 == pytest.approx(2.000000)
     calc_ans_s21 = ray.lookup_table(M2=4.03619180, M1=0.43346186, gam=1.4)
-    assert calc_ans_s21["ds21_R"] == pytest.approx(-2.000000)
+    assert calc_ans_s21["ds21_R"] == pytest.approx(2.000000)
     assert my_s21 == pytest.approx(calc_ans_s21["ds21_R"])
