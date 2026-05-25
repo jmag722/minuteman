@@ -193,9 +193,9 @@ def entropy2(M2, M1=1.0, R: float = 1.0, s1=0.0, gam: float = 1.4):
     ds/R: change in entropy for specific gas constant when `s1`==0.0 and `R`=1.0
     """
     return (
-        s1 + R * np.log(
+        -(s1 + R * np.log(
             ((1+gam*M1*M1)/(1+gam*M2*M2))**(gam+1) * (M2*M2/(M1*M1))**(gam)
-        ) / (gam-1)
+        ) / (gam-1))
     )
 
 
