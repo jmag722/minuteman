@@ -1,5 +1,6 @@
 import numpy as np
 import minuteman.cpg.isentropic_flow as isentropic_flow
+from minuteman import FlowSpeedRegime
 
 
 def test_speed_of_sound_from_temperature():
@@ -65,7 +66,7 @@ def test_lookup_table_by_temperature():
 
 def test_lookup_table_by_area_supersonic():
     actual = isentropic_flow.lookup_table_by_area_ratio(
-        1.094, 1.4, mach_guess=2.0)
+        1.094, 1.4, flow_regime=FlowSpeedRegime.supersonic)
     expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([1.36]),
         temperature=np.array([1.3698630137]),
@@ -80,7 +81,7 @@ def test_lookup_table_by_area_supersonic():
 
 def test_lookup_table_by_area_subsonic():
     actual = isentropic_flow.lookup_table_by_area_ratio(
-        3.1, 1.3, mach_guess=0.2)
+        3.1, 1.3, flow_regime=FlowSpeedRegime.subsonic)
     expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([0.193]),
         temperature=np.array([1.0060362173]),

@@ -13,7 +13,10 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.constants as scc
 
-import minuteman.utils.types as ut
+from minuteman.utils.types import (
+    ArrayOrScalarFloat,
+    ndarray_f,
+)
 
 avogadro = scc.Avogadro
 """Avogadro constant [#/mol]"""
@@ -64,18 +67,18 @@ gas_constant_air_imperial_slug = (
 
 
 def specific_heat_constant_pressure(
-    specific_heat_ratio: ut.ndarray | float, gas_constant: ut.ndarray | float
-) -> ut.ndarray:
+    specific_heat_ratio: ArrayOrScalarFloat, gas_constant: ArrayOrScalarFloat
+) -> ndarray_f:
     """Computes the specific heat at constant pressure.
 
     Valid for perfect (thermally & calorically) gases.
 
     Args:
-        specific_heat_ratio (ndarray | float): ratio of specific heats (gamma)
-        gas_constant (ndarray | float): specific gas constant
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats (gamma)
+        gas_constant (ArrayOrScalarFloat): specific gas constant
 
     Returns:
-        ndarray: specific heat at constant pressure
+        ndarray_f: specific heat at constant pressure
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return gam * specific_heat_constant_volume(
@@ -85,39 +88,39 @@ def specific_heat_constant_pressure(
 
 
 def specific_heat_constant_volume(
-    specific_heat_ratio: ut.ndarray | float, gas_constant: ut.ndarray | float
-) -> ut.ndarray:
+    specific_heat_ratio: ArrayOrScalarFloat, gas_constant: ArrayOrScalarFloat
+) -> ndarray_f:
     """Computes the specific heat at constant volume.
 
     Valid for perfect (thermally & calorically) gases.
 
     Args:
-        specific_heat_ratio (ndarray | float): ratio of specific heats
-        gas_constant (ndarray | float): specific gas constant
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        gas_constant (ArrayOrScalarFloat): specific gas constant
 
     Returns:
-        ndarray: specific heat at constant volume
+        ndarray_f: specific heat at constant volume
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return gas_constant / (gam - 1.0)
 
 
 def entropy_state(
-    pressure: ut.ndarray | float,
-    density: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float,
-    gas_constant: ut.ndarray | float,
-) -> ut.ndarray:
+    pressure: ArrayOrScalarFloat,
+    density: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+    gas_constant: ArrayOrScalarFloat,
+) -> ndarray_f:
     """Compute entropy state of a calorically perfect gas.
 
     Args:
-        pressure (ut.ndarray | float): pressure
-        density (ut.ndarray | float): density
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
-        gas_constant (ut.ndarray | float): specific gas constant
+        pressure (ArrayOrScalarFloat): pressure
+        density (ArrayOrScalarFloat): density
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        gas_constant (ArrayOrScalarFloat): specific gas constant
 
     Returns:
-        ut.ndarray: entropy
+        ndarray_f: entropy
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return np.log(pressure / density**gam) * specific_heat_constant_volume(
@@ -126,23 +129,23 @@ def entropy_state(
 
 
 def entropy_change_tp(
-    temperature_ratio: ut.ndarray | float,
-    pressure_ratio: ut.ndarray | float,
-    specific_heat_constant_pressure: ut.ndarray | float,
-    gas_constant: ut.ndarray | float,
-) -> ut.ndarray:
+    temperature_ratio: ArrayOrScalarFloat,
+    pressure_ratio: ArrayOrScalarFloat,
+    specific_heat_constant_pressure: ArrayOrScalarFloat,
+    gas_constant: ArrayOrScalarFloat,
+) -> ndarray_f:
     """Compute the change in entropy for a known change in temperature and
     pressure.
 
     Args:
-        temperature_ratio (ut.ndarray | float): temperature ratio, T2/T1
-        pressure_ratio (ut.ndarray | float): pressure ratio, p2/p1
-        specific_heat_constant_pressure (ut.ndarray | float): specific heat at
+        temperature_ratio (ArrayOrScalarFloat): temperature ratio, T2/T1
+        pressure_ratio (ArrayOrScalarFloat): pressure ratio, p2/p1
+        specific_heat_constant_pressure (ArrayOrScalarFloat): specific heat at
             constant pressure, cp
-        gas_constant (ut.ndarray | float): specific gas constant R
+        gas_constant (ArrayOrScalarFloat): specific gas constant R
 
     Returns:
-        ut.ndarray: change in entropy, s2-s1
+        ndarray_f: change in entropy, s2-s1
     """
     return specific_heat_constant_pressure * np.log(
         temperature_ratio
@@ -150,23 +153,23 @@ def entropy_change_tp(
 
 
 def entropy_change_tv(
-    temperature_ratio: ut.ndarray | float,
-    specific_volume_ratio: ut.ndarray | float,
-    specific_heat_constant_volume: ut.ndarray | float,
-    gas_constant: ut.ndarray | float,
-) -> ut.ndarray:
+    temperature_ratio: ArrayOrScalarFloat,
+    specific_volume_ratio: ArrayOrScalarFloat,
+    specific_heat_constant_volume: ArrayOrScalarFloat,
+    gas_constant: ArrayOrScalarFloat,
+) -> ndarray_f:
     """Compute the change in entropy for a known change in temperature and
     specific volume.
 
     Args:
-        temperature_ratio (ut.ndarray | float): temperature ratio, T2/T1
-        specific_volume_ratio (ut.ndarray | float): specific volume ratio, v2/v1
-        specific_heat_constant_volume (ut.ndarray | float): specific heat at
+        temperature_ratio (ArrayOrScalarFloat): temperature ratio, T2/T1
+        specific_volume_ratio (ArrayOrScalarFloat): specific volume ratio, v2/v1
+        specific_heat_constant_volume (ArrayOrScalarFloat): specific heat at
             constant volume, cv
-        gas_constant (ut.ndarray | float): specific gas constant, R
+        gas_constant (ArrayOrScalarFloat): specific gas constant, R
 
     Returns:
-        ut.ndarray: change in entropy, s2-s1
+        ndarray_f: change in entropy, s2-s1
     """
     return specific_heat_constant_volume * np.log(
         temperature_ratio
@@ -174,24 +177,24 @@ def entropy_change_tv(
 
 
 def entropy_change_pv(
-    pressure_ratio: ut.ndarray | float,
-    specific_volume_ratio: ut.ndarray | float,
-    specific_heat_constant_pressure: ut.ndarray | float,
-    specific_heat_constant_volume: ut.ndarray | float,
-) -> ut.ndarray:
+    pressure_ratio: ArrayOrScalarFloat,
+    specific_volume_ratio: ArrayOrScalarFloat,
+    specific_heat_constant_pressure: ArrayOrScalarFloat,
+    specific_heat_constant_volume: ArrayOrScalarFloat,
+) -> ndarray_f:
     """Compute the change in entropy for a known change in pressure and
     specific volume.
 
     Args:
-        pressure_ratio (ut.ndarray | float): pressure ratio, p2/p1
-        specific_volume_ratio (ut.ndarray | float): specific volume ratio, v2/v1
-        specific_heat_constant_pressure (ut.ndarray | float): specific heat
+        pressure_ratio (ArrayOrScalarFloat): pressure ratio, p2/p1
+        specific_volume_ratio (ArrayOrScalarFloat): specific volume ratio, v2/v1
+        specific_heat_constant_pressure (ArrayOrScalarFloat): specific heat
             of constant pressure, cp
-        specific_heat_constant_volume (ut.ndarray | float): specific heat
+        specific_heat_constant_volume (ArrayOrScalarFloat): specific heat
             of constant volume, cv
 
     Returns:
-        ut.ndarray: change in entropy, s2-s1
+        ndarray_f: change in entropy, s2-s1
     """
     return specific_heat_constant_volume * np.log(
         pressure_ratio
@@ -204,35 +207,35 @@ class IsentropicProcessResult:
     between states 1 (initial) and 2 (final)
     """
 
-    temperature_ratio: ut.ndarray
+    temperature_ratio: ndarray_f
     """Temperature ratio, T2/T1"""
-    pressure_ratio: ut.ndarray
+    pressure_ratio: ndarray_f
     """Pressure ratio, p2/p1"""
-    density_ratio: ut.ndarray
+    density_ratio: ndarray_f
     """Density ratio, rho2/rho1"""
-    speed_of_sound_ratio: ut.ndarray
+    speed_of_sound_ratio: ndarray_f
     """Speed of sound ratio, a2/a1"""
-    specific_heat_ratio: ut.ndarray
+    specific_heat_ratio: ndarray_f
     """Ratio of specific heats, gamma"""
 
 
 def isentropic_process_from_temperature(
-    temperature_ratio: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float,
+    temperature_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
 ) -> IsentropicProcessResult:
     """Compute the state change of an isentropic process from the change
     in temperature.
 
     Args:
-        temperature_ratio (ut.ndarray | float): temperature ratio, T2/T1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        temperature_ratio (ArrayOrScalarFloat): temperature ratio, T2/T1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
     """
     t21 = np.atleast_1d(temperature_ratio)
-    gam = specific_heat_ratio
+    gam = np.atleast_1d(specific_heat_ratio)
     return IsentropicProcessResult(
         temperature_ratio=t21,
         pressure_ratio=t21 ** (gam / (gam - 1)),
@@ -243,21 +246,21 @@ def isentropic_process_from_temperature(
 
 
 def isentropic_process_from_pressure(
-    pressure_ratio: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+    pressure_ratio: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
 ) -> IsentropicProcessResult:
     """Compute the state change of an isentropic process from the change
     in pressure.
 
     Args:
-        pressure_ratio (ut.ndarray | float): pressure ratio, p2/p1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        pressure_ratio (ArrayOrScalarFloat): pressure ratio, p2/p1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
     """
     p21 = np.atleast_1d(pressure_ratio)
-    gam = specific_heat_ratio
+    gam = np.atleast_1d(specific_heat_ratio)
     return IsentropicProcessResult(
         temperature_ratio=p21 ** ((gam - 1) / gam),
         pressure_ratio=p21,
@@ -268,21 +271,21 @@ def isentropic_process_from_pressure(
 
 
 def isentropic_process_from_density(
-    density_ratio: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
+    density_ratio: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
 ) -> IsentropicProcessResult:
     """Compute the state change of an isentropic process from the change
     in density.
 
     Args:
-        density_ratio (ut.ndarray | float): density ratio, rho2/rho1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        density_ratio (ArrayOrScalarFloat): density ratio, rho2/rho1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
     """
     r21 = np.atleast_1d(density_ratio)
-    gam = specific_heat_ratio
+    gam = np.atleast_1d(specific_heat_ratio)
     return IsentropicProcessResult(
         temperature_ratio=r21 ** (gam - 1),
         pressure_ratio=r21**gam,
@@ -293,22 +296,22 @@ def isentropic_process_from_density(
 
 
 def isentropic_process_from_speed_of_sound(
-    speed_of_sound_ratio: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float,
+    speed_of_sound_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
 ) -> IsentropicProcessResult:
     """Compute the state change of an isentropic process from the change
     in speed of sound.
 
     Args:
-        speed_of_sound_ratio (ut.ndarray | float): speed of sound ratio, a2/a1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        speed_of_sound_ratio (ArrayOrScalarFloat): speed of sound ratio, a2/a1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
     """
     a21 = np.atleast_1d(speed_of_sound_ratio)
-    gam = specific_heat_ratio
+    gam = np.atleast_1d(specific_heat_ratio)
     return IsentropicProcessResult(
         temperature_ratio=a21**2,
         pressure_ratio=a21 ** (2 * gam / (gam - 1)),
@@ -319,41 +322,41 @@ def isentropic_process_from_speed_of_sound(
 
 
 def total_energy(
-    pressure: ut.ndarray | float,
-    density: ut.ndarray | float,
-    speed: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float,
-) -> ut.ndarray:
+    pressure: ArrayOrScalarFloat,
+    density: ArrayOrScalarFloat,
+    speed: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+) -> ndarray_f:
     """Compute total energy per unit volume
 
     Args:
-        pressure (ut.ndarray | float): pressure
-        density (ut.ndarray | float): density
-        speed (ut.ndarray | float): velocity magnitude (sign irrelevant)
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats
+        pressure (ArrayOrScalarFloat): pressure
+        density (ArrayOrScalarFloat): density
+        speed (ArrayOrScalarFloat): velocity magnitude (sign irrelevant)
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
 
     Returns:
-        ut.ndarray: total energy per unit volume
+        ndarray_f: total energy per unit volume
     """
     pressure = np.atleast_1d(pressure)
     return pressure / (specific_heat_ratio - 1) + 0.5 * density * speed**2
 
 
 def specific_enthalpy(
-    specific_internal_energy: ut.ndarray | float,
-    pressure: ut.ndarray | float,
-    density: ut.ndarray | float,
-) -> ut.ndarray:
+    specific_internal_energy: ArrayOrScalarFloat,
+    pressure: ArrayOrScalarFloat,
+    density: ArrayOrScalarFloat,
+) -> ndarray_f:
     """Compute specific enthalpy (per unit mass)
 
     Args:
-        specific_internal_energy (ut.ndarray | float): specific internal
+        specific_internal_energy (ArrayOrScalarFloat): specific internal
             energy
-        pressure (ut.ndarray | float): pressure
-        density (ut.ndarray | float): density
+        pressure (ArrayOrScalarFloat): pressure
+        density (ArrayOrScalarFloat): density
 
     Returns:
-        ut.ndarray: specific enthalpy
+        ndarray_f: specific enthalpy
     """
     e = np.atleast_1d(specific_internal_energy)
     return e + pressure / density

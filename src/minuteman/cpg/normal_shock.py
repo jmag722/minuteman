@@ -10,47 +10,52 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize import fsolve
 import minuteman.cpg.isentropic_flow as isentropic_flow
-import minuteman.utils.types as ut
+from minuteman.utils.types import (
+    ArrayOrScalarFloat,
+    check_equal_shape,
+    Floatlike,
+    ndarray_f,
+)
 
 
 @dataclass
 class NormalShockTable:
     """Normal shock table, for calorically perfect gas"""
 
-    mach_upstream: ut.ndarray
+    mach_upstream: ndarray_f
     """Upstream mach number, M1"""
 
-    mach_downstream: ut.ndarray
+    mach_downstream: ndarray_f
     """Downstream mach number, M2"""
 
-    temperature_ratio: ut.ndarray
+    temperature_ratio: ndarray_f
     """Temperature ratio, T2/T1"""
 
-    pressure_ratio: ut.ndarray
+    pressure_ratio: ndarray_f
     """Static pressure ratio, p2/p1"""
 
-    density_ratio: ut.ndarray
+    density_ratio: ndarray_f
     """Density ratio, rho2/rho1"""
 
-    total_pressure_ratio: ut.ndarray
+    total_pressure_ratio: ndarray_f
     """Total pressure ratio, p02/p01"""
 
-    pitot_pressure_ratio: ut.ndarray
+    pitot_pressure_ratio: ndarray_f
     """Rayleigh Pitot tube pressure ratio, p02/p1"""
 
-    specific_heat_ratio: ut.ndarray
+    specific_heat_ratio: ndarray_f
     """Ratio of specific heats, gamma"""
 
 
 def lookup_table_by_upstream_mach(
-    mach_upstream: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float = 1.4,
+    mach_upstream: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
     """Look up a normal shock table result from the upstream Mach number, M1
 
     Args:
-        mach_upstream (ut.ndarray | float): upstream Mach number, M1
-        specific_heat_ratio (ut.ndarray | float, optional): Ratio of specific
+        mach_upstream (ArrayOrScalarFloat): upstream Mach number, M1
+        specific_heat_ratio (ArrayOrScalarFloat, optional): Ratio of specific
             heats, gamma. Defaults to 1.4.
 
     Returns:
@@ -62,7 +67,8 @@ def lookup_table_by_upstream_mach(
         mach_upstream=m1, specific_heat_ratio=gam
     )
     p01_p1 = isentropic_flow.total_pressure_ratio(
-        mach=m1, specific_heat_ratio=gam)
+        mach=m1, specific_heat_ratio=gam
+    )
     return NormalShockTable(
         mach_upstream=m1,
         mach_downstream=mach_downstream(
@@ -82,27 +88,27 @@ def lookup_table_by_upstream_mach(
 
 
 def lookup_table_by_temperature(
-    temperature_ratio: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float = 1.4,
+    temperature_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
     """Look up a normal shock table result from the temperature ratio, T2/T1
 
     Args:
-        temperature_ratio (ut.ndarray | float): temperature ratio, T2/T1
-        specific_heat_ratio (ut.ndarray | float, optional): Ratio of specific
+        temperature_ratio (ArrayOrScalarFloat): temperature ratio, T2/T1
+        specific_heat_ratio (ArrayOrScalarFloat, optional): Ratio of specific
             heats, gamma. Defaults to 1.4.
 
     Returns:
         NormalShockTable: normal shock table result
     """
     t21 = np.atleast_1d(temperature_ratio)
-    gam = (
-        ut.scalar2array(specific_heat_ratio, t21.shape)
-        if np.isscalar(specific_heat_ratio)
-        else np.atleast_1d(specific_heat_ratio)
-    )
-    # invert the T2/T1 -> M1 relationship
+    if isinstance(specific_heat_ratio, Floatlike):
+        gam = np.full_like(t21, specific_heat_ratio)
+    else:
+        gam = specific_heat_ratio
+    check_equal_shape(t21.shape, gam.shape)
 
+    # invert the T2/T1 -> M1 relationship
     def tfunc(mguess: float, _t: float, _g: float):
         return _t - temperature_ratio_by_upstream_mach(
             mach_upstream=mguess, specific_heat_ratio=_g
@@ -120,21 +126,21 @@ def lookup_table_by_temperature(
 
 
 def lookup_table_by_pressure(
-    pressure_ratio: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float = 1.4,
+    pressure_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
     """Look up a normal shock table result from the static pressure ratio, p2/p1
 
     Args:
-        pressure_ratio (ut.ndarray | float): static pressure ratio, p2/p1
-        specific_heat_ratio (ut.ndarray | float, optional): Ratio of specific
+        pressure_ratio (ArrayOrScalarFloat): static pressure ratio, p2/p1
+        specific_heat_ratio (ArrayOrScalarFloat, optional): Ratio of specific
             heats, gamma. Defaults to 1.4.
 
     Returns:
         NormalShockTable: normal shock table result
     """
     p21 = np.atleast_1d(pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
     # invert the p2/p1 -> M1 relationship
     m1 = ((p21 - 1) * (gam + 1) / (2 * gam) + 1) ** 0.5
     return lookup_table_by_upstream_mach(
@@ -143,21 +149,21 @@ def lookup_table_by_pressure(
 
 
 def lookup_table_by_density(
-    density_ratio: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float = 1.4,
+    density_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
     """Look up a normal shock table result from the density ratio, rho2/rho1
 
     Args:
-        density_ratio (ut.ndarray | float): density ratio, rho2/rho1
-        specific_heat_ratio (ut.ndarray | float, optional): Ratio of specific
+        density_ratio (ArrayOrScalarFloat): density ratio, rho2/rho1
+        specific_heat_ratio (ArrayOrScalarFloat, optional): Ratio of specific
             heats, gamma. Defaults to 1.4.
 
     Returns:
         NormalShockTable: normal shock table result
     """
     r21 = np.atleast_1d(density_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
     # invert the rho2/rho1 -> M1 relationship
     m1 = (2.0 / ((gam + 1) / r21 - gam + 1)) ** 0.5
     return lookup_table_by_upstream_mach(
@@ -166,27 +172,27 @@ def lookup_table_by_density(
 
 
 def lookup_table_by_total_pressure(
-    total_pressure_ratio: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float = 1.4,
+    total_pressure_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
     """Look up a normal shock table result from the total pressure ratio, p02/p01
 
     Args:
-        total_pressure_ratio (ut.ndarray | float): total pressure ratio, p02/p01
-        specific_heat_ratio (ut.ndarray | float, optional): Ratio of specific
+        total_pressure_ratio (ArrayOrScalarFloat): total pressure ratio, p02/p01
+        specific_heat_ratio (ArrayOrScalarFloat, optional): Ratio of specific
             heats, gamma. Defaults to 1.4.
 
     Returns:
         NormalShockTable: normal shock table result
     """
     p02_p01 = np.atleast_1d(total_pressure_ratio)
-    gam = (
-        ut.scalar2array(specific_heat_ratio, p02_p01.shape)
-        if np.isscalar(specific_heat_ratio)
-        else np.atleast_1d(specific_heat_ratio)
-    )
-    # invert the p02/p01 -> M1 relationship
+    if isinstance(specific_heat_ratio, Floatlike):
+        gam = np.full_like(p02_p01, specific_heat_ratio)
+    else:
+        gam = specific_heat_ratio
+    check_equal_shape(p02_p01.shape, gam.shape)
 
+    # invert the p02/p01 -> M1 relationship
     def pfunc(mguess: float, _p021: float, _g: float):
         return _p021 - total_pressure_ratio_by_mach(
             mach_upstream=mguess, specific_heat_ratio=_g
@@ -204,32 +210,32 @@ def lookup_table_by_total_pressure(
 
 
 def lookup_table_by_pitot_pressure(
-    pitot_pressure_ratio: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float = 1.4,
+    pitot_pressure_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
     """Look up a normal shock table result from the Rayleigh Pitot tube pressure ratio, p02/p1
 
     Args:
-        total_pressure_ratio (ut.ndarray | float): Rayleigh Pitot tube pressure ratio, p02/p1
-        specific_heat_ratio (ut.ndarray | float, optional): Ratio of specific
+        total_pressure_ratio (ArrayOrScalarFloat): Rayleigh Pitot tube pressure ratio, p02/p1
+        specific_heat_ratio (ArrayOrScalarFloat, optional): Ratio of specific
             heats, gamma. Defaults to 1.4.
 
     Returns:
         NormalShockTable: normal shock table result
     """
     p02_p1 = np.atleast_1d(pitot_pressure_ratio)
-    gam = (
-        ut.scalar2array(specific_heat_ratio, p02_p1.shape)
-        if np.isscalar(specific_heat_ratio)
-        else np.atleast_1d(specific_heat_ratio)
-    )
-    # invert the p02/p1 -> M1 relationship
+    if isinstance(specific_heat_ratio, Floatlike):
+        gam = np.full_like(p02_p1, specific_heat_ratio)
+    else:
+        gam = specific_heat_ratio
+    check_equal_shape(p02_p1.shape, gam.shape)
 
+    # invert the p02/p1 -> M1 relationship
     def pfunc(mguess: float, _p021: float, _g: float):
         return _p021 - total_pressure_ratio_by_mach(
-            mach_upstream=mguess, specific_heat_ratio=gam
+            mach_upstream=mguess, specific_heat_ratio=_g
         ) * isentropic_flow.total_pressure_ratio(
-            mach=mguess, specific_heat_ratio=gam
+            mach=mguess, specific_heat_ratio=_g
         )
 
     m1 = np.array(
@@ -244,21 +250,22 @@ def lookup_table_by_pitot_pressure(
 
 
 def lookup_table_by_downstream_mach(
-    mach_downstream: ut.ndarray | float,
-    specific_heat_ratio: ut.ndarray | float = 1.4,
+    mach_downstream: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
     """Look up a normal shock table result from the downstream Mach number, M2
 
     Args:
-        mach_downstream (ut.ndarray | float): downstream Mach number, M2
-        specific_heat_ratio (ut.ndarray | float, optional): Ratio of specific
+        mach_downstream (ArrayOrScalarFloat): downstream Mach number, M2
+        specific_heat_ratio (ArrayOrScalarFloat, optional): Ratio of specific
             heats, gamma. Defaults to 1.4.
 
     Returns:
         NormalShockTable: normal shock table result
     """
     m2 = np.atleast_1d(mach_downstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
+
     # invert the M1 -> M2 relationship
     m1 = (
         (1 + m2**2 * 0.5 * (gam - 1)) / (gam * m2**2 - 0.5 * (gam - 1))
@@ -269,30 +276,30 @@ def lookup_table_by_downstream_mach(
 
 
 def mach_downstream(
-    mach_upstream: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
-) -> ut.ndarray:
+    mach_upstream: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
+) -> ndarray_f:
     """Computes the Mach number downstream of a normal shock, M2.
 
     This form is valid for calorically perfect gases only, where `gamma`
     is constant (M1 < 5).
 
     Args:
-        mach_upstream (ut.ndarray | float): upstream Mach number, M1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        mach_upstream (ArrayOrScalarFloat): upstream Mach number, M1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
-        ut.ndarray: downstream Mach number, M2
+        ndarray_f: downstream Mach number, M2
     """
     m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
     return (
         (1 + 0.5 * (gam - 1) * m1**2) / (gam * m1**2 - 0.5 * (gam - 1))
     ) ** 0.5
 
 
 def density_ratio(
-    mach_upstream: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
-) -> ut.ndarray:
+    mach_upstream: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
+) -> ndarray_f:
     """Computes the density ratio across a normal shock, rho2/rho1.
 
     This form is valid for calorically perfect gases only, where `gamma`
@@ -302,62 +309,62 @@ def density_ratio(
     u1/u2
 
     Args:
-        mach_upstream (ut.ndarray | float): upstream Mach number, M1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        mach_upstream (ArrayOrScalarFloat): upstream Mach number, M1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
-        ut.ndarray: density ratio, rho2/rho1
+        ndarray_f: density ratio, rho2/rho1
     """
     m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
     return (gam + 1) * m1**2 / (2 + (gam - 1) * m1**2)
 
 
 def pressure_ratio(
-    mach_upstream: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
-) -> ut.ndarray:
+    mach_upstream: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
+) -> ndarray_f:
     """Computes the static pressure ratio across a normal shock, p2/p1.
 
     This form is valid for calorically perfect gases only, where `gamma`
     is constant (M1 < 5).
 
     Args:
-        mach_upstream (ut.ndarray | float): upstream Mach number, M1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        mach_upstream (ArrayOrScalarFloat): upstream Mach number, M1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
-        ut.ndarray: static pressure ratio, p2/p1
+        ndarray_f: static pressure ratio, p2/p1
     """
     m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
     return 1 + 2 * gam / (gam + 1) * (m1**2 - 1)
 
 
 def total_pressure_ratio_by_mach(
-    mach_upstream: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
-) -> ut.ndarray:
+    mach_upstream: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
+) -> ndarray_f:
     """Computes the total pressure ratio across a normal shock, p02/p01.
 
     This form is valid for calorically perfect gases only, where `gamma`
     is constant (M1 < 5).
 
     Args:
-        mach_upstream (ut.ndarray | float): upstream Mach number, M1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        mach_upstream (ArrayOrScalarFloat): upstream Mach number, M1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
-        ut.ndarray: total pressure ratio across shock, p02/p01
+        ndarray_f: total pressure ratio across shock, p02/p01
     """
     m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
     return ((gam + 1) / (2 * gam * m1**2 - gam + 1)) ** (1.0 / (gam - 1)) * (
         (gam + 1) * m1**2 / ((gam - 1) * m1**2 + 2)
     ) ** (gam / (gam - 1))
 
 
 def temperature_ratio_by_upstream_mach(
-    mach_upstream: ut.ndarray | float, specific_heat_ratio: ut.ndarray | float
-) -> ut.ndarray:
+    mach_upstream: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
+) -> ndarray_f:
     """Computes the temperature ratio across a normal shock, T2/T1.
 
     This form is valid for calorically perfect gases only, where `gamma`
@@ -365,14 +372,14 @@ def temperature_ratio_by_upstream_mach(
     across the normal shock, h2/h1
 
     Args:
-        mach_upstream (ut.ndarray | float): upstream Mach number, M1
-        specific_heat_ratio (ut.ndarray | float): ratio of specific heats, gamma
+        mach_upstream (ArrayOrScalarFloat): upstream Mach number, M1
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
-        ut.ndarray: temperature ratio across shock, T2/T1
+        ndarray_f: temperature ratio across shock, T2/T1
     """
     m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
     return (
         (1 + 2 * gam / (gam + 1) * (m1**2 - 1))
         * (2 + (gam - 1) * m1**2)
@@ -381,30 +388,30 @@ def temperature_ratio_by_upstream_mach(
 
 
 def entropy_change(
-    total_pressure_ratio: ut.ndarray | float, gas_constant: ut.ndarray | float
-) -> ut.ndarray:
+    total_pressure_ratio: ArrayOrScalarFloat, gas_constant: ArrayOrScalarFloat
+) -> ndarray_f:
     """Compute the change in specific entropy across a normal shock, s2-s1
 
     This form is valid for calorically and thermally perfect gases over
     a stationary shock.
 
     Args:
-        total_pressure_ratio (ut.ndarray | float): total pressure ratio, p02/p01
-        gas_constant (ut.ndarray | float): specific gas constant, R
+        total_pressure_ratio (ArrayOrScalarFloat): total pressure ratio, p02/p01
+        gas_constant (ArrayOrScalarFloat): specific gas constant, R
 
     Returns:
-        ut.ndarray: change in specific entropy, s2-s1
+        ndarray_f: change in specific entropy, s2-s1
     """
     p02_p01 = np.atleast_1d(total_pressure_ratio)
     return -gas_constant * np.log(p02_p01)
 
 
 def internal_energy_change(
-    pressure_upstream: ut.ndarray | float,
-    pressure_downstream: ut.ndarray | float,
-    density_upstream: ut.ndarray | float,
-    density_downstream: ut.ndarray | float,
-) -> ut.ndarray:
+    pressure_upstream: ArrayOrScalarFloat,
+    pressure_downstream: ArrayOrScalarFloat,
+    density_upstream: ArrayOrScalarFloat,
+    density_downstream: ArrayOrScalarFloat,
+) -> ndarray_f:
     """Computes the change in specific internal energy across a normal shock.
     This is the Hugoniot relation.
 
@@ -412,13 +419,13 @@ def internal_energy_change(
     This relation is valid for perfect, chemically reacting, and real gases.
 
     Args:
-        pressure_upstream (ut.ndarray | float): upstream static pressure
-        pressure_downstream (ut.ndarray | float): downstream static pressure
-        density_upstream (ut.ndarray | float): upstream static density
-        density_downstream (ut.ndarray | float): downstream static density
+        pressure_upstream (ArrayOrScalarFloat): upstream static pressure
+        pressure_downstream (ArrayOrScalarFloat): downstream static pressure
+        density_upstream (ArrayOrScalarFloat): upstream static density
+        density_downstream (ArrayOrScalarFloat): downstream static density
 
     Returns:
-        ut.ndarray: change in specific internal energy
+        ndarray_f: change in specific internal energy
     """
     p1 = np.atleast_1d(pressure_upstream)
     # compute specific volumes

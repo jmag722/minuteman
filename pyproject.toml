@@ -62,8 +62,6 @@ project-includes = [
     "**/*.py*",
     "**/*.ipynb",
 ]
-[tool.pyrefly.errors]
-unsupported-operation = false
 
 [build-system]
 requires = ["hatchling"]
