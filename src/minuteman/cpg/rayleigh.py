@@ -305,7 +305,8 @@ def _rev_entropy_ratio_by_mach(
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
     """This function computes (s1-s2)/R. This is handy because s1 becomes
-    the critical/sonic point, s*
+    the critical/sonic point, s*, and this allows you to get the typical
+    positive value back out
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -324,13 +325,13 @@ def entropy_ratio_by_mach(
 
     Args:
         mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            simply Mach, M if mach_final==1.0
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is the
-            reference Mach number.
+            the reference Mach number, M*, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
+            the Mach number, M, when mach_initial==1.0
         specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
-        ndarray_f: entropy ratio, (s2-s1)/R (or (s*-s)/R if M2==1.0)
+        ndarray_f: entropy ratio, (s2-s1)/R (or (s-s*)/R if mach_initial==1.0)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -352,9 +353,9 @@ def total_pressure_ratio_by_mach(
 
     Args:
         mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            simply Mach, M if mach_final==1.0
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is the
-            reference Mach number.
+            the reference Mach number, M*, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
+            the Mach number, M, when mach_initial==1.0
         specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
@@ -386,9 +387,9 @@ def total_temperature_ratio_by_mach(
 
     Args:
         mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            simply Mach, M if mach_final==1.0
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is the
-            reference Mach number.
+            the reference Mach number, M*, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
+            the Mach number, M, when mach_initial==1.0
         specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
@@ -419,9 +420,9 @@ def pressure_ratio_by_mach(
 
     Args:
         mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            simply Mach, M if mach_final==1.0
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is the
-            reference Mach number.
+            the reference Mach number, M*, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
+            the Mach number, M, when mach_initial==1.0
         specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
@@ -442,9 +443,9 @@ def temperature_ratio_by_mach(
 
     Args:
         mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            simply Mach, M if mach_final==1.0
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is the
-            reference Mach number.
+            the reference Mach number, M*, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
+            the Mach number, M, when mach_initial==1.0
         specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
@@ -465,9 +466,9 @@ def density_ratio_by_mach(
 
     Args:
         mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            simply Mach, M if mach_final==1.0
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is the
-            reference Mach number.
+            the reference Mach number, M*, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
+            the Mach number, M, when mach_initial==1.0
         specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
 
     Returns:
