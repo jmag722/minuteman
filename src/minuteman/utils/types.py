@@ -62,7 +62,7 @@ def mach_guess_from_flow_regime(
     elif isinstance(flow_regime, np.ndarray):
         check_equal_shape(flow_regime.shape, shape)
         return np.where(
-            flow_regime is FlowSpeedRegime.supersonic,
+            flow_regime == FlowSpeedRegime.supersonic,
             mach_supersonic,
             mach_subsonic,
         )
