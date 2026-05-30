@@ -13,3 +13,23 @@ There are GUI-based and web browser alternatives ([AerospaceWeb](https://aerospa
 - want to perform large trade studies, varying different parameters with multiple values (not feasible in a GUI or browser)
 
 - are not comfortable entering their data in a web browser (CUI or otherwise sensitive)
+
+## Installation
+
+Simply pip-installing the package in place (using traditional pip or uv) will work.
+
+```bash
+git clone git@github.com:jmag722/minuteman.git
+cd minuteman
+uv venv
+source .venv/bin/activate
+uv pip install .
+```
+
+## Documentation
+
+Documentation available at [https://jmag722.github.io/minuteman/](https://jmag722.github.io/minuteman/)
+
+## License
+
+Minuteman uses the Apache 2.0 license, see the [license](LICENSE) file for more detail.
