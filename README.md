@@ -1,8 +1,8 @@
 # Minuteman
 
-| Language | Coverage | License |
-| -------- | -------- | -------- |
-| ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) | ![Code Coverage](tests/badges/coverage.svg) | [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) |
+| Language | Status | Coverage | License |
+| -------- | -------- | -------- | -------- |
+| ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) | [![CI](https://github.com/jmag722/minuteman/actions/workflows/CI.yml/badge.svg)](https://github.com/jmag722/minuteman/actions/workflows/CI.yml) | ![Code Coverage](tests/badges/coverage.svg) | [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) |
 
 Minuteman is a toolkit for rapid solutions to common engineering problems. I'm currently prioritizing thermo-, gas and fluid dynamics, but will grow to include heat transfer, chemistry, plasma, and others (solid mechanics?).
 
