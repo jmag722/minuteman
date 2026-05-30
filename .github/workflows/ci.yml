@@ -30,23 +30,26 @@ jobs:
         pip install . --group dev
     - name: Run pytest and code coverage
       run: |
-        python -m pytest --cov=. --cov-report=html
+        python -m pytest --cov=. --cov-report=html --cov-report=xml
     - name: Upload HTML report if check failed
       uses: actions/upload-artifact@v7
       with:
         name: html-report
         path: htmlcov
 
-    - name: Generate Coverage Badge
-      uses: tj-actions/coverage-badge-py@v2
-      with:
-        output: coverage.svg
-    - name: Publish badge to separate branch
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        branch: coverage-badge
-        folder: .
-        target-folder: .
+    - name: Generate badge with genbadge
+      run: |
+        # Creates an SVG badge at assets/coverage.svg using the coverage.xml report
+        mkdir -p assets
+        genbadge coverage -i coverage.xml -o assets/coverage.svg
+
+    - name: Commit and push badge if changed
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add assets/coverage.svg
+        # Only commit if the badge file actually changed to avoid endless loop runs
+        git diff --quiet && git diff --staged --quiet || (git commit -m "docs: update coverage badge [skip ci]" && git push)
 
     - name: Lint with flake8
       run: |

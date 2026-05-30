@@ -28,6 +28,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "flake8", # TODO: remove once refactor complete
+  "genbadge",
   "mkdocstrings",
   "mkdocstrings-python",
   "pyrefly",
