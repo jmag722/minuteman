@@ -36,17 +36,18 @@ jobs:
       with:
         name: html-report
         path: htmlcov
-      if: ${{ failure() }}
-    # - name: Generate Coverage Badge
-    #   uses: tj-actions/coverage-badge-py@v2
-    #   with:
-    #     output: coverage.svg
-    # - name: Publish badge to separate branch
-    #   uses: JamesIves/github-pages-deploy-action@v4
-    #   with:
-    #     branch: coverage-badge
-    #     folder: .
-    #     target-folder: .
+
+    - name: Generate Coverage Badge
+      uses: tj-actions/coverage-badge-py@v2
+      with:
+        output: coverage.svg
+    - name: Publish badge to separate branch
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: coverage-badge
+        folder: .
+        target-folder: .
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
