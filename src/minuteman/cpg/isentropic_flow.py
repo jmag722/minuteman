@@ -1,4 +1,4 @@
-"""
+r"""
 Compressible, inviscid flow relations.
 
 These functions are basic definitions pertaining to 1-,2-, and 3-D
@@ -30,14 +30,14 @@ from minuteman import FlowSpeedRegime
 def mach_number(
     velocity: ArrayOrScalarFloat, speed_of_sound: ArrayOrScalarFloat
 ) -> ndarray_f:
-    """Compute Mach number
+    r"""Compute Mach number, $M$
 
     Args:
-        velocity (ArrayOrScalarFloat): velocity
-        speed_of_sound (ArrayOrScalarFloat): speed of sound
+        velocity (ArrayOrScalarFloat): velocity, $v$
+        speed_of_sound (ArrayOrScalarFloat): speed of sound, $a$
 
     Returns:
-        ndarray_f: Mach number
+        ndarray_f: Mach number, $M$
     """
     return np.atleast_1d(velocity) / speed_of_sound
 
@@ -47,15 +47,17 @@ def speed_of_sound_from_temperature(
     temperature: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Compute the speed of sound from the gas constant (R) and temperature (T)
+    r"""Compute the speed of sound from the specific gas constant $R$ and
+    temperature $T$
 
     Args:
-        gas_constant (ArrayOrScalarFloat): gas constant
-        temperature (ArrayOrScalarFloat): temperature
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        gas_constant (ArrayOrScalarFloat): specific gas constant, $R$
+        temperature (ArrayOrScalarFloat): temperature $T$
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: speed of sound
+        ndarray_f: speed of sound, $a$
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return (gam * gas_constant * temperature) ** 0.5
@@ -66,15 +68,16 @@ def speed_of_sound_from_pressure(
     density: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Compute the speed of sound from the pressure (p) and density (r)
+    r"""Compute the speed of sound $a$ from the pressure $p$ and density $\rho$
 
     Args:
-        pressure (ArrayOrScalarFloat): pressure
-        density (ArrayOrScalarFloat): density
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        pressure (ArrayOrScalarFloat): pressure, $p$
+        density (ArrayOrScalarFloat): density, $\rho$
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: speed of sound
+        ndarray_f: speed of sound, $a$
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return (gam * pressure / density) ** 0.5
@@ -87,30 +90,30 @@ class IsentropicFlowTable:
     """
 
     mach: ndarray_f
-    """Mach number"""
+    r"""Mach number, $M$"""
     temperature: ndarray_f
-    """total temperature ratio, T0/T"""
+    r"""total temperature ratio, $T_0 / T$"""
     pressure: ndarray_f
-    """total pressure ratio, p0/p"""
+    r"""total pressure ratio, $p_0 / p$"""
     density: ndarray_f
-    """total density ratio, rho0/rho"""
+    r"""total density ratio, $\rho_0 / \rho$"""
     speed_of_sound: ndarray_f
-    """total speed of sound ratio, a0/a"""
+    r"""total speed of sound ratio, $a_0 / a$"""
     area_ratio: ndarray_f
-    """area ratio, A/A*"""
+    r"""area ratio, $A / A^*$"""
     specific_heat_ratio: ndarray_f
-    """ratio of specific heats, gamma"""
+    r"""ratio of specific heats, $\gamma$"""
 
 
 def lookup_table_by_mach(
     mach: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat = 1.4
 ) -> IsentropicFlowTable:
-    """Lookup the isentropic flow table based on Mach number
+    r"""Lookup the isentropic flow table based on Mach number, $M$
 
     Args:
-        mach (ArrayOrScalarFloat): Mach number, M
+        mach (ArrayOrScalarFloat): Mach number, $M$
         specific_heat_ratio (ArrayOrScalarFloat): ratio of
-            specific heats, gamma. Defaults to 1.4.
+            specific heats, $\gamma$. Defaults to 1.4.
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
@@ -138,12 +141,14 @@ def lookup_table_by_temperature(
     temperature_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> IsentropicFlowTable:
-    """Lookup the isentropic flow table based on total temperature ratio
+    r"""Lookup the isentropic flow table based on total temperature ratio,
+    $T_0 / T$
 
     Args:
-        temperature_ratio (ArrayOrScalarFloat): total temperature ratio, T0/T
+        temperature_ratio (ArrayOrScalarFloat): total temperature ratio,
+            $T_0 / T$
         specific_heat_ratio (ArrayOrScalarFloat): ratio of
-            specific heats, gamma. Defaults to 1.4.
+            specific heats, $\gamma$. Defaults to 1.4.
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
@@ -159,12 +164,13 @@ def lookup_table_by_pressure(
     pressure_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> IsentropicFlowTable:
-    """Lookup the isentropic flow table based on total pressure ratio
+    r"""Lookup the isentropic flow table based on total pressure ratio,
+    $p_0 / p$
 
     Args:
-        pressure_ratio (ArrayOrScalarFloat): total pressure ratio, p0/p
+        pressure_ratio (ArrayOrScalarFloat): total pressure ratio, $p_0 / p$
         specific_heat_ratio (ArrayOrScalarFloat): ratio of
-            specific heats, gamma. Defaults to 1.4.
+            specific heats, $\gamma$. Defaults to 1.4.
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
@@ -182,12 +188,13 @@ def lookup_table_by_density(
     density_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> IsentropicFlowTable:
-    """Lookup the isentropic flow table based on total density ratio
+    r"""Lookup the isentropic flow table based on total density ratio,
+    $\rho_0 / \rho$
 
     Args:
-        density_ratio (ArrayOrScalarFloat): total density ratio, rho0/rho
+        density_ratio (ArrayOrScalarFloat): total density ratio, $\rho_0 / \rho$
         specific_heat_ratio (ArrayOrScalarFloat): ratio of
-            specific heats, gamma. Defaults to 1.4.
+            specific heats, $\gamma$. Defaults to 1.4.
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
@@ -205,13 +212,14 @@ def lookup_table_by_speed_of_sound(
     speed_of_sound_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> IsentropicFlowTable:
-    """Lookup the isentropic flow table based on total speed of sound ratio
+    r"""Lookup the isentropic flow table based on total speed of sound ratio,
+    $a_0 / a$
 
     Args:
         speed_of_sound_ratio (ArrayOrScalarFloat): total speed of sound ratio,
-            a0/a
+            $a_0 / a$
         specific_heat_ratio (ArrayOrScalarFloat): ratio of
-            specific heats, gamma. Defaults to 1.4.
+            specific heats, $\gamma$. Defaults to 1.4.
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
@@ -231,14 +239,14 @@ def lookup_table_by_area_ratio(
     flow_regime: ndarray_FlowSpeedRegime
     | FlowSpeedRegime = FlowSpeedRegime.supersonic,
 ) -> IsentropicFlowTable:
-    """Lookup the isentropic flow table based on area ratio
+    r"""Lookup the isentropic flow table based on area ratio, $A / A^*$
 
     Args:
-        area_ratio (ArrayOrScalarFloat): area ratio, A/A*
+        area_ratio (ArrayOrScalarFloat): area ratio, $A / A^*$
         specific_heat_ratio (ArrayOrScalarFloat): ratio of
-            specific heats, gamma. Defaults to 1.4.
+            specific heats, $\gamma$. Defaults to 1.4.
         flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime): Is flowfield
-            subsonic or supersonic. Default is FlowSpeedRegime.supersonic
+            subsonic or supersonic. Default is ``FlowSpeedRegime.supersonic``
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
@@ -266,14 +274,15 @@ def lookup_table_by_area_ratio(
 def total_temperature_ratio(
     mach: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
 ) -> ndarray_f:
-    """Computes the stagnation or total temperature ratio, T0/T
+    r"""Computes the stagnation or total temperature ratio, $T_0 / T$
 
     Args:
-        mach (ArrayOrScalarFloat): Mach number
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        mach (ArrayOrScalarFloat): Mach number, $M$
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: total temperature ratio
+        ndarray_f: total temperature ratio, $T_0 / T$
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return 1 + 0.5 * (gam - 1) * mach**2
@@ -283,14 +292,16 @@ def mach_from_temperature(
     temperature_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Computes the Mach number from total temperature ratio T0/T
+    r"""Computes the Mach number $M$ from total temperature ratio $T_0 / T$
 
     Args:
-        temperature_ratio (ArrayOrScalarFloat): total temperature ratio
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        temperature_ratio (ArrayOrScalarFloat): total temperature ratio,
+            $T_0 / T$
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ArrayOrScalarFloat: _description_
+        ArrayOrScalarFloat: Mach number, $M$
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return (2.0 / (gam - 1) * (temperature_ratio - 1)) ** 0.5
@@ -299,14 +310,15 @@ def mach_from_temperature(
 def total_pressure_ratio(
     mach: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
 ) -> ndarray_f:
-    """Computes the stagnation or total pressure ratio, p0/p
+    r"""Computes the stagnation or total pressure ratio, $p_0 / p$
 
     Args:
-        mach (ArrayOrScalarFloat): Mach number
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        mach (ArrayOrScalarFloat): Mach number, $M$
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: total pressure ratio
+        ndarray_f: total pressure ratio, $p_0 / p$
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return total_temperature_ratio(mach=mach, specific_heat_ratio=gam) ** (
@@ -317,14 +329,15 @@ def total_pressure_ratio(
 def total_density_ratio(
     mach: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
 ) -> ndarray_f:
-    """Computes the stagnation or total density ratio, rho0/rho
+    r"""Computes the stagnation or total density ratio, $\rho_0 / \rho$
 
     Args:
-        mach (ArrayOrScalarFloat): Mach number
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        mach (ArrayOrScalarFloat): Mach number, $M$
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: total density ratio
+        ndarray_f: total density ratio, $\rho_0 / \rho$
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return total_temperature_ratio(mach=mach, specific_heat_ratio=gam) ** (
@@ -335,14 +348,15 @@ def total_density_ratio(
 def total_speed_of_sound_ratio(
     mach: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
 ) -> ndarray_f:
-    """Computes the stagnation or total speed of sound ratio, a0/a
+    r"""Computes the stagnation or total speed of sound ratio, $a_0 / a$
 
     Args:
-        mach (ArrayOrScalarFloat): Mach number
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        mach (ArrayOrScalarFloat): Mach number, $M$
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: total speed of sound ratio
+        ndarray_f: total speed of sound ratio, $a_0 / a$
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return (total_temperature_ratio(mach=mach, specific_heat_ratio=gam)) ** 0.5
@@ -359,16 +373,17 @@ def _area_mach_relation_sqr(m, gam):
 def area_mach_relation(
     mach: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
 ) -> ndarray_f:
-    """Computes the area ratio A/A* for an isentropic nozzle.
+    r"""Computes the area ratio $A / A^*$ for an isentropic nozzle.
 
     This is the standard area-Mach number relation
 
     Args:
-        mach (ArrayOrScalarFloat): Mach number
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats
+        mach (ArrayOrScalarFloat): Mach number, $M$
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: area ratio A/A*
+        ndarray_f: area ratio, $A / A^*$
     """
     return _area_mach_relation_sqr(m=mach, gam=specific_heat_ratio) ** 0.5
 
@@ -378,11 +393,11 @@ def mach_from_area_ratio(
     specific_heat_ratio: Floatlike,
     mach_guess: Floatlike,
 ) -> Floatlike:
-    """Compute the Mach number for a known area ratio, A/A*
+    r"""Compute the Mach number for a known area ratio, $A / A^*$
 
     Args:
-        area_ratio (Floatlike): area ratio
-        specific_heat_ratio (Floatlike): ratio of specific heats
+        area_ratio (Floatlike): area ratio, $A / A^*$
+        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$
         mach_guess (Floatlike): Guess for the Mach number.
             A value above unity is suitable for supersonic Mach (2.0 is good).
             If a subsonic Mach solution is desired, set to a value below

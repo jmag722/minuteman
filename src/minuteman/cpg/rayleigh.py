@@ -24,47 +24,47 @@ from minuteman.utils.types import (
 
 @dataclass
 class RayleighFlowTable:
-    """Rayleigh flow table where the initial Mach number M1=M*=1.0"""
+    r"""Rayleigh flow table where the initial Mach number $M_1=M^*=1.0$"""
 
     mach: ndarray_f
-    """Mach number, M."""
+    r"""Mach number, $M$."""
 
     temperature_ratio: ndarray_f
-    """Temperature ratio, T/T*"""
+    r"""Static temperature ratio, $T / T^*$"""
 
     pressure_ratio: ndarray_f
-    """Static pressure ratio, p/p*"""
+    r"""Static pressure ratio, $p / p^*$"""
 
     density_ratio: ndarray_f
-    """Density ratio, rho/rho*"""
+    r"""Density ratio, $\rho / \rho^*$"""
 
     @property
     def velocity_ratio(self) -> ndarray_f:
-        """Velocity ratio, u/u*"""
+        r"""Velocity ratio, $u / u^*$"""
         return 1.0 / self.density_ratio
 
     total_pressure_ratio: ndarray_f
-    """Total pressure ratio, p0/p0*"""
+    r"""Total pressure ratio, $p_0 / p_0^*$"""
 
     total_temperature_ratio: ndarray_f
-    """Total temperature ratio, T0/T0*"""
+    r"""Total temperature ratio, $T_0 / T_0^*$"""
 
     entropy_ratio: ndarray_f
-    """Entropy ratio, (s*-s)/R"""
+    r"""Specific entropy ratio, $(s^* - s) / R$"""
 
     specific_heat_ratio: ndarray_f
-    """Ratio of specific heats, gamma"""
+    r"""Ratio of specific heats, $\gamma$"""
 
 
 def lookup_table_by_mach(
     mach: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat = 1.4
 ) -> RayleighFlowTable:
-    """Look up a Rayleigh flow table result from the Mach number, M
+    r"""Look up a Rayleigh flow table result from the Mach number, $M$
 
     Args:
-        mach (ArrayOrScalarFloat): Mach number, M
+        mach (ArrayOrScalarFloat): Mach number, $M$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
-            heats, gamma. Defaults to 1.4.
+            heats, $\gamma$. Defaults to 1.4.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
@@ -103,12 +103,13 @@ def lookup_table_by_pressure(
     pressure_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> RayleighFlowTable:
-    """Look up a Rayleigh flow table result from the pressure_ratio, p/p*
+    r"""Look up a Rayleigh flow table result from the static pressure_ratio,
+    $p / p^*$
 
     Args:
-        pressure_ratio (ArrayOrScalarFloat): static pressure ratio, p/p*
+        pressure_ratio (ArrayOrScalarFloat): static pressure ratio, $p / p^*$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
-            heats, gamma. Defaults to 1.4.
+            heats, $\gamma$. Defaults to 1.4.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
@@ -116,7 +117,7 @@ def lookup_table_by_pressure(
     p_ratio = np.atleast_1d(pressure_ratio)
     gam = specific_heat_ratio
     m1 = 1.0
-    # invert relationship between p2/p1 and M1, M2
+    # invert relationship between $p_2 / p_1$ and $M_1$, $M_2$
     m2 = (((1 + gam * m1**2) / p_ratio - 1) / gam) ** 0.5
     return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
 
@@ -127,13 +128,14 @@ def _lookup_table_by_ratio(
     flow_regime: ndarray_FlowSpeedRegime | FlowSpeedRegime,
     mach_func: Callable,
 ) -> RayleighFlowTable:
-    """Lookup the Rayleigh flow table by a generic input ratio where the
+    r"""Lookup the Rayleigh flow table by a generic input ratio where the
     relationship with Mach must be solved numerically
 
     Args:
         ratio (ArrayOrScalarFloat): ratio of interest
             (total temp., total pressure, etc)
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
         flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime): flow regime
             (supersonic, subsonic)
         mach_func (Callable): function to compute Mach from the given ratio
@@ -173,15 +175,17 @@ def lookup_table_by_temperature(
     flow_regime: ndarray_FlowSpeedRegime
     | FlowSpeedRegime = FlowSpeedRegime.supersonic,
 ) -> RayleighFlowTable:
-    """Look up a Rayleigh flow table result from the temperature_ratio, T/T*
+    r"""Look up a Rayleigh flow table result from the static temperature ratio,
+    $T / T^*$
 
     Args:
-        temperature_ratio (ArrayOrScalarFloat): static temperature ratio, T/T*
+        temperature_ratio (ArrayOrScalarFloat): static temperature ratio,
+            $T / T^*$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
-            heats. Defaults to 1.4.
+            heats, $\gamma$. Defaults to 1.4.
         flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to FlowSpeedRegime.supersonic.
+            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
@@ -198,12 +202,14 @@ def lookup_table_by_density(
     density_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> RayleighFlowTable:
-    """Look up a Rayleigh flow table result from the density ratio, rho/rho*
+    r"""Look up a Rayleigh flow table result from the static density ratio,
+    $\rho / \rho^*$
 
     Args:
-        density_ratio (ArrayOrScalarFloat): static pressure ratio, p/p*
+        density_ratio (ArrayOrScalarFloat): static density ratio,
+            $\rho / \rho^*$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
-            heats, gamma. Defaults to 1.4.
+            heats, $\gamma$. Defaults to 1.4.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
@@ -221,16 +227,17 @@ def lookup_table_by_total_pressure(
     flow_regime: ndarray_FlowSpeedRegime
     | FlowSpeedRegime = FlowSpeedRegime.supersonic,
 ) -> RayleighFlowTable:
-    """Look up a Rayleigh flow table result from the total pressure ratio,
-    p0/p0*
+    r"""Look up a Rayleigh flow table result from the total pressure ratio,
+    $p_0 / p_0^*$
 
     Args:
-        total_pressure_ratio (ArrayOrScalarFloat): total pressure ratio, p0/p0*
+        total_pressure_ratio (ArrayOrScalarFloat): total pressure ratio,
+            $p_0 / p_0^*$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
-            heats. Defaults to 1.4.
+            heats, $\gamma$. Defaults to 1.4.
         flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to FlowSpeedRegime.supersonic.
+            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
@@ -249,17 +256,17 @@ def lookup_table_by_total_temperature(
     flow_regime: ndarray_FlowSpeedRegime
     | FlowSpeedRegime = FlowSpeedRegime.supersonic,
 ) -> RayleighFlowTable:
-    """Look up a Rayleigh flow table result from the total temperature ratio,
-    T0/T0*
+    r"""Look up a Rayleigh flow table result from the total temperature ratio,
+    $T_0 / T_0^*$
 
     Args:
         total_temperature_ratio (ArrayOrScalarFloat): total temperature ratio,
-            T0/T0*
+            $T_0 / T_0^*$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
-            heats. Defaults to 1.4.
+            heats, $\gamma$. Defaults to 1.4.
         flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to FlowSpeedRegime.supersonic.
+            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
@@ -278,15 +285,17 @@ def lookup_table_by_entropy(
     flow_regime: ndarray_FlowSpeedRegime
     | FlowSpeedRegime = FlowSpeedRegime.supersonic,
 ) -> RayleighFlowTable:
-    """Look up a Rayleigh flow table result from the entropy ratio, (s*-s)/R
+    r"""Look up a Rayleigh flow table result from the specific entropy ratio,
+    $(s^* - s) / R$
 
     Args:
-        entropy_ratio (ArrayOrScalarFloat): entropy ratio, (s*-s)/R
+        entropy_ratio (ArrayOrScalarFloat): specific entropy ratio,
+            $(s^* - s) / R$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
-            heats. Defaults to 1.4.
+            heats, $\gamma$. Defaults to 1.4.
         flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to FlowSpeedRegime.supersonic.
+            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
@@ -321,17 +330,20 @@ def entropy_ratio_by_mach(
     mach_final: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Compute the entropy ratio from the Mach number for Rayleigh flow.
+    r"""Compute the specific entropy ratio $(s_2-s_1) / R$ from the
+    Mach number $M$ for Rayleigh flow.
 
     Args:
-        mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            the reference Mach number, M*, when equal to unity.
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
-            the Mach number, M, when mach_initial==1.0
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: entropy ratio, (s2-s1)/R (or (s-s*)/R if mach_initial==1.0)
+        ndarray_f: entropy ratio, $(s_2-s_1) / R$
+            (or (s-s*)/R if ``mach_initial==1.0``)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -348,18 +360,20 @@ def total_pressure_ratio_by_mach(
     mach_final: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Compute the total pressure ratio from the Mach number
+    r"""Compute the total pressure ratio $p_02 / p_01$ from the Mach number
     for Rayleigh flow.
 
     Args:
-        mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            the reference Mach number, M*, when equal to unity.
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
-            the Mach number, M, when mach_initial==1.0
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: total pressure ratio, p02/p01 (or p0/p0* if M2==1.0)
+        ndarray_f: total pressure ratio, $p_02 / p_01$
+            ($p_0 / p_0^*$ if $M_2=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -382,18 +396,20 @@ def total_temperature_ratio_by_mach(
     mach_final: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Compute the total temperature ratio from the Mach number
-    for Rayleigh flow.
+    r"""Compute the total temperature ratio $T_02 / T_01$ from the Mach
+    number $M$ for Rayleigh flow.
 
     Args:
-        mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            the reference Mach number, M*, when equal to unity.
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
-            the Mach number, M, when mach_initial==1.0
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: total temperature ratio, T02/T01 (or T0/T0* if M2==1.0)
+        ndarray_f: total temperature ratio, $T_02 / T_01$
+            ($T_0 / T_0^*$ if $M_2=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -416,17 +432,20 @@ def pressure_ratio_by_mach(
     mach_final: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Compute the pressure ratio from the Mach number for Rayleigh flow.
+    r"""Compute the static pressure ratio $p_2 / p_1$ from the Mach number $M$
+    for Rayleigh flow.
 
     Args:
-        mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            the reference Mach number, M*, when equal to unity.
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
-            the Mach number, M, when mach_initial==1.0
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: pressure ratio, p2/p1 (or p/p* if M2==1.0)
+        ndarray_f: static pressure ratio, $p_2 / p_1$
+            ($p / p^*$ if $M_2=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -439,17 +458,20 @@ def temperature_ratio_by_mach(
     mach_final: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Compute the temperature ratio from the Mach number for Rayleigh flow.
+    r"""Compute the static temperature ratio $T_2 / T_1$ from the Mach number
+    for Rayleigh flow.
 
     Args:
-        mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            the reference Mach number, M*, when equal to unity.
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
-            the Mach number, M, when mach_initial==1.0
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: temperature ratio, T2/T1 (or T/T* if M2==1.0)
+        ndarray_f: static temperature ratio, $T_2 / T_1$
+            ($T / T^*$ if $M_2=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -462,17 +484,20 @@ def density_ratio_by_mach(
     mach_final: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    """Compute the density ratio from the Mach number for Rayleigh flow.
+    r"""Compute the density ratio $\rho_2 / \rho_1$ from the Mach number
+    for Rayleigh flow.
 
     Args:
-        mach_initial (ArrayOrScalarFloat): Initial Mach number, M1. This is
-            the reference Mach number, M*, when equal to unity.
-        mach_final (ArrayOrScalarFloat): Final Mach number, M2. This is simply
-            the Mach number, M, when mach_initial==1.0
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats, gamma
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
     Returns:
-        ndarray_f: density ratio, rho2/rho1 (or rho/rho* if M2==1.0)
+        ndarray_f: density ratio, $\rho_2 / \rho_1$
+            ($\rho / \rho^*$ if $M_2=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final

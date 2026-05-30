@@ -25,13 +25,15 @@ dependencies = [
   "scipy",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
   "flake8", # TODO: remove once refactor complete
+  "mkdocstrings-python",
   "pyrefly",
   "pytest",
   "pytest-cov",
   "ruff",
+  "zensical",
 ]
 
 [tool.pytest.ini_options]
