@@ -35,6 +35,8 @@ extra_javascript = [
     "javascripts/mathjax.js",
     "https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"
 ]
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
 
 
 # ----------------------------------------------------------------------------
@@ -231,8 +233,6 @@ toggle.name = "Switch to light mode"
 [project.markdown_extensions.md_in_html]
 [project.markdown_extensions.toc]
 permalink = true
-[project.markdown_extensions.pymdownx.arithmatex]
-generic = true
 [project.markdown_extensions.pymdownx.betterem]
 [project.markdown_extensions.pymdownx.caret]
 [project.markdown_extensions.pymdownx.details]
