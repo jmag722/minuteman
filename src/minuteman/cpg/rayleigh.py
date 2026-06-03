@@ -343,7 +343,7 @@ def entropy_ratio_by_mach(
 
     Returns:
         ndarray_f: entropy ratio, $(s_2-s_1) / R$
-            (or (s-s*)/R if ``mach_initial==1.0``)
+            ($(s - s^*) / R$ if ``mach_initial==1.0``)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final

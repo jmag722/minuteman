@@ -1,267 +1,325 @@
-import pytest
-import minuteman.cpg.fanno as fan
+import numpy as np
+import minuteman.cpg.fanno as fanno
+from minuteman.cpg.fanno import FannoFlowTable
+from minuteman import FlowSpeedRegime
 
 
-def test_lookup_table_M(check_dicts):
-    check_dicts(
-        fan.lookup_table(M=0.4, gam=1.3),
-        {
-            "M": 0.4,
-            "p_ratio": 2.64934764,
-            "r_ratio": 2.35907132043,
-            "T_ratio": 1.12304687,
-            "ds_R_ratio": 0.47144997,
-            "p0_ratio": 1.60231582,
-            "fanno_param": 2.51998734
-        }
+def compare_tables(actual: FannoFlowTable, expected: FannoFlowTable, **kwargs):
+    np.testing.assert_allclose(actual.mach, expected.mach, **kwargs)
+    np.testing.assert_allclose(
+        actual.temperature_ratio, expected.temperature_ratio, **kwargs
+    )
+    np.testing.assert_allclose(
+        actual.pressure_ratio, expected.pressure_ratio, **kwargs
+    )
+    np.testing.assert_allclose(
+        actual.density_ratio, expected.density_ratio, **kwargs
+    )
+    np.testing.assert_allclose(
+        actual.velocity_ratio, expected.velocity_ratio, **kwargs
+    )
+    np.testing.assert_allclose(
+        actual.total_pressure_ratio, expected.total_pressure_ratio, **kwargs
+    )
+    np.testing.assert_allclose(
+        actual.fanno_parameter,
+        expected.fanno_parameter,
+        **kwargs,
+    )
+    np.testing.assert_allclose(
+        actual.entropy_ratio, expected.entropy_ratio, **kwargs
+    )
+    np.testing.assert_allclose(
+        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs
     )
 
 
-def test_lookup_table_p(check_dicts):
-    check_dicts(
-        fan.lookup_table(p_ratio=0.9, gam=1.3),
-        {
-            "M": 1.09670359,
-            "p_ratio": 0.9,
-            "r_ratio": 0.92380212195,
-            "T_ratio": 0.97423461,
-            "ds_R_ratio": 0.00775303,
-            "p0_ratio": 1.00778316,
-            "fanno_param": 0.01054915
-        }
+def test_lookup_table_by_mach():
+    actual = fanno.lookup_table_by_mach(mach=0.4, specific_heat_ratio=1.3)
+    expected = FannoFlowTable(
+        mach=np.array([0.4]),
+        pressure_ratio=np.array([2.64934764]),
+        temperature_ratio=np.array([1.12304687]),
+        density_ratio=np.array([2.35907132043]),
+        entropy_ratio=np.array([0.47144997]),
+        total_pressure_ratio=np.array([1.60231582]),
+        fanno_parameter=np.array([2.51998734]),
+        specific_heat_ratio=np.array([1.3]),
     )
+    compare_tables(actual, expected)
 
 
-def test_lookup_table_r(check_dicts):
-    check_dicts(
-        fan.lookup_table(r_ratio=6.66666666667, gam=1.2),
-        {
-            "M": 0.14316588,
-            "p_ratio": 7.31833333,
-            "r_ratio": 6.66666666667,
-            "T_ratio": 1.09775,
-            "ds_R_ratio": 1.43080683,
-            "p0_ratio": 4.18207206,
-            "fanno_param": 36.3460207
-        }
+def test_lookup_table_by_pressure():
+    actual = fanno.lookup_table_by_pressure(0.9, specific_heat_ratio=1.3)
+    expected = FannoFlowTable(
+        mach=np.array([1.09670359]),
+        pressure_ratio=np.array([0.9]),
+        temperature_ratio=np.array([0.97423461]),
+        density_ratio=np.array([0.92380212195]),
+        entropy_ratio=np.array([0.00775303]),
+        total_pressure_ratio=np.array([1.0077831]),
+        fanno_parameter=np.array([0.01054915]),
+        specific_heat_ratio=np.array([1.3]),
     )
+    compare_tables(actual, expected, rtol=1e-6)
 
 
-def test_lookup_table_T(check_dicts):
-    check_dicts(
-        fan.lookup_table(T_ratio=0.01, gam=1.5),
-        {
-            "M": 22.2710574,
-            "p_ratio": 0.00449013,
-            "r_ratio": 1/2.22710574,
-            "T_ratio": 0.01,
-            "ds_R_ratio": 8.40963750,
-            "p0_ratio": 4490.13255,
-            "fanno_param": 0.66918220
-        }
+def test_mach2_by_pressure():
+    actual = fanno.lookup_table_by_pressure(
+        np.array([4.0, 0.5]), specific_heat_ratio=np.array([1.4, 1.3])
+    ).mach
+    expected = np.array([0.27185940, 1.76924837])
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_lookup_table_by_density():
+    actual = fanno.lookup_table_by_density(
+        6.66666666667, specific_heat_ratio=1.2
     )
-
-
-def test_lookup_table_s(check_dicts):
-    check_dicts(
-        fan.lookup_table(ds_R_ratio=1.1, is_supersonic=False, gam=1.5),
-        {
-            "M": 0.19511262,
-            "p_ratio": 5.70312323,
-            "r_ratio": 1/0.21711184,
-            "T_ratio": 1.23821561,
-            "ds_R_ratio": 1.1,
-            "p0_ratio": 3.00416602,
-            "fanno_param": 14.2998521
-        }
+    expected = FannoFlowTable(
+        mach=np.array([0.14316588]),
+        pressure_ratio=np.array([7.31833333]),
+        temperature_ratio=np.array([1.09775]),
+        density_ratio=np.array([6.66666666667]),
+        entropy_ratio=np.array([1.43080683]),
+        total_pressure_ratio=np.array([4.18207206]),
+        fanno_parameter=np.array([36.3460207]),
+        specific_heat_ratio=np.array([1.2]),
     )
-    check_dicts(
-        fan.lookup_table(ds_R_ratio=1.5, is_supersonic=True, gam=1.1),
-        {
-            "M": 2.54543291,
-            "p_ratio": 0.34986083,
-            "r_ratio": 1/2.26682835,
-            "T_ratio": 0.79307445,
-            "ds_R_ratio": 1.5,
-            "p0_ratio": 4.48168906,
-            "fanno_param": 0.79358257
-        }
+    compare_tables(actual, expected)
+
+
+def test_mach2_by_density():
+    actual = fanno.lookup_table_by_density(
+        np.array([0.5, 5.0]), specific_heat_ratio=np.array([1.3, 1.5])
+    ).mach
+    expected = np.array([2.69679944, 0.17960530])
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_lookup_table_by_temperature():
+    actual = fanno.lookup_table_by_temperature(0.01, specific_heat_ratio=1.5)
+    expected = FannoFlowTable(
+        mach=np.array([22.2710574]),
+        pressure_ratio=np.array([0.00449013]),
+        temperature_ratio=np.array([0.01]),
+        density_ratio=np.array([1 / 2.22710574]),
+        entropy_ratio=np.array([8.40963750]),
+        total_pressure_ratio=np.array([4490.13255]),
+        fanno_parameter=np.array([0.66918220]),
+        specific_heat_ratio=np.array([1.5]),
     )
+    compare_tables(actual, expected, rtol=1e-6)
 
 
-def test_lookup_table_p0(check_dicts):
-    check_dicts(
-        fan.lookup_table(p0_ratio=5, is_supersonic=False, gam=1.4),
-        {
-            "M": 0.11668889,
-            "p_ratio": 9.37498439,
-            "r_ratio": 1/0.12765258,
-            "T_ratio": 1.19674096,
-            "ds_R_ratio": 1.60943791,
-            "p0_ratio": 5,
-            "fanno_param": 48.2150982
-        }
+def test_mach2_by_temperature():
+    actual = fanno.lookup_table_by_temperature(
+        np.array([0.5, 1.1]), specific_heat_ratio=np.array([1.3, 1.5])
+    ).mach
+    expected = np.array([2.94392028, 0.73854894])
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_lookup_table_by_entropy():
+    actual = fanno.lookup_table_by_entropy(
+        entropy_ratio=np.array([1.1, 1.5]),
+        specific_heat_ratio=np.array([1.5, 1.1]),
+        flow_regime=np.array(
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+        ),
     )
-    check_dicts(
-        fan.lookup_table(p0_ratio=1.5, is_supersonic=True, gam=1.1),
-        {
-            "M": 1.73162005,
-            "p_ratio": 0.55183241,
-            "r_ratio": 1/1.65467392,
-            "T_ratio": 0.91310271,
-            "ds_R_ratio": 0.40546510,
-            "p0_ratio": 1.5,
-            "fanno_param": 0.35551592
-        }
+    expected = FannoFlowTable(
+        mach=np.array([0.19511262, 2.54543291]),
+        pressure_ratio=np.array([5.70312323, 0.34986083]),
+        temperature_ratio=np.array([1.23821561, 0.79307445]),
+        density_ratio=np.array([1 / 0.21711184, 1 / 2.26682835]),
+        entropy_ratio=np.array([1.1, 1.5]),
+        total_pressure_ratio=np.array([3.00416602, 4.48168906]),
+        fanno_parameter=np.array([14.2998521, 0.79358257]),
+        specific_heat_ratio=np.array([1.5, 1.1]),
     )
+    compare_tables(actual, expected)
 
 
-def test_lookup_table_fan(check_dicts):
-    check_dicts(
-        fan.lookup_table(fanno_param=33, is_supersonic=False, gam=1.4),
-        {
-            "M": 0.13904873,
-            "p_ratio": 7.86294980,
-            "r_ratio": 1/0.15202660,
-            "T_ratio": 1.19537758,
-            "ds_R_ratio": 1.43754446,
-            "p0_ratio": 4.21034447,
-            "fanno_param": 33
-        }
+def test_mach1_by_entropy():
+    actual = fanno.lookup_table_by_entropy(
+        np.array(
+            [
+                2.0,
+                0.6,
+                fanno.entropy_ratio_by_mach(
+                    mach_initial=4.0, mach_final=1.0, specific_heat_ratio=1.4
+                )[0]
+                - 0.3,
+            ]
+        ),
+        specific_heat_ratio=np.array([1.5, 1.3, 1.4]),
+        flow_regime=np.array(
+            [
+                FlowSpeedRegime.subsonic,
+                FlowSpeedRegime.supersonic,
+                FlowSpeedRegime.supersonic,
+            ]
+        ),
+    ).mach
+    expected = np.array([0.07776356, 2.02884749, 3.66913016])
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_lookup_table_by_total_pressure():
+    actual = fanno.lookup_table_by_total_pressure(
+        total_pressure_ratio=np.array([5.0, 1.5]),
+        specific_heat_ratio=np.array([1.4, 1.1]),
+        flow_regime=np.array(
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+        ),
     )
-    check_dicts(
-        fan.lookup_table(fanno_param=0.01, is_supersonic=True, gam=1.3),
-        {
-            "M": 1.09393234,
-            "p_ratio": 0.90262819,
-            "r_ratio": 1 / 1.08016431,
-            "T_ratio": 	0.97498675,
-            "ds_R_ratio": 0.00732479,
-            "p0_ratio": 1.00735168,
-            "fanno_param": 0.01
-        }
+    expected = FannoFlowTable(
+        mach=np.array([0.11668889, 1.73162005]),
+        pressure_ratio=np.array([9.37498439, 0.55183241]),
+        temperature_ratio=np.array([1.19674096, 0.91310271]),
+        density_ratio=np.array([1 / 0.12765258, 1 / 1.65467392]),
+        entropy_ratio=np.array([1.60943791, 0.40546510]),
+        total_pressure_ratio=np.array([5.0, 1.5]),
+        fanno_parameter=np.array([48.2150982, 0.35551592]),
+        specific_heat_ratio=np.array([1.4, 1.1]),
     )
+    compare_tables(actual, expected)
 
 
-def test_mach2_pressure():
-    assert fan.mach2(M1=1, p21=4) == pytest.approx(0.27185940)
-    assert fan.mach2(M1=1, p21=0.5, gam=1.3) == pytest.approx(1.76924837)
-    assert fan.mach2(M1=2, p21=0.9) == pytest.approx(
-        fan.mach2(p21=fan.pressure2(M2=2)*0.9))
+def test_mach2_by_total_pressure():
+    actual = fanno.lookup_table_by_total_pressure(
+        np.array([2.0, 3.0]),
+        specific_heat_ratio=np.array([1.3, 1.2]),
+        flow_regime=np.array(
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+        ),
+    ).mach
+    expected = np.array([0.30900860, 2.39713187])
+    np.testing.assert_allclose(actual, expected)
 
 
-def test_mach2_temperature():
-    assert fan.mach2(M1=1, gam=1.3, T21=.5) == pytest.approx(2.94392028)
-    assert fan.mach2(M1=1, gam=1.5, T21=1.1) == pytest.approx(0.73854894)
-    assert fan.mach2(M1=4, T21=0.1) == pytest.approx(
-        fan.mach2(T21=fan.temperature2(M2=4)*0.1))
-
-
-def test_mach2_density():
-    assert fan.mach2(M1=1, gam=1.3, r21=.5) == pytest.approx(2.69679944)
-    assert fan.mach2(M1=1, gam=1.5, r21=5) == pytest.approx(0.17960530)
-    assert fan.mach2(M1=.3, r21=.4) == pytest.approx(
-        fan.mach2(r21=fan.density2(M2=0.3)*0.4))
-
-
-def test_mach2_entropy():
-    assert fan.mach2(M1=.3, is_supersonic=False,
-                     ds21_R=0.5) == pytest.approx(0.56421189)
-    assert fan.mach2(M1=4, is_supersonic=True,
-                     ds21_R=0.3) == pytest.approx(3.66913016)
-    with pytest.raises(ValueError):
-        fan.mach2(ds21_R=0.3)
-
-
-def test_mach1_entropy():
-    assert fan.mach1(M2=1, is_supersonic=False, ds21_R=2,
-                     gam=1.5) == pytest.approx(0.07776356)
-    assert fan.mach1(M2=1, is_supersonic=True, ds21_R=0.6,
-                     gam=1.3) == pytest.approx(2.02884749)
-    assert fan.mach1(ds21_R=(fan.entropy2(M1=4)-0.3)
-                     ) == pytest.approx(3.66913016)
-
-
-def test_mach2_total_pressure():
-    assert fan.mach2(M1=1, is_supersonic=False, p02_p01=2,
-                     gam=1.3) == pytest.approx(0.30900860)
-    assert fan.mach2(M1=1, is_supersonic=True, p02_p01=3,
-                     gam=1.2) == pytest.approx(2.39713187)
-    assert fan.mach2(M1=2.3, is_supersonic=True, p02_p01=0.5, gam=1.2) == pytest.approx(fan.mach2(
-        p02_p01=fan.total_pressure2(M2=2.3, gam=1.2)*.5, gam=1.2)
+def test_lookup_table_by_fanno_parameter():
+    actual = fanno.lookup_table_by_fanno_parameter(
+        fanno_parameter=np.array([33, 0.01]),
+        specific_heat_ratio=np.array([1.4, 1.3]),
+        flow_regime=np.array(
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+        ),
     )
+    expected = FannoFlowTable(
+        mach=np.array([0.13904873, 1.09393234]),
+        pressure_ratio=np.array([7.86294980, 0.90262819]),
+        temperature_ratio=np.array([1.19537758, 0.97498675]),
+        density_ratio=np.array([1 / 0.15202660, 1 / 1.08016431]),
+        entropy_ratio=np.array([1.43754446, 0.00732479]),
+        total_pressure_ratio=np.array([4.21034447, 1.00735168]),
+        fanno_parameter=np.array([33, 0.01]),
+        specific_heat_ratio=np.array([1.4, 1.3]),
+    )
+    compare_tables(actual, expected, rtol=1e-6)
 
 
-def test_mach2_fanno_param():
-    # M0.77231902
-    assert fan.mach2(M1=.4, fanno_param=.1) == pytest.approx(0.40563819)
-    assert fan.mach2(M1=3, fanno_param=0.2) == pytest.approx(2.05872043)
-    with pytest.raises(ValueError):
-        fan.mach2(fanno_param=.5)
+def test_upstream_mach_by_fanno_parameter():
+    actual = fanno.lookup_table_by_fanno_parameter(
+        fanno_parameter=np.array([1.2, 0.4]),
+        specific_heat_ratio=np.array([1.3, 1.35]),
+        flow_regime=np.array(
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+        ),
+    ).mach
+    expected = np.array([0.49693601, 2.23092883])
+    np.testing.assert_allclose(actual, expected)
 
-
-def test_mach1_fanno_param():
-    assert fan.mach1(M2=1, is_supersonic=False, fanno_param=1.2,
-                     gam=1.3) == pytest.approx(0.49693601)
-    assert fan.mach1(M2=1, is_supersonic=True, fanno_param=0.4,
-                     gam=1.35) == pytest.approx(2.23092883)
     # L1* - L2* = L
-    assert fan.mach1(fanno_param=(.2+fan.fanno_parameter(M1=2))
-                     ) == pytest.approx(2.89064091)
+    actual = fanno.lookup_table_by_fanno_parameter(
+        fanno_parameter=(
+            0.2
+            + fanno.fanno_parameter_by_mach(
+                mach_initial=2.0, mach_final=1.0, specific_heat_ratio=1.4
+            )
+        ),
+        specific_heat_ratio=1.4,
+        flow_regime=FlowSpeedRegime.supersonic,
+    ).mach
+    np.testing.assert_allclose(actual, np.array([2.89064091]))
 
 
-def test_temperature2():
-    assert fan.temperature2(M2=3, M1=4, gam=1.35) == pytest.approx(
-        0.45631067*1/0.30921052)
-    assert fan.temperature2(M2=0.5, M1=1, gam=1.4) == pytest.approx(1.14285714)
-    assert fan.temperature2(M2=1.02, M1=1, gam=1.4,
-                            T1=300) == pytest.approx(0.99331170*300)
+def test_temperature_ratio_by_mach():
+    actual = fanno.temperature_ratio_by_mach(
+        mach_initial=np.array([4.0, 1.0, 1.0]),
+        mach_final=np.array([3.0, 0.5, 1.02]),
+        specific_heat_ratio=np.array([1.35, 1.4, 1.4]),
+    )
+    expected = np.array([0.45631067 * 1 / 0.30921052, 1.14285714, 0.99331170])
+    np.testing.assert_allclose(actual, expected)
 
 
-def test_pressure2():
-    assert fan.pressure2(M2=5, M1=1, gam=1.2) == pytest.approx(0.11212238)
-    assert fan.pressure2(M2=0.3, M1=0.1, gam=1.35) == pytest.approx(
-        3.58512467 * 1/10.8302693)
-    assert fan.pressure2(M2=0.9, gam=1.4, p1=101325) == pytest.approx(
-        1.12913286*101325)
+def test_pressure_ratio_by_mach():
+    actual = fanno.pressure_ratio_by_mach(
+        mach_initial=np.array([1.0, 0.1, 1.0]),
+        mach_final=np.array([5.0, 0.3, 0.9]),
+        specific_heat_ratio=np.array([1.2, 1.35, 1.4]),
+    )
+    expected = np.array([0.11212238, 3.58512467 * 1 / 10.8302693, 1.12913286])
+    np.testing.assert_allclose(actual, expected)
 
 
-def test_density2():
-    assert fan.density2(M2=1.1, M1=1, gam=1.6,
-                        rho1=2) == pytest.approx(2/1.07427738)
-    assert fan.density2(M2=.5, M1=1, gam=1.5) == pytest.approx(1/0.54232614)
-    assert fan.density2(M2=2, M1=3, gam=1.3) == pytest.approx(
-        2.09863177/1.69558249)
+def test_density_ratio_by_mach():
+    actual = fanno.density_ratio_by_mach(
+        mach_initial=np.array([1.0, 1.0, 3.0]),
+        mach_final=np.array([1.1, 0.5, 2.0]),
+        specific_heat_ratio=np.array([1.6, 1.5, 1.3]),
+    )
+    expected = np.array(
+        [1 / 1.07427738, 1 / 0.54232614, 2.09863177 / 1.69558249]
+    )
+    np.testing.assert_allclose(actual, expected)
 
 
-def test_total_pressure2():
-    assert fan.total_pressure2(M2=2) == pytest.approx(1.6875)
-    assert fan.total_pressure2(M2=2, M1=2.5) == pytest.approx(0.64)
+def test_total_pressure_ratio_by_mach():
+    np.testing.assert_allclose(
+        fanno.total_pressure_ratio_by_mach(
+            mach_initial=np.array([1.0, 2.5]),
+            mach_final=2.0,
+            specific_heat_ratio=1.4,
+        ),
+        np.array([1.6875, 0.64]),
+    )
 
 
-def test_entropy2():
-    assert fan.entropy2(M2=1, M1=2) == pytest.approx(0.52324814)
-    assert fan.entropy2(M2=1, M1=0.3) == pytest.approx(0.71052788)
-    assert fan.entropy2(M2=1.5, M1=1.8) == pytest.approx(0.20167506)
+def test_entropy_ratio_by_mach():
+    mach_initial = np.array([2.0, 0.3, 1.8])
+    mach_final = np.array([1.0, 1.0, 1.5])
+    specific_heat_ratio = 1.4
+    actual = fanno.entropy_ratio_by_mach(
+        mach_initial=mach_initial,
+        mach_final=mach_final,
+        specific_heat_ratio=specific_heat_ratio,
+    )
+    expected = np.array([0.52324814, 0.71052788, 0.20167506])
+    np.testing.assert_allclose(actual, expected)
 
 
-def test_fanno_parameter():
-    assert fan.fanno_parameter(0.3, M2=1, gam=1.4) == pytest.approx(5.29925)
-    assert fan.fanno_parameter(
-        0.47444776, M2=1, gam=1.4) == pytest.approx(1.29925)
-    assert fan.fanno_parameter(0.3, M2=0.47444776, gam=1.4) == pytest.approx(4)
-    assert fan.fanno_parameter(3, M2=1, gam=1.35) == pytest.approx(0.57108656)
-    assert fan.fanno_parameter(2, M2=1, gam=1.35) == pytest.approx(0.32955389)
-    assert fan.fanno_parameter(3, M2=2, gam=1.35) == pytest.approx(0.24153267)
-    with pytest.raises(ValueError):
-        fan.fanno_parameter(0.3, 1.4)
-        fan.fanno_parameter(1, 1.4)
-        fan.fanno_parameter(1, .5)
-        fan.fanno_parameter(0.3, 0.1)
-        fan.fanno_parameter(3.3, 0.4)
-        fan.fanno_parameter(3.3, 5.1)
+def test_fanno_parameter_by_mach():
+    mach_initial = np.array([0.3, 0.47444776, 0.3, 3.0, 2.0, 3.0])
+    mach_final = np.array([1.0, 1.0, 0.47444776, 1.0, 1.0, 2.0])
+    specific_heat_ratio = np.array([1.4, 1.4, 1.4, 1.35, 1.35, 1.35])
+    actual = fanno.fanno_parameter_by_mach(
+        mach_initial=mach_initial,
+        mach_final=mach_final,
+        specific_heat_ratio=specific_heat_ratio,
+    )
+    expected = np.array(
+        [5.29925, 1.29925, 4.0, 0.57108656, 0.32955389, 0.24153267]
+    )
+    np.testing.assert_allclose(actual, expected, rtol=1e-6)
 
 
-def test_L_star():
-    assert fan.L_star(3, D=.2) == pytest.approx(30)
-    assert fan.L_star(.5, D=1.2, f=.002) == pytest.approx(75)
+def test_duct_length():
+    fanno_param = 0.5
+    diameter = 1.2
+    f = 0.002
+    actual = fanno.duct_length(fanno_param, diameter, f)
+    expected = np.array([75.0])
+    np.testing.assert_allclose(actual, expected)

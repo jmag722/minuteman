@@ -23,6 +23,7 @@ Copyright &copy; 2026 The authors
 nav = [
   {"Home" = "index.md"},
   {"Calorically Perfect Gas" = [
+     "cpg/fanno.md",
      "cpg/isentropic_flow.md",
      "cpg/normal_shock.md",
      "cpg/rayleigh.md",

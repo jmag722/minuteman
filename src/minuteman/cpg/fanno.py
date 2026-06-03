@@ -1,385 +1,567 @@
+"""This module computes 1D, calorically perfect flow with friction (Fanno flow)."""
+
+from dataclasses import dataclass
+from typing import Callable
+
 import numpy as np
 from scipy.optimize import fsolve
 import minuteman.utils.arg_checks as ac
 
+from minuteman.utils.types import (
+    ArrayOrScalarFloat,
+    check_equal_shape,
+    Floatlike,
+    FlowSpeedRegime,
+    mach_guess_from_flow_regime,
+    ndarray_FlowSpeedRegime,
+    ndarray_f,
+)
 
-def lookup_table(p_ratio: float = None, r_ratio: float = None, T_ratio: float = None,
-                 ds_R_ratio: float = None, p0_ratio: float = None,
-                 fanno_param: float = None, M: float = None, gam: float = 1.4,
-                 is_supersonic: bool = True):
+
+@dataclass
+class FannoFlowTable:
+    r"""Fanno flow table where the initial Mach number $M_1=M^*=1.0$"""
+
+    mach: ndarray_f
+    r"""Mach number, $M$"""
+
+    temperature_ratio: ndarray_f
+    r"""Temperature ratio, $T / T^*$"""
+
+    pressure_ratio: ndarray_f
+    r"""Static pressure ratio, $p / p^*$"""
+
+    density_ratio: ndarray_f
+    r"""Density ratio, $\rho / \rho^*$"""
+
+    @property
+    def velocity_ratio(self) -> ndarray_f:
+        r"""Velocity ratio, $u / u^*$"""
+        return 1.0 / self.density_ratio
+
+    total_pressure_ratio: ndarray_f
+    r"""Total pressure ratio, $p_0 / p_0^*$"""
+
+    fanno_parameter: ndarray_f
+    r"""Fanno parameter, $4 f L^* / D$"""
+
+    entropy_ratio: ndarray_f
+    r"""Specific entropy ratio, $(s^* - s) / R$"""
+
+    specific_heat_ratio: ndarray_f
+    r"""Ratio of specific heats, $\gamma$"""
+
+
+def lookup_table_by_mach(
+    mach: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat = 1.4
+) -> FannoFlowTable:
+    r"""Look up a Fanno flow table result from the Mach number, $M$
+
+    Args:
+        mach (ArrayOrScalarFloat): Mach number, $M$
+        specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
+            heats, $\gamma$. Defaults to 1.4.
+
+    Returns:
+        FannoFlowTable: Fanno flow output table
     """
-    Computes Fanno flow parameters (reference Mach=1.0 only) for a given input.
-
-    This form is valid for calorically perfect gases only, where gamma
-    is constant (M < 5).
-
-    Parameters
-    ----------
-    p_ratio : float, optional
-        pressure ratio p/p*, by default None
-    r_ratio : float, optional
-        density ratio rho/rho*, by default None
-    T_ratio : float, optional
-        temperature ratio T/T*, by default None
-    ds_R_ratio : float, optional
-        entropy ratio (s*-s)/R, by default None
-    p0_ratio : float, optional
-        total pressure ratio p0/p0*, by default None
-    fanno_param : float, optional
-        fano parameter 4fL*/D, by default None
-    M : float, optional
-        Mach number, by default None
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-    is_supersonic : bool, optional
-        use supersonic solution (rather than subsonic), needed
-        only if total pressure/entropy/fanno parameter is input, by default True
-
-    Returns
-    -------
-    dict
-        row from Fanno table
-
-    Raises
-    ------
-    ValueError
-        Inconsistent or incorrect inputs supplied
-    """
-    Mref = 1.0
-    if ac.is1known(M, [p_ratio, r_ratio, T_ratio, ds_R_ratio, p0_ratio]):
-        return {
-            "M": M,
-            "p_ratio": pressure2(M2=M, M1=Mref, p1=1.0, gam=gam),
-            "r_ratio": density2(M2=M, M1=Mref, rho1=1.0, gam=gam),
-            "T_ratio": temperature2(M2=M, M1=Mref, T1=1.0, gam=gam),
-            "ds_R_ratio": entropy2(M2=Mref, M1=M, R=1.0, s1=0.0, gam=gam),
-            "p0_ratio": total_pressure2(M2=M, M1=Mref, p01=1.0, gam=gam),
-            "fanno_param": fanno_parameter(M2=Mref, M1=M, gam=gam)
-        }
-
-    elif ac.is1known(p_ratio, [r_ratio, T_ratio, ds_R_ratio, p0_ratio, fanno_param, M]):
-        m = mach2(M1=Mref, is_supersonic=is_supersonic, p21=p_ratio, gam=gam)
-
-    elif ac.is1known(r_ratio, [p_ratio, T_ratio, ds_R_ratio, p0_ratio, fanno_param, M]):
-        m = mach2(M1=Mref, is_supersonic=is_supersonic, r21=r_ratio, gam=gam)
-
-    elif ac.is1known(T_ratio, [p_ratio, r_ratio, ds_R_ratio, p0_ratio, fanno_param, M]):
-        m = mach2(M1=Mref, is_supersonic=is_supersonic, T21=T_ratio, gam=gam)
-
-    elif ac.is1known(ds_R_ratio, [p_ratio, r_ratio, T_ratio, p0_ratio, fanno_param, M]):
-        m = mach1(M2=Mref, is_supersonic=is_supersonic,
-                  ds21_R=ds_R_ratio, gam=gam)
-
-    elif ac.is1known(p0_ratio, [p_ratio, r_ratio, T_ratio, ds_R_ratio, fanno_param, M]):
-        m = mach2(M1=Mref, is_supersonic=is_supersonic,
-                  p02_p01=p0_ratio, gam=gam)
-
-    elif ac.is1known(fanno_param, [p_ratio, r_ratio, T_ratio, ds_R_ratio, p0_ratio, M]):
-        m = mach1(M2=Mref, is_supersonic=is_supersonic,
-                  fanno_param=fanno_param, gam=gam)
-
+    m1 = 1.0
+    m2 = np.atleast_1d(mach)
+    if isinstance(specific_heat_ratio, Floatlike):
+        gam = np.full_like(m1, specific_heat_ratio)
     else:
-        raise ValueError("Specify exactly 1 of the following: M1, p_ratio, "
-                         "T_ratio, r_ratio, ds_R_ratio, p0_ratio, or the Fanno parameter.")
-    return lookup_table(M=m, gam=gam)
+        gam = np.asarray(specific_heat_ratio)
+    return FannoFlowTable(
+        mach=np.atleast_1d(m2),
+        temperature_ratio=temperature_ratio_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        ),
+        pressure_ratio=pressure_ratio_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        ),
+        density_ratio=density_ratio_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        ),
+        total_pressure_ratio=total_pressure_ratio_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        ),
+        fanno_parameter=_rev_fanno_parameter_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        ),
+        entropy_ratio=_rev_entropy_ratio_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        ),
+        specific_heat_ratio=gam,
+    )
 
 
-def mach2(M1: float = 1.0, is_supersonic: bool = True, p21: float = None, r21: float = None,
-          T21: float = None, ds21_R: float = None, p02_p01: float = None,
-          fanno_param: float = None, gam: float = 1.4):
+def lookup_table_by_pressure(
+    pressure_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
+) -> FannoFlowTable:
+    r"""Look up a Fanno flow table result from the static pressure ratio,
+    $p / p^*$
+
+    Args:
+        pressure_ratio (ArrayOrScalarFloat): static pressure ratio, $p / p^*$
+        specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
+            heats, $\gamma$. Defaults to 1.4.
+
+    Returns:
+        FannoFlowTable: Fanno flow output table
     """
-    Compute Mach number at station 2 for M1 and another input parameter.
-
-    Parameters
-    ----------
-    M1 : float, optional
-        Mach number at station 1 or M* if M1==1.0, by default 1.0
-    is_supersonic : bool, optional
-        if M1==1.0 and input param is total pressure/entropy/Fanno param,
-        then the user must specify if M2 should be supersonic or not, by default True
-    p21 : float, optional
-        pressure ratio p2/p1 or p/p*, by default None
-    r21 : float, optional
-        density ratio rho2/rho1 or rho/rho*, by default None
-    T21 : float, optional
-        temperature ratio T2/T1 or T/T*, by default None
-    ds21_R : float, optional
-        entropy ratio (s2-s1)/R (cannot be s*-s/R), by default None
-    p02_p01 : float, optional
-        total pressure ratio p02/p01 or p0/p0*, by default None
-    fanno_param : float, optional
-        Fanno parameter 4f/D(x2-x1) (cannot be 4fL*/D), by default None
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-
-    Returns
-    -------
-    float
-        Mach number at station 2, or M if M1==1.0
-
-    Raises
-    ------
-    ValueError
-        When M1=1.0 and the input parameter is Fanno parameter or entropy ratio.
-    """
-    if np.abs(M1-1) < 1e-5:
-        M2_guess = 50 if is_supersonic else 0.01
+    m1 = 1.0
+    pratio = np.atleast_1d(pressure_ratio)
+    if isinstance(specific_heat_ratio, Floatlike):
+        gam = np.full_like(m1, specific_heat_ratio)
     else:
-        M2_guess = 0.5*(M1+1)
+        gam = np.asarray(specific_heat_ratio)
+    # expression obtained with wolfram alpha, real-only root kept
+    a = 2.0 / (gam - 1)
+    b = -1.0 / (gam - 1) * (m1 / pratio) ** 2 * (2 + (gam - 1) * m1**2)
+    m2 = 2**-0.5 * ((a**2 - 4 * b) ** 0.5 - a) ** 0.5
+    return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
 
-    if ac.is1known(p21, [T21, r21, ds21_R, p02_p01, fanno_param]):
-        # expression obtained with wolfram alpha, real-only root kept
-        a = 2/(gam-1)
-        b = -1/(gam-1) * (M1/p21)**2 * (2 + (gam-1)*M1*M1)
-        return (
-            2**-0.5 * ((a**2 - 4*b)**0.5 - a)**0.5
-        )
 
-    elif ac.is1known(T21, [p21, r21, ds21_R, p02_p01, fanno_param]):
-        return (((2+(gam-1)*M1*M1) / T21 - 2) / (gam-1))**0.5
+def lookup_table_by_temperature(
+    temperature_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
+) -> FannoFlowTable:
+    r"""Look up a Fanno flow table result from the static temperature ratio,
+    $T / T^*$
 
-    elif ac.is1known(r21, [p21, T21, ds21_R, p02_p01, fanno_param]):
-        a = (r21/M1)**2 * (2 + (gam-1)*M1*M1)
-        return (2 / (a - (gam-1)))**0.5
+    Args:
+        temperature_ratio (ArrayOrScalarFloat): static temperature ratio, $T / T^*$
+        specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
+            heats, $\gamma$. Defaults to 1.4.
 
-    elif ac.is1known(ds21_R, [p21, T21, r21, p02_p01, fanno_param]):
-        def func(M2, M1, ds21_R, gam): return (
-            ds21_R - entropy2(M1=M1, M2=M2, R=1.0, s1=0.0, gam=gam)
-        )
-        if np.abs(M1 - 1) < 1e-5:
-            raise ValueError(
-                "M2 is the sonic condition for entropy computations, use `mach1` instead.")
-        return fsolve(func, M2_guess, args=(M1, ds21_R, gam))[0]
-
-    elif ac.is1known(p02_p01, [p21, T21, r21, ds21_R, fanno_param]):
-        def func(M2, M1, p02_p01, gam): return (
-            p02_p01 - total_pressure2(M2=M2, M1=M1, p01=1.0, gam=gam)
-        )
-        return fsolve(func, M2_guess, args=(M1, p02_p01, gam))[0]
-
-    elif ac.is1known(fanno_param, [p21, T21, r21, ds21_R, p02_p01]):
-        if np.abs(M1 - 1) < 1e-5:
-            raise ValueError(
-                "M2 is the sonic condition for Fanno param computations, use `mach1` instead.")
-
-        def func(M2, M1, fanno_param, gam): return (
-            fanno_param -
-            fanno_parameter(M2=np.maximum(M2, 0.01), M1=M1,
-                            gam=gam, throw_err=False)
-        )
-        return fsolve(func, M2_guess, args=(M1, fanno_param, gam))[0]
-
+    Returns:
+        FannoFlowTable: Fanno flow output table
+    """
+    m1 = 1.0
+    tratio = np.atleast_1d(temperature_ratio)
+    if isinstance(specific_heat_ratio, Floatlike):
+        gam = np.full_like(m1, specific_heat_ratio)
     else:
-        raise ValueError("Specify 1 of the following: p21, "
-                         "T21, r21, ds21_R, p02_p01, or the Fanno parameter.")
+        gam = np.asarray(specific_heat_ratio)
+    m2 = (((2 + (gam - 1) * m1**2) / tratio - 2) / (gam - 1)) ** 0.5
+    return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
 
 
-def mach1(M2=1.0, ds21_R: float = None, fanno_param: float = None, is_supersonic: bool = True,
-          gam: float = 1.4):
+def lookup_table_by_density(
+    density_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
+) -> FannoFlowTable:
+    r"""Look up a Fanno flow table result from the density ratio,
+    $\rho / \rho^*$
+
+    Args:
+        density_ratio (ArrayOrScalarFloat): density ratio, $\rho / \rho^*$
+        specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
+            heats, $\gamma$. Defaults to 1.4.
+
+    Returns:
+        FannoFlowTable: Fanno flow output table
     """
-    Get Mach number M or (M1 if M2 != 1.0) for a given entropy ratio or Fanno parameter.
-    Use this function rather than `mach2` for these parameters because their reference
-    condition Mach number is flipped (annoyingly M2 rather than M1).
-
-    Parameters
-    ----------
-    M2 : float, optional
-        _description_, by default 1.0
-    ds21_R : float, optional
-        _description_, by default None
-    fanno_param : float, optional
-        _description_, by default None
-    is_supersonic : bool, optional
-        _description_, by default True
-    gam : float, optional
-        _description_, by default 1.4
-
-    Returns
-    -------
-    _type_
-        _description_
-
-    Raises
-    ------
-    ValueError
-        _description_
-    """
-    M1_guess = 3 if is_supersonic else 0.2
-
-    if ac.is1known(ds21_R, [fanno_param]):
-        def func(M1, M2, ds21_R, gam): return (
-            ds21_R - entropy2(M1=M1, M2=M2, R=1.0, s1=0.0, gam=gam)
-        )
-        return fsolve(func, M1_guess, args=(M2, ds21_R, gam))[0]
-
-    elif ac.is1known(fanno_param, [ds21_R]):
-        def func(M1, M2, fanno_param, gam): return (
-            fanno_param -
-            fanno_parameter(M2=M2, M1=M1, gam=gam, throw_err=False)
-        )
-        return fsolve(func, M1_guess, args=(M2, fanno_param, gam))[0]
-
+    m1 = 1.0
+    rratio = np.atleast_1d(density_ratio)
+    if isinstance(specific_heat_ratio, Floatlike):
+        gam = np.full_like(m1, specific_heat_ratio)
     else:
-        raise ValueError(
-            "Specify 1 of the following: ds21_R or the Fanno parameter.")
+        gam = np.asarray(specific_heat_ratio)
+    a = (rratio / m1) ** 2 * (2 + (gam - 1) * m1**2)
+    m2 = (2.0 / (a - (gam - 1))) ** 0.5
+    return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
 
 
-def temperature2(M2, M1=1.0, T1=1.0, gam: float = 1.4):
-    return T1 * (2+(gam-1)*M1*M1) / (2+(gam-1)*M2*M2)
+def _lookup_table_by_ratio(
+    ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+    flow_regime: ndarray_FlowSpeedRegime | FlowSpeedRegime,
+    mach_func: Callable,
+) -> FannoFlowTable:
+    r"""Lookup the Fanno flow table by a generic input ratio where the
+    relationship with Mach must be solved numerically
 
+    Args:
+        ratio (ArrayOrScalarFloat): ratio of interest
+            (total temp., total pressure, etc)
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
+        flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime): flow regime
+            (supersonic, subsonic)
+        mach_func (Callable): function to compute Mach from the given ratio
 
-def pressure2(M2, M1=1.0, p1=1.0, gam: float = 1.4):
-    return p1 * M1/M2 * temperature2(M1=M1, M2=M2, T1=1.0, gam=gam)**0.5
-
-
-def density2(M2, M1=1.0, rho1=1.0, gam: float = 1.4):
-    return rho1 * M1/M2 * temperature2(M1=M1, M2=M2, T1=1.0, gam=gam)**-0.5
-
-
-def total_pressure2(M2: float, M1=1.0, p01=1.0, gam: float = 1.4):
+    Returns:
+        FannoFlowTable: Fanno flow table
     """
-    Compute total pressure p02/p01 for Fanno flow.
+    _ratio = np.atleast_1d(ratio)
+    if isinstance(specific_heat_ratio, Floatlike):
+        gam = np.full_like(_ratio, specific_heat_ratio)
+    else:
+        gam = np.asarray(specific_heat_ratio)
+    check_equal_shape(gam.shape, _ratio.shape)
 
-    This form is valid for calorically perfect gases only, where `gamma`
-    is constant (M1 < 5).
+    mach_guesses = mach_guess_from_flow_regime(
+        flow_regime, _ratio.shape, mach_subsonic=0.01, mach_supersonic=3.0
+    )
 
-    Parameters
-    ----------
-    M2 : float
-        Mach number at station 2
-    M1 : float, optional
-        Mach number at station 1, by default 1.0
-    p01 : float, optional
-        Stagnation pressure at station 1, by default 1.0
-    gam : float, optional
-        ratio of specific heats gamma, by default 1.4
+    def get_mach_by_ratio(_m, _r, _g):
+        return _r - mach_func(
+            mach_initial=1.0, mach_final=_m, specific_heat_ratio=_g
+        )
 
-    Returns
-    -------
-    float
-        p02/p01 stagnation pressure ratio AND
+    m2 = np.empty_like(_ratio)
+    for i in range(_ratio.size):
+        m2.flat[i] = fsolve(
+            get_mach_by_ratio,
+            mach_guesses.flat[i],
+            args=(_ratio.flat[i], gam.flat[i]),
+        )[0]
+    return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
 
-        p0/p0* if `M1`==1.0 AND
 
-        p02 if `p01`!=1.0 AND
+def lookup_table_by_total_pressure(
+    total_pressure_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
+    flow_regime: ndarray_FlowSpeedRegime
+    | FlowSpeedRegime = FlowSpeedRegime.supersonic,
+) -> FannoFlowTable:
+    r"""Look up a Fanno flow table result from the total pressure ratio,
+    $p_0 / p_0^*$
 
-        p0 if `M1`==1.0 and `p01`!=1.0
+    Args:
+        total_pressure_ratio (ArrayOrScalarFloat): total pressure ratio,
+            $p_0 / p_0^*$
+        specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
+            heats, $\gamma$. Defaults to 1.4.
+        flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime, optional):
+            flow speed regime (either supersonic or subsonic).
+            Defaults to ``FlowSpeedRegime.supersonic``.
+
+    Returns:
+        FannoFlowTable: Fanno flow output table
     """
+    return _lookup_table_by_ratio(
+        ratio=total_pressure_ratio,
+        specific_heat_ratio=specific_heat_ratio,
+        flow_regime=flow_regime,
+        mach_func=total_pressure_ratio_by_mach,
+    )
+
+
+def lookup_table_by_entropy(
+    entropy_ratio: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
+    flow_regime: ndarray_FlowSpeedRegime
+    | FlowSpeedRegime = FlowSpeedRegime.supersonic,
+) -> FannoFlowTable:
+    r"""Look up a Fanno flow table result from the entropy ratio, $(s* - s) / R$
+
+    Args:
+        total_pressure_ratio (ArrayOrScalarFloat): entropy ratio,
+            $(s* - s) / R$
+        specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
+            heats, $\gamma$. Defaults to 1.4.
+        flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime, optional):
+            flow speed regime (either supersonic or subsonic).
+            Defaults to ``FlowSpeedRegime.supersonic``.
+
+    Returns:
+        FannoFlowTable: Fanno flow output table
+    """
+    return _lookup_table_by_ratio(
+        ratio=entropy_ratio,
+        specific_heat_ratio=specific_heat_ratio,
+        flow_regime=flow_regime,
+        mach_func=_rev_entropy_ratio_by_mach,
+    )
+
+
+def lookup_table_by_fanno_parameter(
+    fanno_parameter: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat = 1.4,
+    flow_regime: ndarray_FlowSpeedRegime
+    | FlowSpeedRegime = FlowSpeedRegime.supersonic,
+) -> FannoFlowTable:
+    r"""Look up a Fanno flow table result from the Fanno parameter,
+    $4 f L^* / D$
+
+    Args:
+        fanno_parameter (ArrayOrScalarFloat): Fanno parameter,
+            $4 f L^* / D$
+        specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
+            heats, $\gamma$. Defaults to 1.4.
+        flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime, optional):
+            flow speed regime (either supersonic or subsonic).
+            Defaults to ``FlowSpeedRegime.supersonic``.
+
+    Returns:
+        FannoFlowTable: Fanno flow output table
+    """
+    return _lookup_table_by_ratio(
+        ratio=fanno_parameter,
+        specific_heat_ratio=specific_heat_ratio,
+        flow_regime=flow_regime,
+        mach_func=_rev_fanno_parameter_by_mach,
+    )
+
+
+def temperature_ratio_by_mach(
+    mach_initial: ArrayOrScalarFloat,
+    mach_final: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+) -> ndarray_f:
+    r"""Compute the static temperature ratio $T_2 / T_1$ from the Mach number
+    for Fanno flow.
+
+    Args:
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
+
+    Returns:
+        ndarray_f: static temperature ratio, $T_2 / T_1$
+            ($T / T^*$ if $M_2=1.0$)
+    """
+    m1 = np.atleast_1d(mach_initial)
+    m2 = mach_final
+    gam = specific_heat_ratio
+    return (2 + (gam - 1) * m1**2) / (2 + (gam - 1) * m2**2)
+
+
+def pressure_ratio_by_mach(
+    mach_initial: ArrayOrScalarFloat,
+    mach_final: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+) -> ndarray_f:
+    r"""Compute the static pressure ratio $p_2 / p_1$ from the Mach number $M$
+    for Fanno flow.
+
+    Args:
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
+
+    Returns:
+        ndarray_f: static pressure ratio, $p_2 / p_1$
+            ($p / p^*$ if $M_2=1.0$)
+    """
+    m1 = np.atleast_1d(mach_initial)
+    m2 = mach_final
+    gam = specific_heat_ratio
     return (
-        p01 * M1/M2
-        * temperature2(M1=M1, M2=M2, T1=1.0, gam=gam)**(-(gam+1)/(2*(gam-1)))
-    )
-
-
-def entropy2(M1: float, M2=1.0, R: float = 1.0, s1: float = 0.0, gam: float = 1.4):
-    """
-    Compute entropy at station 2 s2 for Fanno flow.
-
-    This form is valid for calorically perfect gases only, where `gamma`
-    is constant (M1 < 5).
-
-    Parameters
-    ----------
-    M1 : float
-        Mach number at station 1 (upstream condition)
-    M2 : float, optional
-        Mach number at station 2, by default 1.0
-    R : float, optional
-        specific gas constant, by default 1.0
-    s1 : float, optional
-        Entropy at state 1, by default 0.0
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-
-    Returns
-    -------
-    float
-        s2 AND
-
-        (s2-s1) if `s1`==0 AND
-
-        (s2-s1)/R if `s1`==0 and `R`==1.0 AND
-
-        (s*-s)/R if `s1`==0 and `R`==1.0 and `M2`==1.0
-    """
-    return (
-        s1 + R * np.log(
-            M2/M1 * ((1+(gam-1)/2*M1*M1)
-                     / (1+(gam-1)/2*M2*M2))**(0.5*(gam+1)/(gam-1))
+        m1
+        / m2
+        * temperature_ratio_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
         )
+        ** 0.5
     )
 
 
-def fanno_parameter(M1, M2=1.0, gam: float = 1.4, throw_err: bool = True):
+def density_ratio_by_mach(
+    mach_initial: ArrayOrScalarFloat,
+    mach_final: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+) -> ndarray_f:
+    r"""Compute the density ratio $\rho_2 / \rho_1$ from the Mach number
+    for Fanno flow.
+
+    This is equivalent to velocity ratio $u_1 / u_2$
+
+    Args:
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
+
+    Returns:
+        ndarray_f: density ratio, $\rho_2 / \rho_1$
+            ($\rho / \rho^*$ if $M_2=1.0$)
     """
-    Compute the Fanno parameter.
-
-    Parameters
-    ----------
-    M1 : float
-        Mach number at station 1, or simply M
-    M2 : float, optional
-        Mach number at station 2 or M* if M2==1.0, by default 1.0
-    gam : float, optional
-        ratio of specific heats, by default 1.4
-    throw_err : bool, optional
-        throw error if 2nd law violated (handy to set false when
-        root-finding), by default True
-
-    Returns
-    -------
-    float
-        4f/D(x2-x1) AND
-        4fL*/D when M2==1.0 AND
-
-    Raises
-    ------
-    ValueError
-        Violation of 2nd law or revision of inlet conditions required.
-    """
-    if throw_err:
-        if M1 >= 1:
-            if M2 > M1:
-                raise ValueError("M2 cannot be greater than M1 when "
-                                 "M1 is supersonic. Violation of 2nd Law.")
-            elif M2 < 1:
-                raise ValueError("M2 cannot be subsonic. Flow is choked. "
-                                 "Normal shock to form before inlet.")
-        elif M1 < 1:
-            if M2 < M1:
-                raise ValueError("M2 cannot be less than M1 when "
-                                 "M1 is subsonic. Violation of 2nd Law.")
-            elif M2 > 1:
-                raise ValueError("M2 cannot be supersonic. Flow is choked. "
-                                 "Revision of inlet conditions required.")
-
-    def integrand(m, g): return (
-        -1/(g*m*m) - (g+1)/(2*g)*np.log(
-            m*m/(1+(g-1)/2*m*m)
-        )
-    )
+    m1 = np.atleast_1d(mach_initial)
+    m2 = mach_final
+    gam = specific_heat_ratio
     return (
-        integrand(M2, gam) - integrand(M1, gam)
+        m1
+        / m2
+        * temperature_ratio_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        )
+        ** -0.5
     )
 
 
-def L_star(fanno_param, D, f: float = 0.005):
-    """
-    Compute duct length L for a given Fanno parameter 4fL*/D.
+def total_pressure_ratio_by_mach(
+    mach_initial: ArrayOrScalarFloat,
+    mach_final: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+) -> ndarray_f:
+    r"""Compute total pressure ratio $p_{02} / p_{01}$ for Fanno flow.
 
-    Parameters
-    ----------
-    fanno_param : Any
-        Fanno flow parameter 4fL*/D
-    D : Any
-        duct diameter
-    f : float, optional
-        average friction coefficient, by default 0.005 (which holds
-        for Re > 1e5 and surface roughness of 0.001D)
+    Args:
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            simply the Mach number, $M$, when ``mach_initial==1.0``
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
 
-    Returns
-    -------
-    Any
-        Duct length L AND L* for M=1
+    Returns:
+        ndarray_f: total pressure ratio, $p_{02} / p_{01}$
+            ($p_0 / p_0^*$ if $M_2=1.0$)
     """
-    return 0.25*fanno_param*D/f
+    m1 = np.atleast_1d(mach_initial)
+    m2 = mach_final
+    gam = specific_heat_ratio
+    return (
+        m1
+        / m2
+        * temperature_ratio_by_mach(
+            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        )
+        ** (-(gam + 1) / (2 * (gam - 1)))
+    )
+
+
+def _rev_entropy_ratio_by_mach(
+    mach_initial: ArrayOrScalarFloat,
+    mach_final: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+) -> ndarray_f:
+    """This function computes (s1-s2)/R. This is handy because s1 becomes
+    the critical/sonic point, s*, and this allows you to get the typical
+    positive value back out
+    """
+    m1 = np.atleast_1d(mach_initial)
+    m2 = mach_final
+    gam = specific_heat_ratio
+    return -1.0 * entropy_ratio_by_mach(
+        mach_final=m2, mach_initial=m1, specific_heat_ratio=gam
+    )
+
+
+def entropy_ratio_by_mach(
+    mach_initial: ArrayOrScalarFloat,
+    mach_final: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+) -> ndarray_f:
+    r"""Compute specific entropy ratio $(s_2 - s_1) / R$ for Fanno flow.
+
+    Args:
+        mach_initial (ArrayOrScalarFloat): Mach number at station 1, $M_1$
+            (initial or upstream Mach)
+        mach_final (ArrayOrScalarFloat): Mach number at station 2, $M_2$
+            (final or downstream Mach)
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
+
+    Returns:
+        ndarray_f: specific entropy ratio, $(s_2 - s_1) / R$
+            ($(s - s^*) / R$ if ``mach_initial==1.0``)
+    """
+    m1 = np.atleast_1d(mach_initial)
+    m2 = mach_final
+    gam = specific_heat_ratio
+    return np.log(
+        m2
+        / m1
+        * ((2 + (gam - 1) * m1**2) / (2 + (gam - 1) * m2**2))
+        ** (0.5 * (gam + 1) / (gam - 1))
+    )
+
+
+# class InvalidMachError(Exception):
+#     pass
+
+
+# def _check_valid_mach(mach_initial: ndarray_f,
+#                       mach_final: ndarray_f):
+#     valid_mach = (mach_initial > 0.0) & (mach_final > 0.0)
+#     if not valid_mach.all():
+#         raise InvalidMachError("Mach must be positive")
+
+#     invalid_2nd_law = (((mach_initial < 1) & (mach_final < mach_initial)) |
+#                        (mach_initial >= 1) & (mach_final > mach_initial))
+#     if invalid_2nd_law.any():
+#         raise InvalidMachError(
+#             "Choice of Mach numbers violates 2nd law of thermodynamics"
+#         )
+#     choked_flow = (
+#         ((mach_initial < 1) & (mach_final > 1)) | (
+#             (mach_initial >= 1) & (mach_final < 1))
+#     )
+#     if choked_flow.any():
+#         raise InvalidMachError("Flow is choked, a normal shock will develop")
+
+
+def _rev_fanno_parameter_by_mach(
+    mach_initial: ArrayOrScalarFloat,
+    mach_final: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+):
+    return -1.0 * fanno_parameter_by_mach(
+        mach_initial=mach_initial,
+        mach_final=mach_final,
+        specific_heat_ratio=specific_heat_ratio,
+    )
+
+
+def fanno_parameter_by_mach(
+    mach_initial: ArrayOrScalarFloat,
+    mach_final: ArrayOrScalarFloat,
+    specific_heat_ratio: ArrayOrScalarFloat,
+) -> ndarray_f:
+    r"""Compute Fanno parameter, $4L f / D$ where $L=x_2 - x_1$
+
+    Args:
+        mach_initial (ArrayOrScalarFloat): Initial Mach number, $M_1$. This is
+            simply the Mach number, $M$, when ``mach_final==1.0``
+        mach_final (ArrayOrScalarFloat): Final Mach number, $M_2$. This is
+            the reference Mach number, $M^*$, when equal to unity.
+        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+            $\gamma$
+
+    Returns:
+        ndarray_f: Fanno parameter, $4L f / D$
+            ($4 L^* f / D$ if $M_2=1.0$)
+    """
+    m1 = np.atleast_1d(mach_initial)
+    m2 = np.atleast_1d(mach_final)
+    gam = specific_heat_ratio
+
+    def fanno_integrand(m, g):
+        return -1.0 / (g * m**2) - (g + 1) / (2 * g) * np.log(
+            m**2 / (1 + (g - 1) / 2 * m**2)
+        )
+
+    return fanno_integrand(m2, gam) - fanno_integrand(m1, gam)
+
+
+def duct_length(
+    fanno_parameter: ArrayOrScalarFloat,
+    diameter: ArrayOrScalarFloat,
+    friction_coeff: ArrayOrScalarFloat = 0.005,
+) -> ndarray_f:
+    r"""Compute duct length $L$ for a given Fanno parameter $4 f L / D$.
+
+    Args:
+        fanno_parameter (ArrayOrScalarFloat): Fanno flow parameter, $4 f L / D$
+        diameter (ArrayOrScalarFloat): duct diameter, $D$
+        friction_coeff (ArrayOrScalarFloat, optional): average friction
+            coefficient. Defaults to 0.005. The default holds for $Re > 1e5$
+            and surface roughness of $0.001 D$
+
+    Returns:
+        ndarray_f: duct length $L$ or $L^*$
+    """
+    return 0.25 * np.atleast_1d(fanno_parameter) * diameter / friction_coeff
