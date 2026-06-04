@@ -10,14 +10,14 @@ from typing import Callable
 import numpy as np
 from scipy.optimize import fsolve
 
+from minuteman.cpg import FlowSpeedRegime, ndarray_FlowSpeedRegime
+from minuteman.cpg.base import mach_guess_from_flow_regime
 import minuteman.cpg.isentropic_flow as isentropic_flow
 from minuteman.utils.types import (
     ArrayOrScalarFloat,
     check_equal_shape,
     Floatlike,
-    FlowSpeedRegime,
-    mach_guess_from_flow_regime,
-    ndarray_FlowSpeedRegime,
+
     ndarray_f,
 )
 

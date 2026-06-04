@@ -15,72 +15,15 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize import fsolve
 
+from minuteman.cpg import FlowSpeedRegime, ndarray_FlowSpeedRegime
+from minuteman.cpg.base import mach_guess_from_flow_regime
 import minuteman.cpg.thermo as thermo
 from minuteman.utils.types import (
     ArrayOrScalarFloat,
     check_equal_shape,
     Floatlike,
-    mach_guess_from_flow_regime,
-    ndarray_FlowSpeedRegime,
     ndarray_f,
 )
-from minuteman import FlowSpeedRegime
-
-
-def mach_number(
-    velocity: ArrayOrScalarFloat, speed_of_sound: ArrayOrScalarFloat
-) -> ndarray_f:
-    r"""Compute Mach number, $M$
-
-    Args:
-        velocity (ArrayOrScalarFloat): velocity, $v$
-        speed_of_sound (ArrayOrScalarFloat): speed of sound, $a$
-
-    Returns:
-        ndarray_f: Mach number, $M$
-    """
-    return np.atleast_1d(velocity) / speed_of_sound
-
-
-def speed_of_sound_from_temperature(
-    gas_constant: ArrayOrScalarFloat,
-    temperature: ArrayOrScalarFloat,
-    specific_heat_ratio: ArrayOrScalarFloat,
-) -> ndarray_f:
-    r"""Compute the speed of sound from the specific gas constant $R$ and
-    temperature $T$
-
-    Args:
-        gas_constant (ArrayOrScalarFloat): specific gas constant, $R$
-        temperature (ArrayOrScalarFloat): temperature $T$
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
-            $\gamma$
-
-    Returns:
-        ndarray_f: speed of sound, $a$
-    """
-    gam = np.atleast_1d(specific_heat_ratio)
-    return (gam * gas_constant * temperature) ** 0.5
-
-
-def speed_of_sound_from_pressure(
-    pressure: ArrayOrScalarFloat,
-    density: ArrayOrScalarFloat,
-    specific_heat_ratio: ArrayOrScalarFloat,
-) -> ndarray_f:
-    r"""Compute the speed of sound $a$ from the pressure $p$ and density $\rho$
-
-    Args:
-        pressure (ArrayOrScalarFloat): pressure, $p$
-        density (ArrayOrScalarFloat): density, $\rho$
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
-            $\gamma$
-
-    Returns:
-        ndarray_f: speed of sound, $a$
-    """
-    gam = np.atleast_1d(specific_heat_ratio)
-    return (gam * pressure / density) ** 0.5
 
 
 @dataclass
@@ -413,3 +356,15 @@ def mach_from_area_ratio(
     return fsolve(compute_mach, mach_guess, (area_ratio, specific_heat_ratio))[
         0
     ]
+
+
+def mach_angle(mach: ArrayOrScalarFloat) -> ndarray_f:
+    r"""Compute the Mach angle, $\mu$ [radians].
+
+    Args:
+        mach (ArrayOrScalarFloat): Mach number, $M$
+
+    Returns:
+        ndarray_f: Mach angle, $\mu$ [radians]
+    """
+    return np.asin(1.0 / np.atleast_1d(mach))

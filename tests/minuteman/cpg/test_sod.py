@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import minuteman.cpg.isentropic_flow as isentropic_flow
+from minuteman import cpg
 import minuteman.cpg.sod as sod
 
 
@@ -11,9 +11,9 @@ def test_solve_p21():
     p1 = 1e4
     r4 = 1
     r1 = .125
-    a4 = isentropic_flow.speed_of_sound_from_pressure(
+    a4 = cpg.speed_of_sound_from_pressure(
         specific_heat_ratio=gam4, pressure=p4, density=r4)
-    a1 = isentropic_flow.speed_of_sound_from_pressure(
+    a1 = cpg.speed_of_sound_from_pressure(
         specific_heat_ratio=gam1, pressure=p1, density=r1)
     actual = sod.solve_p21(p41=p4/p1, a41=a4/a1, gam4=gam4, gam1=gam1)
     assert actual == pytest.approx(3.0313017805065474)

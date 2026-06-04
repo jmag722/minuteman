@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
+import minuteman.cpg.isentropic_flow as isentropic_flow
 import minuteman.cpg.oblique_shock as obs
 
 
@@ -146,7 +147,7 @@ def taylor_maccoll_from_cone(M1: float, cone_angle: float, gam: float = 1.4):
         return theta[-1] - cone_angle
     # multiply by 1+small decimal to avoid numerical issues with edge case
     actual_shock_angle = brentq(
-        func, a=obs.mach_angle(M=M1)*1.00001, b=max_angle,
+        func, a=isentropic_flow.mach_angle(mach=M1)[0]*1.00001, b=max_angle,
         args=(M1, cone_angle, gam))
     return taylor_maccoll_from_shock(
         M1=M1, shock_angle=actual_shock_angle, gam=gam)
@@ -174,7 +175,7 @@ def taylor_maccoll_from_surface_mach(M1: float, cone_mach: float, gam: float = 1
         mach = mach_from_nondimensional_velocity(vprime, gam=gam)
         return mach[-1] - cone_mach
     actual_shock_angle = brentq(
-        func, a=obs.mach_angle(M=M1)*1.00001, b=max_angle,
+        func, a=isentropic_flow.mach_angle(mach=M1)[0]*1.00001, b=max_angle,
         args=(M1, cone_mach, gam))
     return taylor_maccoll_from_shock(
         M1=M1, shock_angle=actual_shock_angle, gam=gam)

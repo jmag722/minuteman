@@ -4,19 +4,7 @@ This module computes flow parameters of a 2D, stationary, calorically perfect ob
 
 import numpy as np
 
-
-def mach_angle(M: float):
-    """Compute the Mach angle.
-
-    Source: Eqn 4.1 in Anderson
-
-    Args:
-        M (float): Mach number [-]
-
-    Returns:
-        float: Mach angle [radians]
-    """
-    return np.asin(1.0 / M)
+import minuteman.cpg.isentropic_flow as isentropic_flow
 
 
 def mach1_normal(M1: float, beta: float):
@@ -118,7 +106,7 @@ def check_shock_angle(beta: float, M: float):
     Raises:
         ValueError: shock angle outside bounds
     """
-    mu = mach_angle(M)
+    mu = isentropic_flow.mach_angle(M)
     if np.min(beta) < mu or np.max(beta) > np.radians(90):
         raise ValueError(
             f"Shock angle must be between [{np.degrees(mu)}, 90] degrees.")

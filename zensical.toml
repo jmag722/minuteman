@@ -23,12 +23,16 @@ Copyright &copy; 2026 The authors
 nav = [
   {"Home" = "index.md"},
   {"Calorically Perfect Gas" = [
+     "cpg/index.md",
      "cpg/fanno.md",
      "cpg/isentropic_flow.md",
      "cpg/normal_shock.md",
      "cpg/rayleigh.md",
      "cpg/thermo.md",
-  ]}
+  ]},
+  {"Utilities" = [
+     "utils/types.md",
+  ]},
 ]
 
 # MathJax support

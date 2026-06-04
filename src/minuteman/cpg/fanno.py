@@ -5,15 +5,13 @@ from typing import Callable
 
 import numpy as np
 from scipy.optimize import fsolve
-import minuteman.utils.arg_checks as ac
 
+from minuteman.cpg import FlowSpeedRegime, ndarray_FlowSpeedRegime
+from minuteman.cpg.base import mach_guess_from_flow_regime
 from minuteman.utils.types import (
     ArrayOrScalarFloat,
     check_equal_shape,
     Floatlike,
-    FlowSpeedRegime,
-    mach_guess_from_flow_regime,
-    ndarray_FlowSpeedRegime,
     ndarray_f,
 )
 
@@ -259,8 +257,7 @@ def lookup_table_by_entropy(
     r"""Look up a Fanno flow table result from the entropy ratio, $(s* - s) / R$
 
     Args:
-        total_pressure_ratio (ArrayOrScalarFloat): entropy ratio,
-            $(s* - s) / R$
+        entropy_ratio (ArrayOrScalarFloat): entropy ratio, $(s* - s) / R$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
             heats, $\gamma$. Defaults to 1.4.
         flow_regime (ndarray_FlowSpeedRegime | FlowSpeedRegime, optional):
