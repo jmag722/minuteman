@@ -1,7 +1,8 @@
 import numpy as np
+
 import minuteman.cpg.fanno as fanno
-from minuteman.cpg.fanno import FannoFlowTable
 from minuteman.cpg import FlowSpeedRegime
+from minuteman.cpg.fanno import FannoFlowTable
 
 
 def compare_tables(actual: FannoFlowTable, expected: FannoFlowTable, **kwargs):

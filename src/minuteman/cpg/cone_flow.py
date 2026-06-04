@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
+
 import minuteman.cpg.isentropic_flow as isentropic_flow
 import minuteman.cpg.oblique_shock as obs
 

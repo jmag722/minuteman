@@ -1,7 +1,8 @@
-import pytest
 import numpy as np
-from minuteman import cpg
+import pytest
+
 import minuteman.cpg.sod as sod
+from minuteman import cpg
 
 
 def test_solve_p21():

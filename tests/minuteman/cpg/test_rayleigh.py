@@ -1,7 +1,8 @@
 import numpy as np
+
 import minuteman.cpg.rayleigh as rayleigh
-from minuteman.cpg.rayleigh import RayleighFlowTable
 from minuteman.cpg import FlowSpeedRegime
+from minuteman.cpg.rayleigh import RayleighFlowTable
 
 
 def compare_tables(

@@ -15,13 +15,13 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize import fsolve
 
+import minuteman.cpg.thermo as thermo
 from minuteman.cpg import FlowSpeedRegime, ndarray_FlowSpeedRegime
 from minuteman.cpg.base import mach_guess_from_flow_regime
-import minuteman.cpg.thermo as thermo
 from minuteman.utils.types import (
     ArrayOrScalarFloat,
-    check_equal_shape,
     Floatlike,
+    check_equal_shape,
     ndarray_f,
 )
 

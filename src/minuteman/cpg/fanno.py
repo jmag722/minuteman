@@ -10,8 +10,8 @@ from minuteman.cpg import FlowSpeedRegime, ndarray_FlowSpeedRegime
 from minuteman.cpg.base import mach_guess_from_flow_regime
 from minuteman.utils.types import (
     ArrayOrScalarFloat,
-    check_equal_shape,
     Floatlike,
+    check_equal_shape,
     ndarray_f,
 )
 

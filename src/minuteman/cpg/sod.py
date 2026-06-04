@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.optimize import fsolve
 
-from minuteman import cpg
 import minuteman.cpg.thermo as thermo
+from minuteman import cpg
 
 
 def shock_tube(t: float,

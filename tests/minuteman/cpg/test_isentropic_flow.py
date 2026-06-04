@@ -1,4 +1,5 @@
 import numpy as np
+
 import minuteman.cpg.isentropic_flow as isentropic_flow
 from minuteman.cpg import FlowSpeedRegime
 

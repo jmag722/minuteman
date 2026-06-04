@@ -1,6 +1,7 @@
 
 import numpy as np
 import pytest
+
 import minuteman.cpg.oblique_shock as obs
 
 

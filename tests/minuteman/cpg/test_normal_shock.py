@@ -1,4 +1,5 @@
 import numpy as np
+
 import minuteman.cpg.normal_shock as normal_shock
 from minuteman.cpg.normal_shock import NormalShockTable
 

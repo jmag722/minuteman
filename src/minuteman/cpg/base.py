@@ -8,8 +8,8 @@ import numpy.typing as npt
 
 from minuteman.utils.types import (
     ArrayOrScalarFloat,
-    ndarray_f,
     check_equal_shape,
+    ndarray_f,
 )
 
 

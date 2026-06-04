@@ -12,11 +12,12 @@ from dataclasses import dataclass
 
 import numpy as np
 from scipy.optimize import fsolve
+
 import minuteman.cpg.isentropic_flow as isentropic_flow
 from minuteman.utils.types import (
     ArrayOrScalarFloat,
-    check_equal_shape,
     Floatlike,
+    check_equal_shape,
     ndarray_f,
 )
 
