@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import minuteman.cpg.sod as sod
+import minuteman.cpg.shock_tube as shock_tube
 from minuteman import cpg
 
 
@@ -16,7 +16,7 @@ def test_solve_p21():
         specific_heat_ratio=gam4, pressure=p4, density=r4)
     a1 = cpg.speed_of_sound_from_pressure(
         specific_heat_ratio=gam1, pressure=p1, density=r1)
-    actual = sod.solve_p21(p41=p4/p1, a41=a4/a1, gam4=gam4, gam1=gam1)
+    actual = shock_tube.solve_p21(p41=p4/p1, a41=a4/a1, gam4=gam4, gam1=gam1)
     assert actual == pytest.approx(3.0313017805065474)
 
 
@@ -26,7 +26,7 @@ def test_contact_surface_speed():
     pratio = 10
     gam = 1.4
     a1 = (gam*287*T)**0.5
-    assert sod.contact_surface_speed(
+    assert shock_tube.contact_surface_speed(
         pratio, a1, gam) == pytest.approx(756.0737668928916)
 
 
@@ -36,7 +36,7 @@ def test_moving_shock_speed():
     pratio = 10
     gam = 1.4
     a1 = (gam*287*T)**0.5
-    actual = sod.moving_shock_speed(pratio, a1, gam)
+    actual = shock_tube.moving_shock_speed(pratio, a1, gam)
     assert actual == pytest.approx(1024.9)
 
 
@@ -44,7 +44,7 @@ def test_moving_shock_temperature_ratio():
     # see Anderson Example 7.1
     pratio = 10
     gam = 1.4
-    assert sod.moving_shock_temperature_ratio(
+    assert shock_tube.moving_shock_temperature_ratio(
         pratio, gam) == pytest.approx(2.622950819672131)
 
 
@@ -52,26 +52,27 @@ def test_moving_shock_density_ratio():
     # see Anderson Example 7.1
     pratio = 10
     gam = 1.4
-    assert sod.moving_shock_density_ratio(pratio, gam) == pytest.approx(3.8125)
+    assert shock_tube.moving_shock_density_ratio(
+        pratio, gam) == pytest.approx(3.8125)
 
 
 def test_velocity_expansion_fan():
-    actual = sod.velocity_expansion_fan(
+    actual = shock_tube.velocity_expansion_fan(
         a4=300, x=np.array([1, 2, 3]), t=0.1, gam=1.4)
     np.testing.assert_allclose(actual, np.array(
         [258.33333333, 266.66666667, 275.]))
 
 
 def test_sound_speed_expansion_fan():
-    actual = sod.sound_speed_expansion_fan(
+    actual = shock_tube.sound_speed_expansion_fan(
         a4=205, u=np.array([1000, 2000, 30]), gam=1.43)
     np.testing.assert_allclose(actual, np.array([-10., -225.,  198.55]))
 
 
 def test_shock_tube():
-    actual = sod.shock_tube(t=0.01, p_driver=1e5, p_driven=1e4,
-                            rho_driver=1, rho_driven=0.125, R_driver=287, R_driven=287,
-                            gam_driver=1.4, gam_driven=1.4)
+    actual = shock_tube.shock_tube(t=0.01, p_driver=1e5, p_driven=1e4,
+                                   rho_driver=1, rho_driven=0.125, R_driver=287, R_driven=287,
+                                   gam_driver=1.4, gam_driven=1.4)
     # tested with https://onlineflowcalculator.com/pages/CFLOW/calculator.html
     actual["pressure"][actual["region1"]].mean() == pytest.approx(1e4)
     actual["pressure"][actual["region2"]].mean() == pytest.approx(3.03130e+4)
