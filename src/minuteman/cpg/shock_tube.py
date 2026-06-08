@@ -1,384 +1,484 @@
+from dataclasses import dataclass
+
 import numpy as np
 from scipy.optimize import fsolve
 
 import minuteman.cpg.thermo as thermo
 from minuteman import cpg
+from minuteman.utils.types import (
+    Floatlike,
+    ndarray_b,
+    ndarray_f,
+)
+
+"""
+Solve the 1D Sod shock tube problem
+"""
 
 
-def shock_tube(t: float,
-               p_driver: float, p_driven: float, rho_driver: float, rho_driven: float,
-               gam_driver: float = 1.4, gam_driven: float = 1.4,
-               R_driver: float = thermo.gas_constant_air_si, R_driven: float = thermo.gas_constant_air_si,
-               left_driver: bool = True, tube_length: float = 20.0, positions: np.ndarray = None):
+@dataclass
+class ShockTubeSolution:
+    """Solution to the Sod Shock tube"""
+
+    position: ndarray_f
+    """Position in the shock tube, $x$"""
+    time: Floatlike
+    """Time, $t$"""
+    pressure: ndarray_f
+    """Pressure, $p$"""
+    density: ndarray_f
+    r"""Density, $\rho$"""
+    temperature: ndarray_f
+    """Temperature, $T$"""
+    specific_heat_ratio: ndarray_f
+    r"""Ratio of specific heats, $\gamma$"""
+    gas_constant: ndarray_f
+    """Specific gas constant, $R$"""
+    mach: ndarray_f
+    """Mach number, $M$"""
+    velocity: ndarray_f
+    """Velocity, $v$"""
+    speed_of_sound: ndarray_f
+    """Speed of sound, $a$"""
+    entropy: ndarray_f
+    """Entropy, $s$"""
+    internal_energy: ndarray_f
+    """Specific internal energy, $e$"""
+    enthalpy: ndarray_f
+    """Specific internal enthalpy, $h$"""
+    total_energy: ndarray_f
+    """Total energy per unit volume, $E_t$"""
+    region_1: ndarray_b
+    """Region 1 solution mask"""
+    region_2: ndarray_b
+    """Region 2 solution mask"""
+    region_3: ndarray_b
+    """Region 3 solution mask"""
+    region_4: ndarray_b
+    """Region 4 solution mask"""
+    region_5: ndarray_b
+    """Region 5 solution mask"""
+
+
+def solve_sod(
+    time: Floatlike,
+    pressure_l: Floatlike,
+    pressure_r: Floatlike,
+    density_l: Floatlike,
+    density_r: Floatlike,
+    specific_heat_ratio_l: Floatlike = 1.4,
+    specific_heat_ratio_r: Floatlike = 1.4,
+    gas_constant_l: Floatlike = thermo.gas_constant_air_si,
+    gas_constant_r: Floatlike = thermo.gas_constant_air_si,
+    tube_length: Floatlike = 20.0,
+    position: ndarray_f | None = None,
+) -> ShockTubeSolution:
+    r"""Computes Sod shock tube problem. Both gases initially stagnant, with
+    the contact surface centered in the tube at x=0.
+
+    Args:
+        time (Floatlike): time, $t$ [seconds]
+        pressure_l (Floatlike): pressure on left hand side (LHS), $p_L$ [Pa]
+        pressure_r (Floatlike): pressure on right hand side (RHS), $p_R$ [Pa]
+        density_l (Floatlike): density on LHS, $\rho_L$ [kg/$m^3$]
+        density_r (Floatlike): density on RHS, $\rho_R$ [kg/$m^3$]
+        specific_heat_ratio_l (Floatlike, optional): ratio of specific heats on
+            LHS, $\gamma_L$. Defaults to 1.4.
+        specific_heat_ratio_r (Floatlike, optional): ratio of specific heats on
+            RHS, $\gamma_R$. Defaults to 1.4.
+        gas_constant_l (Floatlike, optional): specific gas constant on LHS,
+            $R_L$. Defaults to ``thermo.gas_constant_air_si``.
+        gas_constant_r (Floatlike, optional): specific gas constant on RHS,
+            $R_R$. Defaults to ``thermo.gas_constant_air_si``.
+        tube_length (Floatlike, optional): Length of shock tube.
+            Defaults to 20.0, the Sod problem #1 length
+        position (ndarray_f | None, optional): explicit positions along
+            the shock tube to evaluate. This is helpful when comparing to a
+            CFD grid directly. Defaults to ``None``.
+
+    Returns:
+        ShockTubeSolution: Sod shock tube solution
     """
-    Computes Sod shock tube problem. Both gases initially stagnant, with the contact
-    surface centered in the tube at x=0.
+    # initialize driver gas (region 4) and driven gas (region 1)
+    left_driver = pressure_l >= pressure_r
+    p4 = pressure_l if left_driver else pressure_r
+    p1 = pressure_r if left_driver else pressure_l
+    r4 = density_l if left_driver else density_r
+    r1 = density_r if left_driver else density_l
+    gam4 = specific_heat_ratio_l if left_driver else specific_heat_ratio_r
+    gam1 = specific_heat_ratio_r if left_driver else specific_heat_ratio_l
+    gas_const4 = gas_constant_l if left_driver else gas_constant_r
+    gas_const1 = gas_constant_r if left_driver else gas_constant_l
 
-    Parameters
-    ----------
-    t : float
-        time [seconds]
-    p_driver : float
-        driver gas pressure
-    p_driven : float
-        driven gas pressure
-    rho_driver : float
-        driver gas density
-    rho_driven : float
-        driven gas density
-    gam_driver : float, optional
-        driver gas heat capacity ratio gamma, by default 1.4
-    gam_driven : float, optional
-        driven gas heat capacity ratio gamma, by default 1.4
-    R_driver : float, optional
-        driver gas constant, by default thermo.gas_constant_air_si
-    R_driven : float, optional
-        driven gas constant, by default thermo.gas_constant_air_si
-    left_driver : bool, optional
-        driver gas starts on left hand side rather than the right, by default True
-    tube_length : float, optional
-        shock tube length, by default 20. (Sod problem #1 length)
-    positions : np.ndarray, optional
-        explicit positions along the shock tube to evaluate, by default None.
-        This is helpful when comparing to CFD grid directly.
-
-    Returns
-    -------
-    dict
-        position,
-        pressure,
-        density,
-        sound speed,
-        temperature,
-        entropy,
-        velocity,
-        gamma,
-        gas constant,
-        specific internal energy,
-        specific enthalpy,
-        total energy,
-        Mach number,
-        region masks
-
-    Raises
-    ------
-    ValueError
-        Driver gas pressure is lower than driven gas pressure
-    """
-    p41 = p_driver/p_driven
-    if p41 < 1.:
-        raise ValueError(
-            "Driver gas pressure must be greater than driven pressure.")
-
-    p4 = p_driver
-    r4 = rho_driver
-    gam4 = gam_driver
+    # derived driver quantities
+    p41 = p4 / p1
     a4 = cpg.speed_of_sound_from_pressure(
-        specific_heat_ratio=gam4, pressure=p4, density=r4)[0]
-    T4 = p4/(r4*R_driver)
-    u4 = 0.
+        specific_heat_ratio=gam4, pressure=p4, density=r4
+    )[0]
+    t4 = p4 / (r4 * gas_const4)
+    u4 = 0.0
 
-    p1 = p_driven
-    r1 = rho_driven
-    gam1 = gam_driven
+    # derived driven quantities
     a1 = cpg.speed_of_sound_from_pressure(
-        specific_heat_ratio=gam1, pressure=p1, density=r1)[0]
-    T1 = p1/(r1*R_driven)
-    u1 = 0.
+        pressure=p1, density=r1, specific_heat_ratio=gam1
+    )[0]
+    t1 = p1 / (r1 * gas_const1)
+    u1 = 0.0
 
-    p21 = solve_p21(p41=p41, a41=a4/a1, gam4=gam4, gam1=gam1)
-    p2 = p21*p1
-    r2 = moving_shock_density_ratio(p21=p21, gam=gam1)*r1
+    # compute properties across shock
+    p21 = moving_shock_pressure_ratio(
+        pressure_ratio=p41,
+        speed_of_sound_ratio=a4 / a1,
+        specific_heat_ratio_driver=gam4,
+        specific_heat_ratio_driven=gam1,
+    )
+    p2 = p21 * p1
+    r2 = r1 * moving_shock_density_ratio(
+        pressure_ratio=p21, specific_heat_ratio_driven=gam1
+    )
     a2 = cpg.speed_of_sound_from_pressure(
-        specific_heat_ratio=gam1, pressure=p2, density=r2)[0]
-    T2 = moving_shock_temperature_ratio(p21=p21, gam=gam1)*T1
-    u2 = contact_surface_speed(p21=p21, a1=a1, gam1=gam1)  # u2=u3=V=u_piston
-    W = moving_shock_speed(p21=p21, a1=a1, gam=gam1)
+        pressure=p2, density=r2, specific_heat_ratio=gam1
+    )[0]
+    t2 = t1 * moving_shock_temperature_ratio(
+        pressure_ratio=p21, specific_heat_ratio_driven=gam1
+    )
+    # u2=u3=V=u_piston
+    u2 = contact_surface_speed(
+        pressure_ratio=p21,
+        speed_of_sound_driven=a1,
+        specific_heat_ratio_driven=gam1,
+    )
+    w = moving_shock_speed(
+        pressure_ratio=p21,
+        speed_of_sound_driven=a1,
+        specific_heat_ratio_driven=gam1,
+    )
 
-    p34 = p21/p41  # p2/p1 = p3/p1
+    # compute expansion fan properties
+    p34 = p21 / p41  # because p2/p1 = p3/p1
     expansion34 = thermo.isentropic_process_from_pressure(
-        pressure_ratio=p34, specific_heat_ratio=gam4)
-    p3 = p34*p4
-    r3 = expansion34.density_ratio[0]*r4
-    a3 = expansion34.speed_of_sound_ratio[0]*a4
-    T3 = expansion34.temperature_ratio[0]*T4
+        pressure_ratio=p34, specific_heat_ratio=gam4
+    )
+    p3 = p34 * p4
+    r3 = expansion34.density_ratio[0] * r4
+    a3 = expansion34.speed_of_sound_ratio[0] * a4
+    t3 = expansion34.temperature_ratio[0] * t4
     u3 = u2
 
     # critical positions
-    x45 = (u4 - a4)*t  # expansion fan head
-    x53 = (u3 - a3)*t  # expansion fan tail
-    x32 = u2*t  # contact surface
-    x21 = W*t  # shock
-    # `set` removes multiple zeros @ t=0
-    crit_pts = np.array(list(set([x45, x53, x32, x21])))
-    if positions is None:
+    x45 = (u4 - a4) * time  # expansion fan head
+    x53 = (u3 - a3) * time  # expansion fan tail
+    x32 = u2 * time  # contact surface
+    x21 = w * time  # shock
+    # using set here removes multiple zeros @ time=0
+    crit_pts = {x45, x53, x32, x21}
+    if position is None:
         N = 500
         # adding crit pts so discont. always well resolved
-        x_arr = np.zeros(N + crit_pts.size)
-        x_arr[:N] = np.linspace(-0.5*tube_length, 0.5*tube_length, N)
-        x_arr[-crit_pts.size:] = crit_pts
-        x_arr.sort()
+        x_soln = np.zeros(N + len(crit_pts))
+        x_soln[:N] = np.linspace(-0.5 * tube_length, 0.5 * tube_length, N)
+        x_soln[-len(crit_pts):] = list(crit_pts)
+        x_soln.sort()
     else:
-        x_arr = np.zeros_like(positions)
-        x_arr[:] = positions[:]
+        x_soln = np.zeros_like(position)
+        x_soln[:] = position[:]
 
     # masks for each region
-    region4 = x_arr < x45
-    region5 = np.logical_and(x_arr >= x45, x_arr < x53)
-    region3 = np.logical_and(x_arr >= x53, x_arr < x32)
-    region2 = np.logical_and(x_arr >= x32, x_arr < x21)
-    region1 = x_arr >= x21
+    region4 = x_soln < x45
+    region5 = np.logical_and(x_soln >= x45, x_soln < x53)
+    region3 = np.logical_and(x_soln >= x53, x_soln < x32)
+    region2 = np.logical_and(x_soln >= x32, x_soln < x21)
+    region1 = x_soln >= x21
 
-    def assign_regions(_arr, _X4, _X5, _X3, _X2, _X1):
-        _arr[region4] = _X4
-        _arr[region5] = _X5
-        _arr[region3] = _X3
-        _arr[region2] = _X2
-        _arr[region1] = _X1
+    def assign_regions(_soln, _4, _5, _3, _2, _1):
+        _soln[region4] = _4
+        _soln[region5] = _5
+        _soln[region3] = _3
+        _soln[region2] = _2
+        _soln[region1] = _1
 
-    s_arr = np.empty_like(x_arr)  # entropy
-    T_arr = np.empty_like(x_arr)
-    u_arr = np.empty_like(x_arr)
-    p_arr = np.empty_like(x_arr)
-    a_arr = np.empty_like(x_arr)
-    r_arr = np.empty_like(x_arr)
+    s_soln = np.empty_like(x_soln)  # entropy
+    t_soln = np.empty_like(x_soln)  # temperature
+    u_soln = np.empty_like(x_soln)  # velocity
+    p_soln = np.empty_like(x_soln)  # pressure
+    a_soln = np.empty_like(x_soln)  # speed of sound
+    r_soln = np.empty_like(x_soln)
 
-    m_arr = np.empty_like(x_arr)
-    e_arr = np.empty_like(x_arr)
-    h_arr = np.empty_like(x_arr)
-    Et_arr = np.empty_like(x_arr)
-    gam_arr = np.empty_like(x_arr)
-    Rgas_arr = np.empty_like(x_arr)
+    m_soln = np.empty_like(x_soln)
+    e_soln = np.empty_like(x_soln)
+    h_soln = np.empty_like(x_soln)
+    etot_soln = np.empty_like(x_soln)
+    gam_soln = np.empty_like(x_soln)
+    gas_const_soln = np.empty_like(x_soln)
 
-    u5 = velocity_expansion_fan(a4, x_arr[region5], t, gam4)
-    a5 = sound_speed_expansion_fan(a4, u5, gam4)
+    u5 = expansion_fan_velocity(a4, x_soln[region5], time, gam4)
+    a5 = expansion_fan_speed_of_sound(a4, u5, gam4)
     expansion54 = thermo.isentropic_process_from_speed_of_sound(
-        speed_of_sound_ratio=a5/a4, specific_heat_ratio=gam4)
+        speed_of_sound_ratio=a5 / a4, specific_heat_ratio=gam4
+    )
     p5 = expansion54.pressure_ratio[0] * p4
     r5 = expansion54.density_ratio[0] * r4
-    T5 = expansion54.temperature_ratio[0] * T4
+    t5 = expansion54.temperature_ratio[0] * t4
 
-    assign_regions(u_arr, u4, u5, u3, u2, u1)
-    assign_regions(a_arr, a4, a5, a3, a2, a1)
-    assign_regions(p_arr, p4, p5, p3, p2, p1)
-    assign_regions(r_arr, r4, r5, r3, r2, r1)
-    assign_regions(T_arr, T4, T5, T3, T2, T1)
-    assign_regions(gam_arr, gam4, gam4, gam4, gam1, gam1)
-    assign_regions(Rgas_arr, R_driver, R_driver, R_driver, R_driven, R_driven)
-    s_arr[:] = thermo.entropy_state(pressure=p_arr, density=r_arr,
-                                    specific_heat_ratio=gam_arr,
-                                    gas_constant=Rgas_arr)
-    m_arr[:] = cpg.mach_number(velocity=u_arr, speed_of_sound=a_arr)
-    e_arr[:] = thermo.specific_heat_constant_volume(
-        specific_heat_ratio=gam_arr, gas_constant=Rgas_arr) * \
-        T_arr  # specific internal energy = cv*T
-    h_arr[:] = thermo.specific_enthalpy(
-        specific_internal_energy=e_arr, pressure=p_arr, density=r_arr)
-    Et_arr[:] = thermo.total_energy(
-        pressure=p_arr, density=r_arr, speed=u_arr, specific_heat_ratio=gam_arr)
+    assign_regions(u_soln, u4, u5, u3, u2, u1)
+    assign_regions(a_soln, a4, a5, a3, a2, a1)
+    assign_regions(p_soln, p4, p5, p3, p2, p1)
+    assign_regions(r_soln, r4, r5, r3, r2, r1)
+    assign_regions(t_soln, t4, t5, t3, t2, t1)
+    assign_regions(gam_soln, gam4, gam4, gam4, gam1, gam1)
+    assign_regions(
+        gas_const_soln, gas_const4, gas_const4, gas_const4,
+        gas_const1, gas_const1
+    )
+    s_soln[:] = thermo.entropy_state(
+        pressure=p_soln,
+        density=r_soln,
+        specific_heat_ratio=gam_soln,
+        gas_constant=gas_const_soln,
+    )
+    m_soln[:] = cpg.mach_number(velocity=u_soln, speed_of_sound=a_soln)
+    # specific internal energy = cv * T
+    e_soln[:] = t_soln * thermo.specific_heat_constant_volume(
+        specific_heat_ratio=gam_soln, gas_constant=gas_const_soln
+    )
+    h_soln[:] = thermo.specific_enthalpy(
+        specific_internal_energy=e_soln, pressure=p_soln, density=r_soln
+    )
+    etot_soln[:] = thermo.total_energy(
+        pressure=p_soln,
+        density=r_soln,
+        speed=u_soln,
+        specific_heat_ratio=gam_soln,
+    )
 
-    POS_NAME = "position"
-    answer = {
-        POS_NAME: x_arr,
-        "temperature": T_arr,
-        "pressure": p_arr,
-        "density": r_arr,
-        "speed": u_arr,
-        "sound_speed": a_arr,
-        "entropy": s_arr,
-        "gas_constant": Rgas_arr,
-        "gamma": gam_arr,
-        "mach": m_arr,
-        "spec_internal_energy": e_arr,
-        "spec_enthalpy": h_arr,
-        "total_energy": Et_arr,
-        "region1": region1,
-        "region2": region2,
-        "region3": region3,
-        "region4": region4,
-        "region5": region5,
-    }
-
-    if not left_driver:
-        for k, v in answer.items():
-            answer[k] = np.flip(v) if k != POS_NAME else v
-
-    return answer
-
-
-def velocity_expansion_fan(a4, x, t, gam):
-    """
-    Compute velocity within expansion fan. Eq. 7.89 of Anderson
-
-    Parameters
-    ----------
-    a4 : float
-        speed of sound of driver gas
-    x : float | ArrayLike
-        position within expansion fan
-    t : float | ArrayLike
-        time
-    gam : float | ArrayLike
-        ratio of specific heats
-
-    Returns
-    -------
-    u
-        velocity in the expansion fan bounds
-    """
-    return 2/(gam+1) * (a4 + x/t)
-
-
-def sound_speed_expansion_fan(a4, u, gam):
-    """
-    Compute speed of sound within expansion fan - Eq. 7.84 of Anderson.
-
-    Parameters
-    ----------
-    a4 : float
-        speed of sound of driver gas
-    u : float | ArrayLike
-        velocity within expansion fan
-    gam : float | ArrayLike
-        ratio of specific heats
-
-    Returns
-    -------
-    a
-        speed of sound within expansion fan
-    """
-    return a4 - (gam-1)/2 * (u)
-
-
-def moving_shock_density_ratio(p21: float, gam: float):
-    """
-    Compute the density ratio across a moving normal
-    shock as a function of pressure ratio. See Eq. 7.11 in
-    Anderson.
-
-    Parameters
-    ----------
-    p21 : float
-        pressure ratio across shock
-    gam : float
-        ratio of specific heats
-
-    Returns
-    -------
-    rho2/rho1
-        density ratio across shock
-    """
-    return (
-        (1 + (gam+1)/(gam-1) * p21) / ((gam+1)/(gam-1) + p21)
+    return ShockTubeSolution(
+        position=x_soln,
+        time=time,
+        temperature=t_soln,
+        pressure=p_soln,
+        density=r_soln,
+        specific_heat_ratio=gam_soln,
+        gas_constant=gas_const_soln,
+        mach=m_soln,
+        velocity=u_soln,
+        speed_of_sound=a_soln,
+        entropy=s_soln,
+        internal_energy=e_soln,
+        enthalpy=h_soln,
+        total_energy=etot_soln,
+        region_1=region1,
+        region_2=region2,
+        region_3=region3,
+        region_4=region4,
+        region_5=region5,
     )
 
 
-def moving_shock_temperature_ratio(p21: float, gam: float):
-    """
-    Compute the temperature ratio across a moving normal
-    shock as a function of pressure ratio. See Eq. 7.10 in
-    Anderson.
+def expansion_fan_velocity(
+    speed_of_sound_driver: Floatlike,
+    position: ndarray_f,
+    time: Floatlike,
+    specfic_heat_ratio_driver: Floatlike,
+) -> ndarray_f:
+    r"""Compute the velocity within the expansion fan of a shock tube $u$[^1]
 
-    Parameters
-    ----------
-    p21 : float
-        pressure ratio across shock
-    gam : float
-        ratio of specific heats
+    [^1]: Eq. 7.89, Anderson, J. D., Jr. (2003). *Modern compressible flow: With
+        historical perspective* (3rd ed.). McGraw-Hill.
 
-    Returns
-    -------
-    T2/T1
-        temperature ratio across shock
+    Args:
+        speed_of_sound_driver (Floatlike): speed of sound of driver gas, $a_4$
+        position (ndarray_f): position within expansion fan, $x$
+        time (ArrayOrScalarFloat): time $t$
+        specfic_heat_ratio_driver (Floatlike): ratio of specific heats of
+            driver gas, $\gamma_4$
+
+    Returns:
+        ndarray_f: velocity within the expansion fan, $u$
     """
-    return (
-        p21 * ((gam+1)/(gam-1) + p21) / (1 + (gam+1)/(gam-1) * p21)
+    a4 = speed_of_sound_driver
+    x = position
+    t = time
+    gam4 = specfic_heat_ratio_driver
+    return 2.0 / (gam4 + 1) * (a4 + x / t)
+
+
+def expansion_fan_speed_of_sound(
+    speed_of_sound_driver: Floatlike,
+    velocity: ndarray_f,
+    specific_heat_ratio_driver: Floatlike,
+) -> ndarray_f:
+    r"""Compute speed of sound within expansion fan $a$[^1]
+
+    Args:
+        speed_of_sound_driver (Floatlike): speed of sound of driver gas, $a_4$
+        velocity (ndarray_f): velocity within the expansion fan
+        specific_heat_ratio_driver (Floatlike): ratio of specific heats of
+            driver gas, $\gamma_4$
+
+    Returns:
+        ndarray_f: speed of sound within expansion fan, $a$
+    """
+    a4 = speed_of_sound_driver
+    u = velocity
+    gam4 = specific_heat_ratio_driver
+    return a4 - (gam4 - 1) / 2.0 * u
+
+
+def moving_shock_density_ratio(
+    pressure_ratio: Floatlike, specific_heat_ratio_driven: Floatlike
+) -> Floatlike:
+    r"""Compute the density ratio $\rho_2 / \rho_1$ ratio across a
+    moving normal shock[^1]
+
+    [^1]: Eq. 7.11, Anderson, J. D., Jr. (2003). *Modern compressible flow: With
+        historical perspective* (3rd ed.). McGraw-Hill.
+
+    Args:
+        pressure_ratio (Floatlike): static pressure ratio across
+            shock, $p_2 / p_1$
+        specific_heat_ratio_driven (Floatlike): ratio of specific heats
+            for the driven gas, $\gamma_1$
+
+    Returns:
+        Floatlike: density ratio, $\rho_2 / \rho_1$
+    """
+    p21 = pressure_ratio
+    gam1 = specific_heat_ratio_driven
+    return (1 + (gam1 + 1) / (gam1 - 1) * p21) / (
+        (gam1 + 1) / (gam1 - 1) + p21
     )
 
 
-def moving_shock_speed(p21: float, a1: float, gam: float):
-    """
-    Compute the shock speed of the moving shock as a function
-    of pressure ratio and the speed of sound of the driven gas.
-    See Eq. 7.14 of Anderson.
+def moving_shock_temperature_ratio(
+    pressure_ratio: Floatlike, specific_heat_ratio_driven: Floatlike
+) -> Floatlike:
+    r"""Compute the static temperature $T_2 / T_1$ ratio across a
+    moving normal shock[^1]
 
-    Parameters
-    ----------
-    p21 : float
-        pressure ratio across shock
-    a1 : float
-        speed of sound of driven gas
-    gam : float
-        ratio of specific heat for the gas
+    [^1]: Eq. 7.10, Anderson, J. D., Jr. (2003). *Modern compressible flow: With
+        historical perspective* (3rd ed.). McGraw-Hill.
 
-    Returns
-    -------
-    W
-        wave velocity of the moving shock wave
+    Args:
+        pressure_ratio (Floatlike): static pressure ratio across
+            shock, $p_2 / p_1$
+        specific_heat_ratio_driven (Floatlike): ratio of specific heats
+            for the driven gas, $\gamma_1$
+
+    Returns:
+        Floatlike: static temperature ratio, $T_2 / T_1$
     """
+    p21 = pressure_ratio
+    gam1 = specific_heat_ratio_driven
     return (
-        a1 * ((gam+1)/(2*gam) * (p21-1) + 1)**0.5
+        p21
+        * ((gam1 + 1) / (gam1 - 1) + p21)
+        / (1 + (gam1 + 1) / (gam1 - 1) * p21)
     )
 
 
-def contact_surface_speed(p21: float, a1: float, gam1: float):
+def moving_shock_speed(
+    pressure_ratio: Floatlike,
+    speed_of_sound_driven: Floatlike,
+    specific_heat_ratio_driven: Floatlike,
+) -> Floatlike:
+    r"""Compute the shock speed $w$ of the moving shock[^1]
+
+    [^1]: Eq. 7.14, Anderson, J. D., Jr. (2003). *Modern compressible flow: With
+        historical perspective* (3rd ed.). McGraw-Hill.
+
+    Args:
+        pressure_ratio (Floatlike): static pressure ratio across
+            shock, $p_2 / p_1$
+        speed_of_sound_driven (Floatlike): speed of sound of driven
+            gas, $a_1$
+        specific_heat_ratio_driven (Floatlike): ratio of specific heats
+            for the driven gas, $\gamma_1$
+
+    Returns:
+        Floatlike: wave velocity of the moving shock wave, $w$
     """
-    Compute the speed of the contact surface/piston in a shock tube,
-    or the speed of the mass motion induced by the incident shock.
-    See Eq. 7.16 of Anderson.
+    p21 = pressure_ratio
+    a1 = speed_of_sound_driven
+    gam1 = specific_heat_ratio_driven
+    return a1 * ((gam1 + 1) / (2 * gam1) * (p21 - 1) + 1) ** 0.5
 
-    As p21->infinity, for gam1=1.4, Mach number->1.89
 
-    Parameters
-    ----------
-    p21 : float
-        pressure ratio across shock
-    a1 : float
-        speed of sound in driven gas
-    gam1 : float
-        gamma of driven gas
+def contact_surface_speed(
+    pressure_ratio: Floatlike,
+    speed_of_sound_driven: Floatlike,
+    specific_heat_ratio_driven: Floatlike,
+) -> Floatlike:
+    r"""Compute the speed of the contact surface/piston $u_p$ in a shock tube,
+    or the speed of the mass motion induced by the incident shock[^1].
 
-    Returns
-    -------
-    up
-        contact surface or piston speed
+    For $\gamma_1=1.4$, as the pressure ratio approaches infinity, the
+    Mach number approaches 1.89.
+
+    [^1]: Eq. 7.16, Anderson, J. D., Jr. (2003). *Modern compressible flow: With
+        historical perspective* (3rd ed.). McGraw-Hill.
+
+    Args:
+        pressure_ratio (Floatlike): static pressure ratio across
+            shock, $p_2 / p_1$
+        speed_of_sound_driven (Floatlike): speed of sound of driven
+            gas, $a_1$
+        specific_heat_ratio_driven (Floatlike): ratio of specific heats
+            for the driven gas, $\gamma_1$
+    Returns:
+        Floatlike: contact surface or piston speed, $u_p$
     """
+    p21 = pressure_ratio
+    a1 = speed_of_sound_driven
+    gam1 = specific_heat_ratio_driven
     return (
-        a1/gam1 * (p21-1) * (2*gam1/(gam1+1) / (p21 + (gam1-1)/(gam1+1)))**0.5
+        a1
+        / gam1
+        * (p21 - 1)
+        * (2 * gam1 / (gam1 + 1) / (p21 + (gam1 - 1) / (gam1 + 1))) ** 0.5
     )
 
 
-def solve_p21(p41: float, a41: float, gam4: float, gam1: float):
-    """
-    Solve for the pressure ratio of the normal shock in a shock tube.
-    See Eq. 7.94 of Anderson
+def moving_shock_pressure_ratio(
+    pressure_ratio: Floatlike,
+    speed_of_sound_ratio: Floatlike,
+    specific_heat_ratio_driver: Floatlike,
+    specific_heat_ratio_driven: Floatlike,
+) -> Floatlike:
+    r"""Solve for the pressure ratio across a moving normal shock in a shock
+    tube, $p_2 / p_1$[^1]
 
-    Parameters
-    ----------
-    p41 : float
-        pressure ratio between driver and driven gas
-    a41 : float
-        speed of sound ratio between driver and driven gas
-    gam4 : float
-        gamma of driver gas
-    gam1 : float
-        gamma of driven gas
+    [^1]: Eq. 7.94, Anderson, J. D., Jr. (2003). *Modern compressible flow: With
+        historical perspective* (3rd ed.). McGraw-Hill.
 
-    Returns
-    -------
-    p21
-        pressure ratio of the normal shock in shock tube
-    """
-    return fsolve(_p21_func, 0.5*p41, (p41, a41, gam4, gam1))[0]
+    Args:
+        pressure_ratio (Floatlike): pressure ratio between the
+            driver and driven gas, $p_4 / p_1$
+        speed_of_sound_ratio (Floatlike): speed of sound ratio between the
+            driver and driven gas, $a_4 / a_1$
+        specific_heat_ratio_driver (Floatlike): ratio of specific heats
+            for the driver gas, $\gamma_4$
+        specific_heat_ratio_driven (Floatlike): ratio of specific heats
+            for the driven gas, $\gamma_1$
 
+    Returns:
+        Floatlike: pressure ratio $p_2 / p_1$ across the moving normal shock
+    """
+    p41 = pressure_ratio
+    a41 = speed_of_sound_ratio
+    gam4 = specific_heat_ratio_driver
+    gam1 = specific_heat_ratio_driven
 
-def _p21_func(p21: float, p41: float, a41: float, gam4: float, gam1: float):
-    """
-    Eq. 7.94 of anderson
-    """
-    return (
-        p41 - p21*(
-            1 - ((gam4-1)/a41*(p21-1))
-            / (2*gam1*(2*gam1+(gam1+1)*(p21-1)))**0.5
-        )**((-2*gam4)/(gam4-1))
-    )
+    def _p21_func(
+        p21: Floatlike,
+        p41: Floatlike,
+        a41: Floatlike,
+        gam4: Floatlike,
+        gam1: Floatlike,
+    ):
+        return p41 - p21 * (
+            1
+            - ((gam4 - 1) / a41 * (p21 - 1))
+            / (2 * gam1 * (2 * gam1 + (gam1 + 1) * (p21 - 1))) ** 0.5
+        ) ** (-2 * gam4 / (gam4 - 1))
+
+    return fsolve(_p21_func, 0.5 * p41, (p41, a41, gam4, gam1))[0]

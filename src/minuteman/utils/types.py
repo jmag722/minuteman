@@ -6,6 +6,9 @@ import numpy.typing as npt
 ndarray_f: TypeAlias = npt.NDArray[np.floating]
 """Numpy array of any floating type"""
 
+ndarray_b: TypeAlias = npt.NDArray[np.bool]
+"""Numpy array of boolean"""
+
 Floatlike: TypeAlias = float | np.floating
 """Any float type"""
 

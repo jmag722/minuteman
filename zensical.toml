@@ -29,6 +29,7 @@ nav = [
      "cpg/normal_shock.md",
      "cpg/rayleigh.md",
      "cpg/thermo.md",
+     "cpg/shock_tube.md",
   ]},
   {"Utilities" = [
      "utils/types.md",
