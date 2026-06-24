@@ -3,7 +3,7 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
 
 import minuteman.cpg.isentropic_flow as isentropic_flow
-import minuteman.cpg.oblique_shock as obs
+import minuteman.cpg.oblique_shock as oblique_shock
 
 
 def nondimensional_velocity_from_mach(M: float, gam: float):
@@ -135,12 +135,12 @@ def taylor_maccoll_from_cone(M1: float, cone_angle: float, gam: float = 1.4):
     Returns:
         tuple: see taylor_maccoll_from_shock return
     """
-    max_defl_ang = obs.max_deflection_angle(M1=M1, gam=gam)
+    max_defl_ang = oblique_shock.deflection_angle_max(mach_upstream=M1, specific_heat_ratio=gam)[0]
     if cone_angle >= max_defl_ang:
-        max_angle = obs.sonic_shock_angle(M1=M1, gam=gam)
+        max_angle = oblique_shock.shock_angle_sonic(mach_upstream=M1, specific_heat_ratio=gam)[0]
     else:
-        max_angle = obs.shock_angle(
-            M1=M1, theta=cone_angle, gam=gam)
+        max_angle = oblique_shock.shock_angle_by_deflection_mach(
+            mach_upstream=M1, deflection_angle=cone_angle, specific_heat_ratio=gam)[0]
 
     def func(shock_angle, M1, cone_angle, gam):
         theta, _, _ = taylor_maccoll_from_shock(
@@ -167,7 +167,7 @@ def taylor_maccoll_from_surface_mach(M1: float, cone_mach: float, gam: float = 1
     """
     if cone_mach > M1:
         raise ValueError("Surface mach number should be less than freestream")
-    max_angle = obs.sonic_shock_angle(M1=M1, gam=gam)
+    max_angle = oblique_shock.shock_angle_sonic(mach_upstream=M1, specific_heat_ratio=gam)[0]
 
     def func(shock_angle, M1, cone_mach, gam):
         _, vr, vtheta = taylor_maccoll_from_shock(
@@ -197,11 +197,12 @@ def taylor_maccoll_from_shock(M1: float, shock_angle: float, gam: float = 1.4):
         tuple: theta, radial velocity, azimuthal velocity
 
     """
-    obs.check_shock_angle(beta=shock_angle, M=M1)
-    mn1 = obs.mach1_normal(M1=M1, beta=shock_angle)
-    mn2 = obs.mach2_normal(Mn1=mn1, gam=gam)
-    deflection_angle = obs.deflection_angle(M1=M1, beta=shock_angle, gam=gam)
-    m2 = obs.mach2(Mn2=mn2, beta=shock_angle, theta=deflection_angle)
+    oblique_shock.check_shock_angle(shock_angle=shock_angle, mach=M1)
+    mn1 = oblique_shock.mach_upstream_normal_component(mach_upstream=M1, shock_angle=shock_angle)[0]
+    mn2 = oblique_shock.mach_downstream_normal_component(mach_upstream_normal=mn1, specific_heat_ratio=gam)[0]
+    deflection_angle = oblique_shock.deflection_angle_by_shock_mach(mach_upstream=M1, shock_angle=shock_angle, specific_heat_ratio=gam)[0]
+    m2 = oblique_shock.mach_downstream_by_postshock(
+        mach_downstream_normal=mn2, shock_angle=shock_angle, deflection_angle=deflection_angle)[0]
     v_shock = nondimensional_velocity_from_mach(M=m2, gam=gam)
     vr_shock = nondimensional_velocity_radial(velocity_nondim=v_shock,
                                               shock_angle=shock_angle,
