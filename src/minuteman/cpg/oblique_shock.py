@@ -1,5 +1,5 @@
 r"""
-This module computes flow parameters of a 2D, stationary, calorically perfect 
+This module computes flow parameters of a 2D, stationary, calorically perfect
 oblique shocks.
 """
 
@@ -470,9 +470,8 @@ def shock_angle_by_deflection_mach(
 def shock_angle_max(
     mach_upstream: ArrayOrScalarFloat, specific_heat_ratio: ArrayOrScalarFloat
 ) -> ndarray_f:
-    r"""Compute the max shock angle $\beta_{max}$ [radians] that is still
-    attached for a given Mach number $M$. This is achieved at the maximum flow
-    deflection angle, $\theta_{max}$ (slide 11 of
+    r"""Compute the shock angle $\beta_{max}$ [radians] that yields the max
+    deflection angle $\theta_{max}$ for a given Mach number $M$ (slide 11 of
     [2](oblique_shock.md#references)).
 
     Args:

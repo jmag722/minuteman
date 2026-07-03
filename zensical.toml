@@ -24,6 +24,7 @@ nav = [
   {"Home" = "index.md"},
   {"Calorically Perfect Gas" = [
      "cpg/index.md",
+     "cpg/cone_flow.md",
      "cpg/fanno.md",
      "cpg/isentropic_flow.md",
      "cpg/normal_shock.md",

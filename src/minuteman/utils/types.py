@@ -21,6 +21,10 @@ class InvalidArrayShape(Exception):
 
     pass
 
+class DeveloperError(Exception):
+    """Error meaning the developer needs to fix something"""
+    pass
+
 
 def check_equal_shape(
     actual: tuple[int, ...], expected: tuple[int, ...]
