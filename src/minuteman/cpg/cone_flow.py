@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -19,26 +20,26 @@ _delta: float = 1e-9
 
 @dataclass
 class ConeFlowSolution:
-    """Flowfield solution for cone flow for a calorically perfect gas.
+    r"""Flowfield solution for cone flow for a calorically perfect gas.
 
-    Arraylike quantities vary as a function of the normal angle."""
+    Arraylike quantities vary as a function of the polar angle, $\theta$."""
 
     mach_upstream: float
     r"""Upstream mach number, $M_1$"""
 
-    normal_angle: ndarray_f
-    r"""Normal angle decreasing from the shock to the cone surface,
-        $\theta$ [radians]"""
+    polar_angle: ndarray_f
+    r"""Polar or cross-flow angle decreasing from the shock to the
+        cone surface, $\theta$ [radians]"""
 
     @property
     def shock_angle(self) -> float:
         r"""Shock angle, $\theta_s$ [radians]"""
-        return self.normal_angle[0]
+        return self.polar_angle[0]
 
     @property
     def cone_angle(self) -> float:
         r"""Cone half-angle, $\theta_c$ [radians]"""
-        return self.normal_angle[-1]
+        return self.polar_angle[-1]
 
     specific_heat_ratio: float
     r"""Ratio of specific heats, $\gamma$"""
@@ -49,8 +50,8 @@ class ConeFlowSolution:
     velocity_radial: ndarray_f
     r"""Nondimensional radial velocity, $V'_r$"""
 
-    velocity_normal: ndarray_f
-    r"""Nondimensional normal velocity, $V'_{\theta}$"""
+    velocity_polar: ndarray_f
+    r"""Nondimensional polar velocity, $V'_{\theta}$"""
 
     velocity: ndarray_f
     r"""Nondimensional velocity magnitude, $V'$"""
@@ -71,122 +72,131 @@ class ConeFlowSolution:
     r"""Total pressure ratio, $p_0 / p_01$"""
 
 
-def nondimensional_velocity_from_mach(mach, specific_heat_ratio):
-    """Compute the nondimensional velocity useful to nondimensionalizing the
-    Taylor Maccoll equations.
+def nondimensional_velocity_from_mach(
+    mach: Any, specific_heat_ratio: Any
+) -> Any:
+    r"""Compute the nondimensional velocity $V'$ useful to nondimensionalizing
+    the Taylor Maccoll equations.
 
-    V'=V/Vmax from Anderson chapter 10, where Vmax is a a max theoretical velocity
-    if the flow expanded to 0 K (ho=h+V^2/2=Vmax^2/2). It is a function of Mach number only.
+    $V' = V / V_{max}$ in chapter 10 of [1]. $V_{max}$ is a max theoretical
+    velocity if the flow were expanded to 0 K.
 
     Args:
-        M (float): Mach number [-]
-        gam (float): ratio of specific heats [-]
+        mach (Any): Mach number $M$
+        specific_heat_ratio (Any): ratio of specific heats, $\gamma$
 
     Returns:
-        float: nondimensional velocity V'
+        Any: nondimensional velocity $V'$
     """
     return (2.0 / ((specific_heat_ratio - 1.0) * mach**2) + 1.0) ** -0.5
 
 
-def nondimensional_velocity_from_components(velocity_radial, velocity_azimuth):
-    """Compute the nondimensional velocity V' useful to nondimensionalizing the
-    Taylor Maccoll equations from its radial and azimuthal components,
-    V_r' and V_theta'.
+def nondimensional_velocity_from_components(
+    velocity_radial: Any, velocity_polar: Any
+) -> Any:
+    r"""Compute the nondimensional velocity $V'$ useful to nondimensionalizing
+    the Taylor Maccoll equations from its radial and polar components.
 
     Args:
-        velocity_radial (float): nondimensional radial velocity [-]
-        velocity_azimuth (float): nondimensional azimuth velocity [-]
+        velocity_radial (Any): nondimensional radial velocity $V'_r$
+        velocity_polar (Any): nondimensional polar velocity $V'_{\theta}$
 
     Returns:
-        float: nondimensional velocity V' [-]
+        Any: nondimensional velocity $V'$
     """
-    return np.linalg.norm((velocity_radial, velocity_azimuth), axis=0)
+    return np.linalg.norm((velocity_radial, velocity_polar), axis=0)
 
 
-def mach_from_nondimensional_velocity(velocity, specific_heat_ratio):
-    """Compute Mach number from nondimensional velocity
+def mach_from_nondimensional_velocity(
+    velocity: Any, specific_heat_ratio: Any
+) -> Any:
+    r"""Compute Mach number $M$ from nondimensional velocity $V'$
 
     Args:
-        velocity (float): nondimensional velocity, V' [-]
-        gam (float): ratio of specific heats [-]
+        velocity (Any): nondimensional velocity, $V'$
+        specific_heat_ratio (Any): ratio of specific heats, $\gamma$
 
     Returns:
-        float: Mach number
+        Any: Mach number $M$
     """
     return (0.5 * (specific_heat_ratio - 1) * (velocity**-2 - 1.0)) ** -0.5
 
 
-def nondimensional_velocity_azimuth(
-    velocity_nondim, shock_angle, deflection_angle
-):
-    """Compute the nondimensional azimuthal velocity behind a conic flow.
+def nondimensional_velocity_polar(
+    velocity: Any, shock_angle: Any, deflection_angle: Any
+) -> Any:
+    r"""Compute the nondimensional polar velocity $V'_{\theta}$ for conic flow
 
-    This is V_theta' from Anderson chapter 10. The quantity is negative, as the
-    positive V_theta axis in the coordinate system is positive away from the
-    body.
+    The quantity is negative, as the $+V'_{\theta}$ axis in the
+    coordinate system is positive pointing away from the body.
 
     Args:
-        velocity_nondim (Any): nondimensional velocity, V'
-        shock_angle (Any): shock angle [radians]
-        deflection_angle (Any): deflection angle [radians]
+        velocity (Any): nondimensional velocity, $V'$
+        shock_angle (Any): shock angle $\theta_s$ [radians]
+        deflection_angle (Any): deflection angle of the flow, $\theta$ [radians]
 
     Returns:
-        Any: azimuth component of nondimensional velocity
+        Any: polar component of nondimensional velocity, $V'_{\theta}$
     """
-    return -np.sin(shock_angle - deflection_angle) * velocity_nondim
+    return -np.sin(shock_angle - deflection_angle) * velocity
 
 
 def nondimensional_velocity_radial(
-    velocity_nondim, shock_angle, deflection_angle
-):
-    """Compute the nondimensional radial velocity behind a conic flow.
+    velocity: Any, shock_angle: Any, deflection_angle: Any
+) -> Any:
+    r"""Compute the nondimensional radial velocity $V'_r$ for conic flow
 
-    This is V_r' from Anderson chapter 10. The quantity is positive in the
-    downstream direction
+    The quantity is positive in the downstream direction
 
     Args:
-        velocity_nondim (Any): nondimensional velocity, V'
-        shock_angle (Any): shock angle [radians]
-        deflection_angle (Any): deflection angle [radians]
+        velocity (Any): nondimensional velocity, $V'$
+        shock_angle (Any): shock angle $\theta_s$ [radians]
+        deflection_angle (Any): deflection angle of the flow, $\theta$ [radians]
 
     Returns:
-        Any: radial component of nondimensional velocity
+        Any: radial component of nondimensional velocity, $V'_r$
     """
-    return np.cos(shock_angle - deflection_angle) * velocity_nondim
+    return np.cos(shock_angle - deflection_angle) * velocity
 
 
-def taylor_maccoll_odes(
-    azimuth_angles: np.ndarray, nondim_velocity_components: tuple, gam: float
-):
-    """Return the Taylor-Maccoll 2nd-order ODE as a system of first-order ODE,
-    evaluated for a set of azimuth angles and nondimensional velocities.
+def _taylor_maccoll_odes(
+    polar_angle: float,
+    nondim_velocity_components: tuple[float, float],
+    specific_heat_ratio: float,
+) -> tuple[float, float]:
+    r"""Return the Taylor-Maccoll 2nd-order ODE as a system of first-order ODE,
+    evaluated for a polar angle $\theta$ and nondimensional velocity
+    components $V'_r$ and $V'_{\theta}$.
 
-    Let y1 = V_r',
+    Let
 
-    y2 = dV_r'/dtheta = V_theta'
+    $y_1 = V'_r$,
+
+    $y_2 = \frac{dV'_r}{d\theta} = V'_{\theta}$
 
     Then,
 
-    dy1/dtheta = dV_r'/dtheta = y2
+    $\frac{dy_1}{d\theta} = \frac{dV'_r}{d\theta} = y_2$
 
-    dy2/dtheta = d^2V_r'/dtheta^2
+    $\frac{dy_2}{d\theta} = \frac{d^2V'_r}{d\theta^2}$
 
     Args:
-        azimuth_angles (np.ndarray): azimuth angles at which to evaluate
-            ODE [radians]
-        nondim_velocity_components (tuple): radial, then azimuthal velocity components [-]
-        gam (float): ratio of specific heats [-]
+        polar_angle (float): polar angle at which to evaluate
+            ODE, $\theta$ [radians]
+        nondim_velocity_components (tuple[float, float]): radial and polar
+            velocity components, $V'_r$ and $V'_{\theta}$
+        specific_heat_ratio (float): ratio of specific heats, $\gamma$
 
     Returns:
-        tuple: (dy1/dtheta, dy2/dtheta)
+        tuple[float, float]: ($\frac{dy_1}{d\theta}$, $\frac{dy_2}{d\theta}$)
     """
     y1, y2 = nondim_velocity_components
     dy1_dtheta = y2  # irrotational condition
 
-    gamma_term = 0.5 * (gam - 1)
+    gamma_term = 0.5 * (specific_heat_ratio - 1)
     # nondim. speed of sound squared, a^2
     a2 = gamma_term * (1.0 - y1**2 - y2**2)
-    dy2_dtheta = (y1 * y2**2 - a2 * (2 * y1 + y2 / np.tan(azimuth_angles))) / (
+    dy2_dtheta = (y1 * y2**2 - a2 * (2 * y1 + y2 / np.tan(polar_angle))) / (
         a2 - y2**2
     )
     return dy1_dtheta, dy2_dtheta
@@ -253,8 +263,8 @@ def solve_taylor_maccoll_by_cone_angle(
         shock_type(ObliqueShockType): shock type, strong or weak
 
     Returns:
-        tuple[3*float]: normal angle $\theta$, nondimensional radial velocity
-            $V'_r$, and normal velocity $V'_{\theta}$
+        tuple[3*float]: polar angle $\theta$, nondimensional radial velocity
+            $V'_r$, and polar velocity $V'_{\theta}$
     """
     theta_c = float(cone_angle)
     m1 = float(mach_upstream)
@@ -310,7 +320,7 @@ def solve_taylor_maccoll_by_surface_mach(
     surface_mach: Floatlike,
     mach_upstream: Floatlike,
     specific_heat_ratio: Floatlike,
-):
+) -> tuple[ndarray_f, ndarray_f, ndarray_f]:
     r"""Compute the solution to the Taylor-Maccoll equations for a given
     Mach number at the surface of the cone, $M_c$.
 
@@ -320,8 +330,9 @@ def solve_taylor_maccoll_by_surface_mach(
         specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$
 
     Returns:
-        tuple[3*float]: normal angle $\theta$, nondimensional radial velocity
-            $V'_r$, and normal velocity $V'_{\theta}$
+        tuple[ndarray_f,ndarray_f,ndarray_f]: polar angle $\theta$,
+            nondimensional radial velocity $V'_r$,
+            and polar velocity $V'_{\theta}$
 
     Raises:
         InvalidSurfaceMachError: Surface Mach number is not possible for the
@@ -342,7 +353,7 @@ def solve_taylor_maccoll_by_surface_mach(
         shock_angle=0.5 * np.pi, mach_upstream=m1, specific_heat_ratio=gam
     )
     v90 = nondimensional_velocity_from_components(
-        velocity_radial=vr90, velocity_azimuth=vtheta90
+        velocity_radial=vr90, velocity_polar=vtheta90
     )
     m90 = mach_from_nondimensional_velocity(v90, specific_heat_ratio=gam)[-1]
     if mc < m90:
@@ -358,7 +369,7 @@ def solve_taylor_maccoll_by_surface_mach(
             shock_angle=theta_s, mach_upstream=_m1, specific_heat_ratio=_gam
         )
         vprime = nondimensional_velocity_from_components(
-            velocity_radial=vr, velocity_azimuth=vtheta
+            velocity_radial=vr, velocity_polar=vtheta
         )
         mach = mach_from_nondimensional_velocity(
             velocity=vprime, specific_heat_ratio=gam
@@ -393,8 +404,8 @@ def solve_taylor_maccoll_by_shock_angle(
         specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$
 
     Returns:
-        tuple[3*float]: normal angle $\theta$, nondimensional radial velocity
-            $V'_r$, and normal velocity $V'_{\theta}$
+        tuple[3*float]: polar angle $\theta$, nondimensional radial velocity
+            $V'_r$, and polar velocity $V'_{\theta}$
 
     Raises:
         InvalidNormalVelocity: Normal velocity has the wrong sign, check inputs
@@ -423,12 +434,12 @@ def solve_taylor_maccoll_by_shock_angle(
         mach=m2, specific_heat_ratio=gam
     )
     vr_shock = nondimensional_velocity_radial(
-        velocity_nondim=v_shock,
+        velocity=v_shock,
         shock_angle=theta_s,
         deflection_angle=deflection_angle,
     )
-    vtheta_shock = nondimensional_velocity_azimuth(
-        velocity_nondim=v_shock,
+    vtheta_shock = nondimensional_velocity_polar(
+        velocity=v_shock,
         shock_angle=theta_s,
         deflection_angle=deflection_angle,
     )
@@ -451,7 +462,7 @@ def solve_taylor_maccoll_by_shock_angle(
             return y[1]
 
     solution = solve_ivp(
-        fun=taylor_maccoll_odes,
+        fun=_taylor_maccoll_odes,
         t_span=(theta_s, 0.0),
         y0=(vr_shock, vtheta_shock),
         args=(gam,),
