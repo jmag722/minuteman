@@ -63,7 +63,6 @@ def lookup_table_by_mach(
     """
     m = np.atleast_1d(mach)
     gam = np.atleast_1d(specific_heat_ratio)
-    check_equal_shape(m.shape, gam.shape)
     p0_ratio = total_pressure_ratio(mach=m, specific_heat_ratio=gam)
     r0_ratio = total_density_ratio(mach=m, specific_heat_ratio=gam)
     t0_ratio = total_temperature_ratio(mach=m, specific_heat_ratio=gam)

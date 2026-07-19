@@ -68,8 +68,8 @@ class ConeFlowSolution:
     density_ratio: ndarray_f
     r"""Density ratio, $\rho / \rho_1$"""
 
-    total_pressure_ratio: ndarray_f
-    r"""Total pressure ratio, $p_0 / p_01$"""
+    total_pressure_ratio: float
+    r"""Total pressure ratio, $p_0 / p_01$. This value is constant post-shock"""
 
 
 def nondimensional_velocity_from_mach(
@@ -157,6 +157,24 @@ def nondimensional_velocity_radial(
         Any: radial component of nondimensional velocity, $V'_r$
     """
     return np.cos(shock_angle - deflection_angle) * velocity
+
+
+def deflection_angle_by_velocity_components(
+    polar_angle: ndarray_f,
+    velocity_radial: ndarray_f,
+    velocity_polar: ndarray_f,
+) -> ndarray_f:
+    r"""Compute the flow deflection angle $\psi$ at all polar angles $\theta$
+
+    Args:
+        polar_angle(ndarray_f): polar angle $\theta$ [radians]
+        velocity_radial (ndarray_f): nondimensional radial velocity $V'_r$
+        velocity_polar (ndarray_f): nondimensional polar velocity $V'_{\theta}$
+
+    Returns:
+        ndarray_f: flow deflection angle $\psi$ at all polar angles post-shock
+    """
+    return polar_angle + np.atan(velocity_polar / velocity_radial)
 
 
 def _taylor_maccoll_odes(
@@ -248,6 +266,68 @@ def cone_shock_angle_maxes(
     return theta_c_max, theta_s_at_cone_max
 
 
+def lookup_solution_by_cone_angle(
+    cone_angle: Floatlike,
+    mach_upstream: Floatlike,
+    specific_heat_ratio: Floatlike = 1.4,
+    shock_type: ObliqueShockType = ObliqueShockType.weak,
+) -> ConeFlowSolution:
+    r"""Solve a cone flow problem with a known surface Mach number, $M_c$
+
+    Args:
+        cone_angle (Floatlike): cone angle, $\theta_c$ [radians]
+        mach_upstream (Floatlike): upstream Mach number, $M_1$
+        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$,
+            defaults to 1.4
+        shock_type(ObliqueShockType): shock type, strong or weak, defaults to
+            a weak shock (almost always what you want)
+
+    Returns:
+        ConeFlowSolution: cone flow solution
+    """
+    m1 = float(mach_upstream)
+    theta_c = float(cone_angle)
+    gam = float(specific_heat_ratio)
+
+    theta, v_r, v_theta = solve_taylor_maccoll_by_cone_angle(
+        cone_angle=theta_c,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
+        shock_type=shock_type,
+    )
+
+    v = nondimensional_velocity_from_components(
+        velocity_radial=v_r, velocity_polar=v_theta
+    )
+    mach = mach_from_nondimensional_velocity(
+        velocity=v, specific_heat_ratio=gam
+    )
+    flow_angle = deflection_angle_by_velocity_components(
+        polar_angle=theta, velocity_radial=v_r, velocity_polar=v_theta
+    )
+
+    p02_p01, p_p1, t_t1, r_r1 = _get_thermo_qty(
+        mach=mach,
+        shock_angle=theta[0],
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
+    )
+    return ConeFlowSolution(
+        mach_upstream=m1,
+        polar_angle=theta,
+        specific_heat_ratio=gam,
+        flow_angle=flow_angle,
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
+        velocity=v,
+        mach=mach,
+        pressure_ratio=p_p1,
+        total_pressure_ratio=p02_p01,
+        temperature_ratio=t_t1,
+        density_ratio=r_r1,
+    )
+
+
 def solve_taylor_maccoll_by_cone_angle(
     cone_angle: Floatlike,
     mach_upstream: Floatlike,
@@ -313,6 +393,64 @@ def solve_taylor_maccoll_by_cone_angle(
         raise DeveloperError(f"Root-finding failed: {result.flag}")
     return solve_taylor_maccoll_by_shock_angle(
         shock_angle=shock_angle, mach_upstream=m1, specific_heat_ratio=gam
+    )
+
+
+def lookup_solution_by_surface_mach(
+    surface_mach: Floatlike,
+    mach_upstream: Floatlike,
+    specific_heat_ratio: Floatlike = 1.4,
+) -> ConeFlowSolution:
+    r"""Solve a cone flow problem with a known surface Mach number, $M_c$
+
+    Args:
+        surface_mach (Floatlike): Mach number at the surface of the cone, $M_c$
+        mach_upstream (Floatlike): upstream Mach number, $M_1$
+        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$,
+            defaults to 1.4
+
+    Returns:
+        ConeFlowSolution: cone flow solution
+    """
+    m1 = float(mach_upstream)
+    m_c = float(surface_mach)
+    gam = float(specific_heat_ratio)
+
+    theta, v_r, v_theta = solve_taylor_maccoll_by_surface_mach(
+        surface_mach=m_c,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
+    )
+
+    v = nondimensional_velocity_from_components(
+        velocity_radial=v_r, velocity_polar=v_theta
+    )
+    mach = mach_from_nondimensional_velocity(
+        velocity=v, specific_heat_ratio=gam
+    )
+    flow_angle = deflection_angle_by_velocity_components(
+        polar_angle=theta, velocity_radial=v_r, velocity_polar=v_theta
+    )
+
+    p02_p01, p_p1, t_t1, r_r1 = _get_thermo_qty(
+        mach=mach,
+        shock_angle=theta[0],
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
+    )
+    return ConeFlowSolution(
+        mach_upstream=m1,
+        polar_angle=theta,
+        specific_heat_ratio=gam,
+        flow_angle=flow_angle,
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
+        velocity=v,
+        mach=mach,
+        pressure_ratio=p_p1,
+        total_pressure_ratio=p02_p01,
+        temperature_ratio=t_t1,
+        density_ratio=r_r1,
     )
 
 
@@ -388,6 +526,101 @@ def solve_taylor_maccoll_by_surface_mach(
     return solve_taylor_maccoll_by_shock_angle(
         shock_angle=shock_angle, mach_upstream=m1, specific_heat_ratio=gam
     )
+
+
+def lookup_solution_by_shock_angle(
+    shock_angle: Floatlike,
+    mach_upstream: Floatlike,
+    specific_heat_ratio: Floatlike = 1.4,
+) -> ConeFlowSolution:
+    r"""Solve a cone flow problem with a known shock angle, $\theta_s$
+
+    Args:
+        shock_angle (Floatlike): shock angle, $\theta_s$ [radians]
+        mach_upstream (Floatlike): upstream Mach number, $M_1$
+        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$,
+            defaults to 1.4
+
+    Returns:
+        ConeFlowSolution: cone flow solution
+    """
+    m1 = float(mach_upstream)
+    theta_s = float(shock_angle)
+    gam = float(specific_heat_ratio)
+
+    theta, v_r, v_theta = solve_taylor_maccoll_by_shock_angle(
+        shock_angle=theta_s,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
+    )
+
+    v = nondimensional_velocity_from_components(
+        velocity_radial=v_r, velocity_polar=v_theta
+    )
+    mach = mach_from_nondimensional_velocity(
+        velocity=v, specific_heat_ratio=gam
+    )
+    flow_angle = deflection_angle_by_velocity_components(
+        polar_angle=theta, velocity_radial=v_r, velocity_polar=v_theta
+    )
+
+    p02_p01, p_p1, t_t1, r_r1 = _get_thermo_qty(
+        mach=mach,
+        shock_angle=theta[0],
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
+    )
+    return ConeFlowSolution(
+        mach_upstream=m1,
+        polar_angle=theta,
+        specific_heat_ratio=gam,
+        flow_angle=flow_angle,
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
+        velocity=v,
+        mach=mach,
+        pressure_ratio=p_p1,
+        total_pressure_ratio=p02_p01,
+        temperature_ratio=t_t1,
+        density_ratio=r_r1,
+    )
+
+
+def _get_thermo_qty(
+    mach: ndarray_f,
+    shock_angle: float,
+    mach_upstream: float,
+    specific_heat_ratio: float,
+) -> tuple[float, ndarray_f, ndarray_f, ndarray_f]:
+    m1 = mach_upstream
+    gam = specific_heat_ratio
+
+    # get isentropic quantities post-shock (e.g., p0/p)
+    isentropic_postshock = isentropic_flow.lookup_table_by_mach(
+        mach=mach, specific_heat_ratio=gam
+    )
+    p0_p = isentropic_postshock.pressure
+    t0_t = isentropic_postshock.temperature
+    r0_r = isentropic_postshock.density
+    # get isentropic quantities upstream (e.g., p01/p1)
+    isentropic_upstream = isentropic_flow.lookup_table_by_mach(
+        mach=m1, specific_heat_ratio=gam
+    )
+    p01_p1 = isentropic_upstream.pressure
+    t01_t1 = isentropic_upstream.temperature
+    r01_r1 = isentropic_upstream.density
+    # get quantities across shock (e.g., p02/p01)
+    across_shock_21 = oblique_shock.lookup_table_by_shock_angle(
+        shock_angle=shock_angle, mach_upstream=m1, specific_heat_ratio=gam
+    )
+    p02_p01 = across_shock_21.total_pressure_ratio.item()
+    t02_t01 = 1.0  # shocks are adiabatic
+    r02_r01 = p02_p01  # from ideal gas law, temperature ratio=1
+    # p02 constant post-shock so p0==p02 (same for all quantities)
+    p_p1 = p01_p1 * p02_p01 / p0_p
+    r_r1 = r01_r1 * r02_r01 / r0_r
+    t_t1 = t01_t1 * t02_t01 / t0_t
+    return p02_p01, p_p1, t_t1, r_r1
 
 
 def solve_taylor_maccoll_by_shock_angle(

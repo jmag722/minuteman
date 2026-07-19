@@ -19,6 +19,75 @@ I get better agreement with SAEMiller calculator than VT calculator.
 """
 
 
+def test_lookup_solution_by_cone_angle():
+    # VT
+    soln = cf.lookup_solution_by_cone_angle(
+        cone_angle=np.radians(20.0),
+        mach_upstream=5.0,
+        specific_heat_ratio=1.3,
+    )
+    assert soln.shock_angle == pytest.approx(np.radians(24.5774784), rel=5e-3)
+    assert soln.cone_angle == pytest.approx(np.radians(20.0))
+    assert soln.mach[-1] == pytest.approx(3.60371550, rel=1.2e-3)
+    assert soln.flow_angle[0] == pytest.approx(
+        np.radians(15.9562569), rel=1e-2
+    )
+    # assuming solution between first and last index is good too
+    assert soln.total_pressure_ratio == pytest.approx(0.66020989, rel=4e-3)
+    assert soln.pressure_ratio[0] == pytest.approx(4.75847643, rel=4e-3)
+    assert soln.pressure_ratio[-1] == pytest.approx(5.21665929, rel=4e-3)
+    assert soln.density_ratio[0] == pytest.approx(3.01659726, rel=3e-3)
+    assert soln.density_ratio[-1] == pytest.approx(3.23763976, rel=3e-3)
+    assert soln.temperature_ratio[0] == pytest.approx(1.57743179, rel=3e-3)
+    assert soln.temperature_ratio[-1] == pytest.approx(1.61125377, rel=3e-3)
+
+
+def test_lookup_solution_by_shock_angle():
+    # VT
+    soln = cf.lookup_solution_by_shock_angle(
+        shock_angle=np.radians(40.0),
+        mach_upstream=25.0,
+        specific_heat_ratio=1.45,
+    )
+    assert soln.shock_angle == pytest.approx(np.radians(40.0))
+    assert soln.cone_angle == pytest.approx(np.radians(35.3876897), rel=5e-3)
+    assert soln.mach[-1] == pytest.approx(2.52919698, rel=1.2e-3)
+    assert soln.flow_angle[0] == pytest.approx(
+        np.radians(31.0900981), rel=1e-2
+    )
+    # assuming solution between first and last index is good too
+    assert soln.total_pressure_ratio == pytest.approx(0.00066886, rel=4e-3)
+    assert soln.pressure_ratio[0] == pytest.approx(305.482179, rel=4e-3)
+    assert soln.pressure_ratio[-1] == pytest.approx(322.803464, rel=4e-3)
+    assert soln.density_ratio[0] == pytest.approx(5.35232632, rel=3e-3)
+    assert soln.density_ratio[-1] == pytest.approx(5.55982877, rel=3e-3)
+    assert soln.temperature_ratio[0] == pytest.approx(57.0746551, rel=3e-3)
+    assert soln.temperature_ratio[-1] == pytest.approx(58.0599651, rel=3e-3)
+
+
+def test_lookup_solution_by_surface_mach():
+    # VT
+    soln = cf.lookup_solution_by_surface_mach(
+        surface_mach=0.695,
+        mach_upstream=15.0,
+        specific_heat_ratio=1.2,
+    )
+    assert soln.shock_angle == pytest.approx(np.radians(77.9403741), rel=1e-3)
+    assert soln.cone_angle == pytest.approx(np.radians(65.3639505), rel=1e-3)
+    assert soln.mach[-1] == pytest.approx(0.695)
+    assert soln.flow_angle[0] == pytest.approx(
+        np.radians(53.9374063), rel=1e-3
+    )
+    # assuming solution between first and last index is good too
+    assert soln.total_pressure_ratio == pytest.approx(1.89623e-6, rel=4e-4)
+    assert soln.pressure_ratio[0] == pytest.approx(234.649167, rel=1e-4)
+    assert soln.pressure_ratio[-1] == pytest.approx(240.738529, rel=1e-4)
+    assert soln.density_ratio[0] == pytest.approx(10.5114984, rel=3e-5)
+    assert soln.density_ratio[-1] == pytest.approx(10.7383309, rel=3e-5)
+    assert soln.temperature_ratio[0] == pytest.approx(22.3230940, rel=1e-4)
+    assert soln.temperature_ratio[-1] == pytest.approx(22.4186170, rel=1e-4)
+
+
 @pytest.mark.parametrize(
     "M1, shock_angle, gam, theta_c, mach_c, rtol_theta, rtol_mach",
     [
