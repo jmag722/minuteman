@@ -4,24 +4,33 @@ import minuteman.cpg.normal_shock as normal_shock
 from minuteman.cpg.normal_shock import NormalShockTable
 
 
-def compare_tables(actual: NormalShockTable, expected: NormalShockTable,
-                   **kwargs):
+def compare_tables(
+    actual: NormalShockTable, expected: NormalShockTable, **kwargs
+):
     np.testing.assert_allclose(
-        actual.mach_upstream, expected.mach_upstream, **kwargs)
+        actual.mach_upstream, expected.mach_upstream, **kwargs
+    )
     np.testing.assert_allclose(
-        actual.mach_downstream, expected.mach_downstream, **kwargs)
+        actual.mach_downstream, expected.mach_downstream, **kwargs
+    )
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio, **kwargs)
+        actual.temperature_ratio, expected.temperature_ratio, **kwargs
+    )
     np.testing.assert_allclose(
-        actual.pressure_ratio, expected.pressure_ratio, **kwargs)
+        actual.pressure_ratio, expected.pressure_ratio, **kwargs
+    )
     np.testing.assert_allclose(
-        actual.density_ratio, expected.density_ratio, **kwargs)
+        actual.density_ratio, expected.density_ratio, **kwargs
+    )
     np.testing.assert_allclose(
-        actual.total_pressure_ratio, expected.total_pressure_ratio, **kwargs)
+        actual.total_pressure_ratio, expected.total_pressure_ratio, **kwargs
+    )
     np.testing.assert_allclose(
-        actual.pitot_pressure_ratio, expected.pitot_pressure_ratio, **kwargs)
+        actual.pitot_pressure_ratio, expected.pitot_pressure_ratio, **kwargs
+    )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs)
+        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs
+    )
 
 
 def test_lookup_table_by_upstream_mach():
@@ -34,7 +43,7 @@ def test_lookup_table_by_upstream_mach():
         density_ratio=np.array([3.857]),
         total_pressure_ratio=np.array([0.3283]),
         pitot_pressure_ratio=np.array([12.06]),
-        specific_heat_ratio=np.array([1.4])
+        specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
 
@@ -49,7 +58,7 @@ def test_lookup_table_by_downstream_mach():
         density_ratio=np.array([1.033]),
         total_pressure_ratio=np.array([1.0]),
         pitot_pressure_ratio=np.array([1.938]),
-        specific_heat_ratio=np.array([1.4])
+        specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
 
@@ -64,7 +73,7 @@ def test_lookup_table_by_pressure():
         density_ratio=np.array([5.988]),
         total_pressure_ratio=np.array([0.1144e-5]),
         pitot_pressure_ratio=np.array([3219]),
-        specific_heat_ratio=np.array([1.4])
+        specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
 
@@ -79,7 +88,7 @@ def test_lookup_table_by_density():
         density_ratio=np.array([2.637]),
         total_pressure_ratio=np.array([0.7302]),
         pitot_pressure_ratio=np.array([5.539]),
-        specific_heat_ratio=np.array([1.4])
+        specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
 
@@ -94,7 +103,7 @@ def test_lookup_table_by_temperature():
         density_ratio=np.array([3.95960844]),
         total_pressure_ratio=np.array([0.39284291]),
         pitot_pressure_ratio=np.array([9.15630005635]),
-        specific_heat_ratio=np.array([1.3])
+        specific_heat_ratio=np.array([1.3]),
     )
     compare_tables(actual, expected, rtol=1e-6)
 
@@ -109,7 +118,7 @@ def test_lookup_table_by_total_pressure():
         density_ratio=np.array([3.12576186]),
         total_pressure_ratio=np.array([0.6]),
         pitot_pressure_ratio=np.array([6.72385620146]),
-        specific_heat_ratio=np.array([1.35])
+        specific_heat_ratio=np.array([1.35]),
     )
     compare_tables(actual, expected, rtol=1e-6)
 
@@ -124,14 +133,15 @@ def test_lookup_table_by_pitot_pressure():
         density_ratio=np.array([2.15185109]),
         total_pressure_ratio=np.array([0.87573717]),
         pitot_pressure_ratio=np.array([3.887]),
-        specific_heat_ratio=np.array([1.35])
+        specific_heat_ratio=np.array([1.35]),
     )
     compare_tables(actual, expected)
 
 
 def test_entropy_change():
     ds = normal_shock.entropy_change(
-        total_pressure_ratio=.5615, gas_constant=1716)
+        total_pressure_ratio=0.5615, gas_constant=1716
+    )
     np.testing.assert_allclose(ds, np.array([990.4]), rtol=1e-4)
 
 
@@ -139,7 +149,7 @@ def test_internal_energy_change():
     de = normal_shock.internal_energy_change(
         pressure_upstream=1e5,
         pressure_downstream=3e4,
-        density_upstream=1.0/0.8,
-        density_downstream=1.0/3.0
+        density_upstream=1.0 / 0.8,
+        density_downstream=1.0 / 3.0,
     )
     np.testing.assert_allclose(de, np.array([-143000.0]))

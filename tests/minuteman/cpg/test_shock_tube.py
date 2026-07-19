@@ -14,10 +14,10 @@ def test_speed_of_sound_from_pressure():
     r1 = 0.125
     a4 = cpg.speed_of_sound_from_pressure(
         specific_heat_ratio=gam4, pressure=p4, density=r4
-    )
+    )[0]
     a1 = cpg.speed_of_sound_from_pressure(
         specific_heat_ratio=gam1, pressure=p1, density=r1
-    )
+    )[0]
     actual = shock_tube.moving_shock_pressure_ratio(
         pressure_ratio=p4 / p1,
         speed_of_sound_ratio=a4 / a1,

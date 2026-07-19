@@ -21,8 +21,10 @@ class InvalidArrayShape(Exception):
 
     pass
 
+
 class DeveloperError(Exception):
     """Error meaning the developer needs to fix something"""
+
     pass
 
 

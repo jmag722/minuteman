@@ -27,7 +27,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  "flake8", # TODO: remove once refactor complete
   "mkdocstrings",
   "mkdocstrings-python",
   "pyrefly",
@@ -48,7 +47,6 @@ pythonpath = [
 [tool.ruff]
 line-length = 79
 indent-width = 4
-lint.fixable = ["ALL"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -56,15 +54,27 @@ indent-style = "space"
 docstring-code-format = true
 docstring-code-line-length = 79
 
+[tool.ruff.lint]
+fixable = ["ALL"]
+select = [
+    "E",
+    "W",
+    "F",
+]
+extend-select = [
+    "I",
+]
+
 [project.urls]
 "Homepage" = "https://github.com/jmag722/minuteman"
 "Bug Reports" = "https://github.com/jmag722/minuteman/issues"
 
 [tool.pyrefly]
 project-includes = [
-    "**/*.py*",
-    "**/*.ipynb",
+    "src",
+    "tests",
 ]
+search_path = ["."]
 
 [build-system]
 requires = ["hatchling"]
