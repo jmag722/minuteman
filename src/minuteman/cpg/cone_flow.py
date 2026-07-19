@@ -9,9 +9,9 @@ import minuteman.cpg.isentropic_flow as isentropic_flow
 import minuteman.cpg.oblique_shock as oblique_shock
 from minuteman.cpg.oblique_shock import ObliqueShockType
 from minuteman.utils.types import (
+    DeveloperError,
     Floatlike,
     ndarray_f,
-    DeveloperError,
 )
 
 _delta: float = 1e-9
@@ -69,7 +69,7 @@ class ConeFlowSolution:
     r"""Density ratio, $\rho / \rho_1$"""
 
     total_pressure_ratio: float
-    r"""Total pressure ratio, $p_0 / p_01$. This value is constant post-shock"""
+    r"""Total pressure ratio, $p_0 / p_01$. This value is a constant"""
 
 
 def nondimensional_velocity_from_mach(
@@ -133,7 +133,7 @@ def nondimensional_velocity_polar(
     Args:
         velocity (Any): nondimensional velocity, $V'$
         shock_angle (Any): shock angle $\theta_s$ [radians]
-        deflection_angle (Any): deflection angle of the flow, $\theta$ [radians]
+        deflection_angle (Any): flow deflection angle, $\theta$ [radians]
 
     Returns:
         Any: polar component of nondimensional velocity, $V'_{\theta}$
@@ -151,7 +151,7 @@ def nondimensional_velocity_radial(
     Args:
         velocity (Any): nondimensional velocity, $V'$
         shock_angle (Any): shock angle $\theta_s$ [radians]
-        deflection_angle (Any): deflection angle of the flow, $\theta$ [radians]
+        deflection_angle (Any): flow deflection angle, $\theta$ [radians]
 
     Returns:
         Any: radial component of nondimensional velocity, $V'_r$
@@ -363,8 +363,8 @@ def solve_taylor_maccoll_by_cone_angle(
     )
     if theta_c > theta_c_max:
         raise InvalidConeAngleError(
-            f"Max cone angle for an attached shock is {np.degrees(theta_c_max)}"
-            + " at this flight condition"
+            "Max cone angle for an attached shock is"
+            + f" {np.degrees(theta_c_max)} deg at this flight condition"
         )
 
     mu = isentropic_flow.mach_angle(mach=m1)[0]

@@ -137,8 +137,8 @@ def entropy_change_tp(
     specific_heat_constant_pressure: ArrayOrScalarFloat,
     gas_constant: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    r"""Compute the change in specific entropy $s_2 - s_1$ for a known change in
-    temperature and pressure.
+    r"""Compute the change in specific entropy $s_2 - s_1$ for a known change
+    in temperature and pressure.
 
     Args:
         temperature_ratio (ArrayOrScalarFloat): temperature ratio, $T_2 / T_1$
@@ -161,8 +161,8 @@ def entropy_change_tv(
     specific_heat_constant_volume: ArrayOrScalarFloat,
     gas_constant: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    r"""Compute the change in specific entropy $s_2 - s_1$ for a known change in
-    temperature and specific volume.
+    r"""Compute the change in specific entropy $s_2 - s_1$ for a known change
+    in temperature and specific volume.
 
     Args:
         temperature_ratio (ArrayOrScalarFloat): temperature ratio, $T_2 / T_1$
@@ -186,8 +186,8 @@ def entropy_change_pv(
     specific_heat_constant_pressure: ArrayOrScalarFloat,
     specific_heat_constant_volume: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    r"""Compute the change in specific entropy $s_2 - s_1$ for a known change in
-    pressure and specific volume.
+    r"""Compute the change in specific entropy $s_2 - s_1$ for a known change
+    in pressure and specific volume.
 
     Args:
         pressure_ratio (ArrayOrScalarFloat): pressure ratio, $p_2 / p_1$

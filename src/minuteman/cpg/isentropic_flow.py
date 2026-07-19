@@ -134,7 +134,8 @@ def lookup_table_by_density(
     $\rho_0 / \rho$
 
     Args:
-        density_ratio (ArrayOrScalarFloat): total density ratio, $\rho_0 / \rho$
+        density_ratio (ArrayOrScalarFloat): total density ratio,
+            $\rho_0 / \rho$
         specific_heat_ratio (ArrayOrScalarFloat): ratio of
             specific heats, $\gamma$. Defaults to 1.4.
 

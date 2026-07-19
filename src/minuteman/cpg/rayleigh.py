@@ -1,7 +1,11 @@
 """
-This module computes 1D, calorically perfect flow with heat addition (Rayleigh flow).
-Online calculator for comparison at: http://www.dept.aoe.vt.edu/~devenpor/aoe3114/calc.html
-Additional notes: https://kyleniemeyer.github.io/gas-dynamics-notes/compressible-flows/heat-transfer.html
+This module computes 1D, calorically perfect flow with heat addition
+(Rayleigh flow).
+Online calculator for comparison at:
+dept.aoe.vt.edu/~devenpor/aoe3114/calc.html
+
+Additional notes:
+kyleniemeyer.github.io/gas-dynamics-notes/compressible-flows/heat-transfer.html
 """
 
 from dataclasses import dataclass

@@ -1,4 +1,6 @@
-"""This module computes 1D, calorically perfect flow with friction (Fanno flow)."""
+"""This module computes 1D, calorically perfect gas with friction
+(Fanno flow).
+"""
 
 from dataclasses import dataclass
 from typing import Callable
@@ -129,7 +131,8 @@ def lookup_table_by_temperature(
     $T / T^*$
 
     Args:
-        temperature_ratio (ArrayOrScalarFloat): static temperature ratio, $T / T^*$
+        temperature_ratio (ArrayOrScalarFloat): static temperature ratio,
+            $T / T^*$
         specific_heat_ratio (ArrayOrScalarFloat, optional): ratio of specific
             heats, $\gamma$. Defaults to 1.4.
 
@@ -254,7 +257,8 @@ def lookup_table_by_entropy(
     flow_regime: ndarray_FlowSpeedRegime
     | FlowSpeedRegime = FlowSpeedRegime.supersonic,
 ) -> FannoFlowTable:
-    r"""Look up a Fanno flow table result from the entropy ratio, $(s* - s) / R$
+    r"""Look up a Fanno flow table result from the entropy ratio,
+    $(s* - s) / R$
 
     Args:
         entropy_ratio (ArrayOrScalarFloat): entropy ratio, $(s* - s) / R$

@@ -55,7 +55,8 @@ def lookup_table_by_upstream_mach(
     mach_upstream: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
-    r"""Look up a normal shock table result from the upstream Mach number, $M_1$
+    r"""Look up a normal shock table result from the upstream Mach number,
+    $M_1$
 
     Args:
         mach_upstream (ArrayOrScalarFloat): upstream Mach number, $M_1$
@@ -95,7 +96,8 @@ def lookup_table_by_temperature(
     temperature_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
-    r"""Look up a normal shock table result from the temperature ratio, $T_2 / T_1$
+    r"""Look up a normal shock table result from the temperature ratio,
+    $T_2 / T_1$
 
     Args:
         temperature_ratio (ArrayOrScalarFloat): temperature ratio, $T_2 / T_1$
@@ -133,7 +135,8 @@ def lookup_table_by_pressure(
     pressure_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
-    r"""Look up a normal shock table result from the static pressure ratio, $p_2 / p_1$
+    r"""Look up a normal shock table result from the static pressure ratio,
+    $p_2 / p_1$
 
     Args:
         pressure_ratio (ArrayOrScalarFloat): static pressure ratio, $p_2 / p_1$
@@ -156,7 +159,8 @@ def lookup_table_by_density(
     density_ratio: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat = 1.4,
 ) -> NormalShockTable:
-    r"""Look up a normal shock table result from the density ratio, $\rho_2 / \rho_1$
+    r"""Look up a normal shock table result from the density ratio,
+    $\rho_2 / \rho_1$
 
     Args:
         density_ratio (ArrayOrScalarFloat): density ratio, $\rho_2 / \rho_1$
@@ -423,7 +427,8 @@ def internal_energy_change(
         pressure_upstream (ArrayOrScalarFloat): upstream static pressure, $p_1$
         pressure_downstream (ArrayOrScalarFloat): downstream static pressure,
             $p_2$
-        density_upstream (ArrayOrScalarFloat): upstream static density, $\rho_1$
+        density_upstream (ArrayOrScalarFloat): upstream static density,
+            $\rho_1$
         density_downstream (ArrayOrScalarFloat): downstream static density,
             $\rho_2$
 
