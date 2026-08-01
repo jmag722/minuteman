@@ -21,7 +21,9 @@ ndarray_b: TypeAlias = npt.NDArray[np.bool]
 Floatlike: TypeAlias = float | np.floating
 """Any float type"""
 
-ArrayOrScalarFloat: TypeAlias = ndarray_f | Floatlike
+ArraylikeFloat: TypeAlias = (
+    ndarray_f | list[float] | tuple[float] | Floatlike
+)
 """Scalar or array-like float"""
 
 
@@ -36,12 +38,7 @@ class DeveloperError(Exception):
 
     pass
 
+class RootFindingError(Exception):
+    """Error from fsolve, find_root, or a similar optimization function"""
 
-def check_equal_shape(
-    actual: tuple[int, ...], expected: tuple[int, ...]
-) -> None:
-    if actual != expected:
-        raise InvalidArrayShapeError(
-            f"Actual array shape ({actual}) "
-            f"is not equal to the expected ({expected})"
-        )
+    pass
