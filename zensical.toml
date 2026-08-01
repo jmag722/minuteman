@@ -14,6 +14,7 @@ site_author = "Jared Magnusson"
 site_url = "https://jmag722.github.io/minuteman"
 # so you don't see raw Index html pages when you click around
 use_directory_urls = false
+extra_css = ["stylesheets/extra.css"]
 
 copyright = """
 Copyright &copy; 2026 The authors
@@ -23,7 +24,7 @@ Copyright &copy; 2026 The authors
 nav = [
   {"Home" = "index.md"},
   {"Calorically Perfect Gas" = [
-     "cpg/index.md",
+     "cpg/base.md",
      "cpg/cone_flow.md",
      "cpg/fanno.md",
      "cpg/isentropic_flow.md",
@@ -182,7 +183,7 @@ features = [# https://zensical.org/docs/setup/
     # When navigation integration for the table of contents is enabled, it is
     # always rendered as part of the navigation sidebar on the left.
     # https://zensical.org/docs/setup/navigation/#navigation-integration
-    "toc.integrate",
+    # "toc.integrate",
 ]
 
 # ----------------------------------------------------------------------------
@@ -274,6 +275,7 @@ paths = ["src"]
 
 [project.plugins.mkdocstrings.handlers.python.options]
 docstring_style = "google"
+docstring_section_style = "list"
 inherited_members = true
 show_source = false
 # order functions by source code order, not alphabetical
@@ -282,4 +284,16 @@ members_order = "source"
 filters = "public"
 # do not have TOC entry for module docstring
 show_root_toc_entry = false
+show_root_heading = true
+separate_signature = true
+show_signature_annotations = true
+show_signature_type_parameters = true
+heading_level = 3
+show_object_full_path = false
+show_root_full_path = true
+show_root_members_full_path = false
+line_length = 88
+
+[project.plugins.mkdocstrings.handlers.python.options.docstring_options]
+returns_named_value = false
 

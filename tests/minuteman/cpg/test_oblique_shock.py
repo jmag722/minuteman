@@ -200,14 +200,14 @@ def test_deflection_angle(m1, beta, gam, expected):
             np.radians(5.0),
             ObliqueShockType.strong,
             1.5,
-            oblique_shock.InvalidDeflectionAngle,
+            oblique_shock.InvalidDeflectionAngleError,
         ),
         (
             4,
             np.radians(89.0),
             ObliqueShockType.weak,
             1.3,
-            oblique_shock.InvalidDeflectionAngle,
+            oblique_shock.InvalidDeflectionAngleError,
         ),
     ],
 )
@@ -242,9 +242,9 @@ def test_shock_angle(m1, theta, shock_type, gam, expected):
 def test_check_deflection_angle(theta, m1, gam):
     theta = np.radians(theta)
     oblique_shock.check_deflection_angle(theta, m1, gam)
-    with pytest.raises(oblique_shock.InvalidDeflectionAngle):
+    with pytest.raises(oblique_shock.InvalidDeflectionAngleError):
         oblique_shock.check_deflection_angle(np.radians(-5), 1.05, 1.3)
-    with pytest.raises(oblique_shock.InvalidDeflectionAngle):
+    with pytest.raises(oblique_shock.InvalidDeflectionAngleError):
         oblique_shock.check_deflection_angle(np.radians(90.1), 2, 1.4)
 
 
@@ -252,9 +252,9 @@ def test_check_deflection_angle(theta, m1, gam):
 def test_check_shock_angle(beta, m):
     beta = np.radians(beta)
     oblique_shock.check_shock_angle(shock_angle=beta, mach=m)
-    with pytest.raises(oblique_shock.InvalidShockAngle):
+    with pytest.raises(oblique_shock.InvalidShockAngleError):
         oblique_shock.check_shock_angle(np.radians(5), mach=2)
-    with pytest.raises(oblique_shock.InvalidShockAngle):
+    with pytest.raises(oblique_shock.InvalidShockAngleError):
         oblique_shock.check_shock_angle(np.radians(90.1), mach=1.1)
 
 
@@ -279,7 +279,7 @@ def test_max_shock_deflection_angle(m1, gam):
     assert actual == pytest.approx(expected)
 
     # check that shock_angle errors out just above max
-    with pytest.raises(oblique_shock.InvalidDeflectionAngle):
+    with pytest.raises(oblique_shock.InvalidDeflectionAngleError):
         oblique_shock.shock_angle_by_deflection_mach(
             mach_upstream=m1,
             deflection_angle=theta_max + 1e-10,

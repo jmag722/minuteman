@@ -1,4 +1,11 @@
-"""Base compressible flow relations."""
+r"""
+
+```python
+ import minuteman.cpg.base
+```
+
+Base compressible flow relations.
+"""
 
 from enum import Enum, auto
 from typing import Annotated, TypeAlias

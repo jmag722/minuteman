@@ -1,3 +1,12 @@
+"""
+
+```python
+ import minuteman.cpg.shock_tube as shock_tube
+```
+
+Solve the 1D Sod shock tube problem
+"""
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -10,10 +19,6 @@ from minuteman.utils.types import (
     ndarray_b,
     ndarray_f,
 )
-
-"""
-Solve the 1D Sod shock tube problem
-"""
 
 
 @dataclass
@@ -284,10 +289,8 @@ def expansion_fan_velocity(
     time: Floatlike,
     specfic_heat_ratio_driver: Floatlike,
 ) -> ndarray_f:
-    r"""Compute the velocity within the expansion fan of a shock tube $u$[^1]
-
-    [^1]: Eq. 7.89, Anderson, J. D., Jr. (2003). *Modern compressible flow:
-        With historical perspective* (3rd ed.). McGraw-Hill.
+    r"""Compute the velocity within the expansion fan of a shock tube $u$
+    (Eq. 7.89 in [1](shock_tube.md#references)).
 
     Args:
         speed_of_sound_driver (Floatlike): speed of sound of driver gas, $a_4$
@@ -332,10 +335,7 @@ def moving_shock_density_ratio(
     pressure_ratio: Floatlike, specific_heat_ratio_driven: Floatlike
 ) -> Floatlike:
     r"""Compute the density ratio $\rho_2 / \rho_1$ ratio across a
-    moving normal shock[^1]
-
-    [^1]: Eq. 7.11, Anderson, J. D., Jr. (2003). *Modern compressible flow:
-        With historical perspective* (3rd ed.). McGraw-Hill.
+    moving normal shock (Eq. 7.11 in [1](shock_tube.md#references)).
 
     Args:
         pressure_ratio (Floatlike): static pressure ratio across
@@ -357,10 +357,7 @@ def moving_shock_temperature_ratio(
     pressure_ratio: Floatlike, specific_heat_ratio_driven: Floatlike
 ) -> Floatlike:
     r"""Compute the static temperature $T_2 / T_1$ ratio across a
-    moving normal shock[^1]
-
-    [^1]: Eq. 7.10, Anderson, J. D., Jr. (2003). *Modern compressible flow:
-        With historical perspective* (3rd ed.). McGraw-Hill.
+    moving normal shock (Eq. 7.10 in [1](shock_tube.md#references)).
 
     Args:
         pressure_ratio (Floatlike): static pressure ratio across
@@ -385,10 +382,8 @@ def moving_shock_speed(
     speed_of_sound_driven: Floatlike,
     specific_heat_ratio_driven: Floatlike,
 ) -> Floatlike:
-    r"""Compute the shock speed $w$ of the moving shock[^1]
-
-    [^1]: Eq. 7.14, Anderson, J. D., Jr. (2003). *Modern compressible flow:
-        With historical perspective* (3rd ed.). McGraw-Hill.
+    r"""Compute the shock speed $w$ of the moving shock
+    (Eq. 7.14 in [1](shock_tube.md#references)).
 
     Args:
         pressure_ratio (Floatlike): static pressure ratio across
@@ -413,13 +408,11 @@ def contact_surface_speed(
     specific_heat_ratio_driven: Floatlike,
 ) -> Floatlike:
     r"""Compute the speed of the contact surface/piston $u_p$ in a shock tube,
-    or the speed of the mass motion induced by the incident shock[^1].
+    or the speed of the mass motion induced by the incident shock
+    (Eq. 7.16 in [1](shock_tube.md#references)).
 
     For $\gamma_1=1.4$, as the pressure ratio approaches infinity, the
     Mach number approaches 1.89.
-
-    [^1]: Eq. 7.16, Anderson, J. D., Jr. (2003). *Modern compressible flow:
-        With historical perspective* (3rd ed.). McGraw-Hill.
 
     Args:
         pressure_ratio (Floatlike): static pressure ratio across
@@ -449,10 +442,7 @@ def moving_shock_pressure_ratio(
     specific_heat_ratio_driven: Floatlike,
 ) -> Floatlike:
     r"""Solve for the pressure ratio across a moving normal shock in a shock
-    tube, $p_2 / p_1$[^1]
-
-    [^1]: Eq. 7.94, Anderson, J. D., Jr. (2003). *Modern compressible flow:
-        With historical perspective* (3rd ed.). McGraw-Hill.
+    tube, $p_2 / p_1$ (Eq. 7.94 in [1](shock_tube.md#references)).
 
     Args:
         pressure_ratio (Floatlike): pressure ratio between the

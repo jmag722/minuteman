@@ -1,0 +1,18 @@
+.md-grid {
+    max-width: initial;
+}
+@media screen and (min-width: 76.25em) {
+  /* Adjust the width of the left navigation sidebar */
+  .md-sidebar--primary {
+    width: 12rem;
+    left: -12rem;
+  }
+
+  /* Adjust the width of the right table-of-contents sidebar if needed */
+  .md-sidebar--secondary {
+    width: 20rem;
+    .md-sidebar__inner {
+      padding-right: 0;
+    }
+  }
+}

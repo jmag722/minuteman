@@ -1,4 +1,9 @@
 r"""
+
+```python
+ import minuteman.cpg.normal_shock as normal_shock
+```
+
 This module computes flow parameters of 1D, stationary,
 calorically perfect normal shocks ($\gamma$ is constant).
 

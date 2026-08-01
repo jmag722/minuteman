@@ -1,4 +1,10 @@
-"""This module computes 1D, calorically perfect gas with friction
+r"""
+
+```python
+ import minuteman.cpg.fanno as fanno
+```
+
+This module computes 1D, calorically perfect gas with friction
 (Fanno flow).
 """
 

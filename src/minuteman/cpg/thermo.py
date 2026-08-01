@@ -1,4 +1,9 @@
 r"""
+
+```python
+ import minuteman.cpg.thermo as thermo
+```
+
 Calorically perfect gases are those where gases are chemically unreactive
 and intermolecular forces are neglected. Internal energy and enthalpy are
 functions of temperature only *and* the specific heats are constant.
