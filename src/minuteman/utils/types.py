@@ -25,7 +25,7 @@ ArrayOrScalarFloat: TypeAlias = ndarray_f | Floatlike
 """Scalar or array-like float"""
 
 
-class InvalidArrayShape(Exception):
+class InvalidArrayShapeError(Exception):
     """Array shapes do not match"""
 
     pass
@@ -41,7 +41,7 @@ def check_equal_shape(
     actual: tuple[int, ...], expected: tuple[int, ...]
 ) -> None:
     if actual != expected:
-        raise InvalidArrayShape(
+        raise InvalidArrayShapeError(
             f"Actual array shape ({actual}) "
             f"is not equal to the expected ({expected})"
         )

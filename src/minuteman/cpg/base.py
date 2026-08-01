@@ -91,7 +91,7 @@ def speed_of_sound_from_pressure(
     return (gam * pressure / density) ** 0.5
 
 
-class InvalidFlowRegime(Exception):
+class InvalidFlowRegimeError(Exception):
     """FlowSpeedRegime is invalid"""
 
     pass
@@ -115,6 +115,6 @@ def mach_guess_from_flow_regime(
             mach_subsonic,
         )
     else:
-        raise InvalidFlowRegime(
+        raise InvalidFlowRegimeError(
             "Use FlowSpeedRegime or ndarray_FlowSpeedRegime to set flow_regime"
         )

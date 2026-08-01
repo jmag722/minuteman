@@ -21,4 +21,4 @@
 
 ## Errors
 
-::: minuteman.cpg.base.InvalidFlowRegime
+::: minuteman.cpg.base.InvalidFlowRegimeError

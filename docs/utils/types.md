@@ -19,4 +19,4 @@
 
 ::: minuteman.utils.types.DeveloperError
 
-::: minuteman.utils.types.InvalidArrayShape
+::: minuteman.utils.types.InvalidArrayShapeError
