@@ -1,4 +1,9 @@
 r"""
+
+```python
+ import minuteman.cpg.isentropic_flow as isentropic_flow
+```
+
 Compressible, inviscid flow relations.
 
 These functions are basic definitions pertaining to 1-,2-, and 3-D

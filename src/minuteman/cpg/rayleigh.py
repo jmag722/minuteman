@@ -1,11 +1,11 @@
 """
+
+```python
+ import minuteman.cpg.rayleigh as rayleigh
+```
+
 This module computes 1D, calorically perfect flow with heat addition
 (Rayleigh flow).
-Online calculator for comparison at:
-dept.aoe.vt.edu/~devenpor/aoe3114/calc.html
-
-Additional notes:
-kyleniemeyer.github.io/gas-dynamics-notes/compressible-flows/heat-transfer.html
 """
 
 from dataclasses import dataclass
@@ -346,7 +346,7 @@ def entropy_ratio_by_mach(
 
     Returns:
         ndarray_f: entropy ratio, $(s_2-s_1) / R$
-            ($(s - s^*) / R$ if ``mach_initial==1.0``)
+            ($(s - s^*) / R$ if $M_1=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -363,7 +363,7 @@ def total_pressure_ratio_by_mach(
     mach_final: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    r"""Compute the total pressure ratio $p_02 / p_01$ from the Mach number
+    r"""Compute the total pressure ratio $p_{02} / p_{01}$ from the Mach number
     for Rayleigh flow.
 
     Args:
@@ -375,8 +375,8 @@ def total_pressure_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: total pressure ratio, $p_02 / p_01$
-            ($p_0 / p_0^*$ if $M_2=1.0$)
+        ndarray_f: total pressure ratio, $p_{02} / p_{01}$
+            ($p_0 / p_0^*$ if $M_1=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -399,7 +399,7 @@ def total_temperature_ratio_by_mach(
     mach_final: ArrayOrScalarFloat,
     specific_heat_ratio: ArrayOrScalarFloat,
 ) -> ndarray_f:
-    r"""Compute the total temperature ratio $T_02 / T_01$ from the Mach
+    r"""Compute the total temperature ratio $T_{02} / T_{01}$ from the Mach
     number $M$ for Rayleigh flow.
 
     Args:
@@ -411,8 +411,8 @@ def total_temperature_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: total temperature ratio, $T_02 / T_01$
-            ($T_0 / T_0^*$ if $M_2=1.0$)
+        ndarray_f: total temperature ratio, $T_{02} / T_{01}$
+            ($T_0 / T_0^*$ if $M_1=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -448,7 +448,7 @@ def pressure_ratio_by_mach(
 
     Returns:
         ndarray_f: static pressure ratio, $p_2 / p_1$
-            ($p / p^*$ if $M_2=1.0$)
+            ($p / p^*$ if $M_1=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -474,7 +474,7 @@ def temperature_ratio_by_mach(
 
     Returns:
         ndarray_f: static temperature ratio, $T_2 / T_1$
-            ($T / T^*$ if $M_2=1.0$)
+            ($T / T^*$ if $M_1=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final
@@ -500,7 +500,7 @@ def density_ratio_by_mach(
 
     Returns:
         ndarray_f: density ratio, $\rho_2 / \rho_1$
-            ($\rho / \rho^*$ if $M_2=1.0$)
+            ($\rho / \rho^*$ if $M_1=1.0$)
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = mach_final

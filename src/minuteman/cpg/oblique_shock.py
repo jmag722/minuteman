@@ -1,4 +1,9 @@
 r"""
+
+```python
+ import minuteman.cpg.oblique_shock as oblique_shock
+```
+
 This module computes flow parameters of a 2D, stationary, calorically perfect
 oblique shocks.
 """
@@ -296,8 +301,8 @@ def mach_downstream_by_postshock(
             [radians]
 
     Raises:
-        InvalidDeflectionAngle: Deflection angle must be smaller than shock
-            angle
+        InvalidDeflectionAngleError: Deflection angle must be smaller than
+            shock angle
 
     Returns:
         ndarray_f: downstream Mach number, $M_{n2}$
@@ -306,13 +311,13 @@ def mach_downstream_by_postshock(
     beta = np.atleast_1d(shock_angle)
     theta = np.atleast_1d(deflection_angle)
     if np.any(theta >= beta):
-        raise InvalidDeflectionAngle(
+        raise InvalidDeflectionAngleError(
             "Deflection angle must be smaller than shock angle."
         )
     return mn2 / np.sin(beta - theta)
 
 
-class InvalidShockAngle(Exception):
+class InvalidShockAngleError(Exception):
     r"""Shock angle $\beta$ is invalid"""
 
     pass
@@ -328,15 +333,18 @@ def check_shock_angle(
         mach (ArrayOrScalarFloat): Mach number $M$
 
     Raises:
-        InvalidShockAngle: shock angle is out of bounds for given Mach number
+        InvalidShockAngleError: shock angle is out of bounds for given
+            Mach number
     """
     mu = isentropic_flow.mach_angle(mach)
     valid_beta = np.all((shock_angle >= mu) & (shock_angle <= 0.5 * np.pi))
     if not valid_beta:
-        raise InvalidShockAngle(f"Must be within [{np.degrees(mu)}, 90] deg")
+        raise InvalidShockAngleError(
+            f"Must be within [{np.degrees(mu)}, 90] deg"
+        )
 
 
-class InvalidDeflectionAngle(Exception):
+class InvalidDeflectionAngleError(Exception):
     r"""Deflection angle $\theta$ is invalid"""
 
     pass
@@ -357,7 +365,7 @@ def check_deflection_angle(
             heats, $\gamma$
 
     Raises:
-        InvalidDeflectionAngle: deflection angle is invalid
+        InvalidDeflectionAngleError: deflection angle is invalid
     """
     theta = np.atleast_1d(deflection_angle)
     m1 = np.atleast_1d(mach_upstream)
@@ -365,7 +373,7 @@ def check_deflection_angle(
     theta_max = deflection_angle_max(mach_upstream=m1, specific_heat_ratio=gam)
     valid_theta = np.all((theta >= 0.0) & (theta <= theta_max))
     if not valid_theta:
-        raise InvalidDeflectionAngle(
+        raise InvalidDeflectionAngleError(
             f"Must be within [0, {np.degrees(theta_max)}] deg"
         )
 
@@ -425,7 +433,7 @@ def shock_angle_by_deflection_mach(
             type (weak or strong). Defaults to ``ObliqueShockType.weak``.
 
     Raises:
-        InvalidDeflectionAngle: Deflection angle is invalid for the given
+        InvalidDeflectionAngleError: Deflection angle is invalid for the given
             upstream Mach.
 
     Returns:
@@ -445,7 +453,7 @@ def shock_angle_by_deflection_mach(
         1 + (gam + 1) / 2 * m1**2
     ) * (np.tan(theta)) ** 2
     if sqrt_crit <= 0.0:
-        raise InvalidDeflectionAngle()
+        raise InvalidDeflectionAngleError()
     lam = sqrt_crit**0.5
 
     xi = (
@@ -459,7 +467,7 @@ def shock_angle_by_deflection_mach(
         if np.abs(xi) - 1.0 < 1e-9:
             xi = np.sign(xi) * 1.0
         else:
-            raise InvalidDeflectionAngle()
+            raise InvalidDeflectionAngleError()
 
     return np.atan(
         (m1**2 - 1 + 2 * lam * np.cos((4 * np.pi * delta + np.acos(xi)) / 3))

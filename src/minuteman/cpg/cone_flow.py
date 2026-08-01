@@ -1,3 +1,14 @@
+r"""
+
+```python
+ import minuteman.cpg.cone_flow as cone_flow
+```
+
+Solve for the flow solution of a right cone at zero degrees angle of attack
+for a calorically perfect gas.
+
+"""
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -69,7 +80,7 @@ class ConeFlowSolution:
     r"""Density ratio, $\rho / \rho_1$"""
 
     total_pressure_ratio: float
-    r"""Total pressure ratio, $p_0 / p_01$. This value is a constant"""
+    r"""Total pressure ratio, $p_0 / p_{01}$. This value is a constant"""
 
 
 def nondimensional_velocity_from_mach(
@@ -328,6 +339,12 @@ def lookup_solution_by_cone_angle(
     )
 
 
+class InvalidConeAngleError(Exception):
+    """Input cone angle is invalid"""
+
+    pass
+
+
 def solve_taylor_maccoll_by_cone_angle(
     cone_angle: Floatlike,
     mach_upstream: Floatlike,
@@ -349,9 +366,6 @@ def solve_taylor_maccoll_by_cone_angle(
     theta_c = float(cone_angle)
     m1 = float(mach_upstream)
     gam = float(specific_heat_ratio)
-
-    class InvalidConeAngleError(Exception):
-        pass
 
     if theta_c < 0.0 or theta_c >= 0.5 * np.pi:
         raise InvalidConeAngleError(
@@ -454,6 +468,12 @@ def lookup_solution_by_surface_mach(
     )
 
 
+class InvalidSurfaceMachError(Exception):
+    """Input surface Mach number is invalid"""
+
+    pass
+
+
 def solve_taylor_maccoll_by_surface_mach(
     surface_mach: Floatlike,
     mach_upstream: Floatlike,
@@ -479,9 +499,6 @@ def solve_taylor_maccoll_by_surface_mach(
     mc = float(surface_mach)
     m1 = float(mach_upstream)
     gam = float(specific_heat_ratio)
-
-    class InvalidSurfaceMachError(Exception):
-        pass
 
     # check Mc
     if mc >= m1:
@@ -623,6 +640,18 @@ def _get_thermo_qty(
     return p02_p01, p_p1, t_t1, r_r1
 
 
+class SolveIVPError(Exception):
+    """solve_ivp call failed"""
+
+    pass
+
+
+class InvalidPolarVelocityError(Exception):
+    """Normal velocity is invalid"""
+
+    pass
+
+
 def solve_taylor_maccoll_by_shock_angle(
     shock_angle: Floatlike,
     mach_upstream: Floatlike,
@@ -641,8 +670,9 @@ def solve_taylor_maccoll_by_shock_angle(
             $V'_r$, and polar velocity $V'_{\theta}$
 
     Raises:
-        InvalidNormalVelocity: Normal velocity has the wrong sign, check inputs
-        RungeKuttaIntegrationError: IVP solver failed, check inputs
+        InvalidPolarVelocityError: Normal velocity has the wrong sign,
+            check inputs
+        SolveIVPError: IVP solver failed, check inputs
     """
     theta_s = float(shock_angle)
     m1 = float(mach_upstream)
@@ -677,11 +707,8 @@ def solve_taylor_maccoll_by_shock_angle(
         deflection_angle=deflection_angle,
     )
 
-    class InvalidNormalVelocity(Exception):
-        pass
-
     if vtheta_shock >= 0.0:
-        raise InvalidNormalVelocity("Velocity must be negative")
+        raise InvalidPolarVelocityError("Velocity must be negative")
 
     @dataclass
     class VthetaEqualsZeroEvent:
@@ -704,12 +731,9 @@ def solve_taylor_maccoll_by_shock_angle(
         rtol=1e-13,
     )
 
-    class RungeKuttaIntegrationError(Exception):
-        pass
-
     if not solution.success:
         msg = f"solve_ivp status({solution.status}): {solution.message}"
-        raise RungeKuttaIntegrationError(msg)
+        raise SolveIVPError(msg)
 
     vr, vtheta = solution.y
     theta = solution.t

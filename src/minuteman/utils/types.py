@@ -1,3 +1,12 @@
+r"""
+
+```python
+ import minuteman.utils.types
+```
+
+Basic minuteman types
+"""
+
 from typing import TypeAlias
 
 import numpy as np
