@@ -18,9 +18,10 @@ jobs:
       - uses: actions/configure-pages@v6
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
-        # with:
-        #   python-version: 3.14
-      - run: pip install zensical mkdocstrings mkdocstrings-python
+        with:
+          python-version: 3.14
+      # install ruff so signature formatting done correctly
+      - run: pip install zensical mkdocstrings mkdocstrings-python ruff
       - run: zensical build --clean
       - uses: actions/upload-pages-artifact@v5
         with:

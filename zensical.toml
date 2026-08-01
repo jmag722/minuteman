@@ -292,7 +292,7 @@ heading_level = 3
 show_object_full_path = false
 show_root_full_path = true
 show_root_members_full_path = false
-line_length = 88
+line_length = 100
 
 [project.plugins.mkdocstrings.handlers.python.options.docstring_options]
 returns_named_value = false
