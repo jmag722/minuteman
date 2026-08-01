@@ -7,7 +7,7 @@
 
 ## Typedefs
 
-::: minuteman.utils.types.ArrayOrScalarFloat
+::: minuteman.utils.types.ArraylikeFloat
 
 ::: minuteman.utils.types.Floatlike
 
@@ -20,3 +20,6 @@
 ::: minuteman.utils.types.DeveloperError
 
 ::: minuteman.utils.types.InvalidArrayShapeError
+
+::: minuteman.utils.types.RootFindingError
+

@@ -47,7 +47,7 @@ def test_lookup_table_by_mach():
         total_pressure_ratio=np.array([1.50309597, 1.00019443]),
         total_temperature_ratio=np.array([0.79338842, 0.99971472]),
         entropy_ratio=np.array([1.21757520, 0.001193033]),
-        specific_heat_ratio=np.array([1.4, 1.4]),
+        specific_heat_ratio=np.array([1.4,]),
     )
     compare_tables(actual, expected, rtol=1e-5)
 

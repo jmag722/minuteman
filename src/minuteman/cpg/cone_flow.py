@@ -33,7 +33,7 @@ _delta: float = 1e-9
 class ConeFlowSolution:
     r"""Flowfield solution for cone flow for a calorically perfect gas.
 
-    Arraylike quantities vary as a function of the polar angle, $\theta$."""
+    Array-like quantities vary as a function of the polar angle, $\theta$."""
 
     mach_upstream: float
     r"""Upstream mach number, $M_1$"""

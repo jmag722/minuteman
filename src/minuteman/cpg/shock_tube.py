@@ -295,7 +295,7 @@ def expansion_fan_velocity(
     Args:
         speed_of_sound_driver (Floatlike): speed of sound of driver gas, $a_4$
         position (ndarray_f): position within expansion fan, $x$
-        time (ArrayOrScalarFloat): time $t$
+        time (Floatlike): time $t$
         specfic_heat_ratio_driver (Floatlike): ratio of specific heats of
             driver gas, $\gamma_4$
 

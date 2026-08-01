@@ -8,14 +8,13 @@ Base compressible flow relations.
 """
 
 from enum import Enum, auto
-from typing import Annotated, TypeAlias
+from typing import TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 
 from minuteman.utils.types import (
-    ArrayOrScalarFloat,
-    check_equal_shape,
+    ArraylikeFloat,
     ndarray_f,
 )
 
@@ -29,66 +28,70 @@ class FlowSpeedRegime(Enum):
     r"""Supersonic flow, $M > 1$"""
 
 
-ndarray_FlowSpeedRegime: TypeAlias = Annotated[
-    npt.NDArray[np.object_], FlowSpeedRegime
-]
-"""Array of FlowSpeedRegime objects"""
+ArraylikeFlowSpeedRegime: TypeAlias = (
+    npt.NDArray[np.object_] | list[FlowSpeedRegime] | FlowSpeedRegime
+)
+"""Arraylike of FlowSpeedRegime objects"""
 
 
 def mach_number(
-    velocity: ArrayOrScalarFloat, speed_of_sound: ArrayOrScalarFloat
+    velocity: ArraylikeFloat, speed_of_sound: ArraylikeFloat
 ) -> ndarray_f:
     r"""Compute Mach number, $M$
 
     Args:
-        velocity (ArrayOrScalarFloat): velocity, $v$
-        speed_of_sound (ArrayOrScalarFloat): speed of sound, $a$
+        velocity (ArraylikeFloat): velocity, $v$
+        speed_of_sound (ArraylikeFloat): speed of sound, $a$
 
     Returns:
         ndarray_f: Mach number, $M$
     """
-    return np.atleast_1d(velocity) / speed_of_sound
+    return np.atleast_1d(velocity) / np.atleast_1d(speed_of_sound)
 
 
 def speed_of_sound_from_temperature(
-    gas_constant: ArrayOrScalarFloat,
-    temperature: ArrayOrScalarFloat,
-    specific_heat_ratio: ArrayOrScalarFloat,
+    gas_constant: ArraylikeFloat,
+    temperature: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
 ) -> ndarray_f:
     r"""Compute the speed of sound from the specific gas constant $R$ and
     temperature $T$
 
     Args:
-        gas_constant (ArrayOrScalarFloat): specific gas constant, $R$
-        temperature (ArrayOrScalarFloat): temperature $T$
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+        gas_constant (ArraylikeFloat): specific gas constant, $R$
+        temperature (ArraylikeFloat): temperature $T$
+        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
             $\gamma$
 
     Returns:
         ndarray_f: speed of sound, $a$
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    return (gam * gas_constant * temperature) ** 0.5
+    gc = np.atleast_1d(gas_constant)
+    t = np.atleast_1d(temperature)
+    return (gam * gc * t) ** 0.5
 
 
 def speed_of_sound_from_pressure(
-    pressure: ArrayOrScalarFloat,
-    density: ArrayOrScalarFloat,
-    specific_heat_ratio: ArrayOrScalarFloat,
+    pressure: ArraylikeFloat,
+    density: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
 ) -> ndarray_f:
     r"""Compute the speed of sound $a$ from the pressure $p$ and density $\rho$
 
     Args:
-        pressure (ArrayOrScalarFloat): pressure, $p$
-        density (ArrayOrScalarFloat): density, $\rho$
-        specific_heat_ratio (ArrayOrScalarFloat): ratio of specific heats,
+        pressure (ArraylikeFloat): pressure, $p$
+        density (ArraylikeFloat): density, $\rho$
+        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
             $\gamma$
 
     Returns:
         ndarray_f: speed of sound, $a$
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    return (gam * pressure / density) ** 0.5
+    p = np.atleast_1d(pressure)
+    rho = np.atleast_1d(density)
+    return (gam * p / rho) ** 0.5
 
 
 class InvalidFlowRegimeError(Exception):
@@ -97,24 +100,38 @@ class InvalidFlowRegimeError(Exception):
     pass
 
 
-def mach_guess_from_flow_regime(
-    flow_regime: ndarray_FlowSpeedRegime | FlowSpeedRegime,
-    shape: tuple[int, ...],
-    mach_subsonic: float,
-    mach_supersonic: float,
-) -> ndarray_f:
+def bracket_mach_from_flow_regime(
+    flow_regime: ArraylikeFlowSpeedRegime,
+) -> tuple[ndarray_f, ndarray_f]:
+    subsonic_mach_min = 1e-15
+    subsonic_mach_max = 1.0 - subsonic_mach_min
+    supersonic_mach_min = 1.0
+    supersonic_mach_max = 1e10
     if flow_regime is FlowSpeedRegime.supersonic:
-        return np.full(shape, mach_supersonic)
+        return (
+            np.atleast_1d(supersonic_mach_min),
+            np.atleast_1d(supersonic_mach_max),
+        )
     elif flow_regime is FlowSpeedRegime.subsonic:
-        return np.full(shape, mach_subsonic)
-    elif isinstance(flow_regime, np.ndarray):
-        check_equal_shape(flow_regime.shape, shape)
-        return np.where(
-            flow_regime == FlowSpeedRegime.supersonic,
-            mach_supersonic,
-            mach_subsonic,
+        return (
+            np.atleast_1d(subsonic_mach_min),
+            np.atleast_1d(subsonic_mach_max),
+        )
+    elif isinstance(flow_regime, np.ndarray | list):
+        return (
+            np.where(
+                flow_regime == FlowSpeedRegime.supersonic,
+                supersonic_mach_min,
+                subsonic_mach_min,
+            ),
+            np.where(
+                flow_regime == FlowSpeedRegime.supersonic,
+                supersonic_mach_max,
+                subsonic_mach_max,
+            ),
         )
     else:
         raise InvalidFlowRegimeError(
-            "Use FlowSpeedRegime or ndarray_FlowSpeedRegime to set flow_regime"
+            "Use ArraylikeFlowSpeedRegime to set flow_regime"
         )
+
