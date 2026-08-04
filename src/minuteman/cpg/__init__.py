@@ -1,3 +1,6 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
+
 from .base import ArraylikeFlowSpeedRegime as ArraylikeFlowSpeedRegime
 from .base import FlowSpeedRegime as FlowSpeedRegime
 from .base import mach_number as mach_number

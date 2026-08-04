@@ -1,24 +1,34 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 
-import minuteman.cpg.isentropic_flow as isentropic_flow
-from minuteman.cpg import FlowSpeedRegime
+from minuteman.cpg import FlowSpeedRegime, isentropic_flow
 
 
 def compare_tables(actual, expected, **kwargs):
     np.testing.assert_allclose(actual.mach, expected.mach, **kwargs)
     np.testing.assert_allclose(
-        actual.temperature, expected.temperature, **kwargs
+        actual.temperature,
+        expected.temperature,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.temperature, expected.temperature, **kwargs
+        actual.temperature,
+        expected.temperature,
+        **kwargs,
     )
     np.testing.assert_allclose(actual.pressure, expected.pressure, **kwargs)
     np.testing.assert_allclose(actual.density, expected.density, **kwargs)
     np.testing.assert_allclose(
-        actual.speed_of_sound, expected.speed_of_sound, **kwargs
+        actual.speed_of_sound,
+        expected.speed_of_sound,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        **kwargs,
     )
 
 
@@ -52,7 +62,9 @@ def test_lookup_table_by_temperature():
 
 def test_lookup_table_by_area_supersonic():
     actual = isentropic_flow.lookup_table_by_area_ratio(
-        1.094, 1.4, flow_regime=FlowSpeedRegime.supersonic
+        1.094,
+        1.4,
+        flow_regime=FlowSpeedRegime.supersonic,
     )
     expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([1.36]),
@@ -68,7 +80,9 @@ def test_lookup_table_by_area_supersonic():
 
 def test_lookup_table_by_area_subsonic():
     actual = isentropic_flow.lookup_table_by_area_ratio(
-        3.1, 1.3, flow_regime=FlowSpeedRegime.subsonic
+        3.1,
+        1.3,
+        flow_regime=FlowSpeedRegime.subsonic,
     )
     expected = isentropic_flow.IsentropicFlowTable(
         mach=np.array([0.193]),

@@ -11,9 +11,9 @@
 
 ::: minuteman.utils.types.Floatlike
 
-::: minuteman.utils.types.ndarray_b
+::: minuteman.utils.types.NDArrayBool
 
-::: minuteman.utils.types.ndarray_f
+::: minuteman.utils.types.NDArrayFloat
 
 ## Errors
 

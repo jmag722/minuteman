@@ -1,6 +1,7 @@
-r"""
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
 
-```python
+r"""```python
  import minuteman.cpg.base
 ```
 
@@ -15,7 +16,7 @@ import numpy.typing as npt
 
 from minuteman.utils.types import (
     ArraylikeFloat,
-    ndarray_f,
+    NDArrayFloat,
 )
 
 
@@ -35,8 +36,9 @@ ArraylikeFlowSpeedRegime: TypeAlias = (
 
 
 def mach_number(
-    velocity: ArraylikeFloat, speed_of_sound: ArraylikeFloat
-) -> ndarray_f:
+    velocity: ArraylikeFloat,
+    speed_of_sound: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Compute Mach number, $M$
 
     Args:
@@ -44,7 +46,8 @@ def mach_number(
         speed_of_sound (ArraylikeFloat): speed of sound, $a$
 
     Returns:
-        ndarray_f: Mach number, $M$
+        NDArrayFloat: Mach number, $M$
+
     """
     return np.atleast_1d(velocity) / np.atleast_1d(speed_of_sound)
 
@@ -53,7 +56,7 @@ def speed_of_sound_from_temperature(
     gas_constant: ArraylikeFloat,
     temperature: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the speed of sound from the specific gas constant $R$ and
     temperature $T$
 
@@ -64,7 +67,8 @@ def speed_of_sound_from_temperature(
             $\gamma$
 
     Returns:
-        ndarray_f: speed of sound, $a$
+        NDArrayFloat: speed of sound, $a$
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     gc = np.atleast_1d(gas_constant)
@@ -76,7 +80,7 @@ def speed_of_sound_from_pressure(
     pressure: ArraylikeFloat,
     density: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the speed of sound $a$ from the pressure $p$ and density $\rho$
 
     Args:
@@ -86,7 +90,8 @@ def speed_of_sound_from_pressure(
             $\gamma$
 
     Returns:
-        ndarray_f: speed of sound, $a$
+        NDArrayFloat: speed of sound, $a$
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     p = np.atleast_1d(pressure)
@@ -97,12 +102,10 @@ def speed_of_sound_from_pressure(
 class InvalidFlowRegimeError(Exception):
     """FlowSpeedRegime is invalid"""
 
-    pass
-
 
 def bracket_mach_from_flow_regime(
     flow_regime: ArraylikeFlowSpeedRegime,
-) -> tuple[ndarray_f, ndarray_f]:
+) -> tuple[NDArrayFloat, NDArrayFloat]:
     subsonic_mach_min = 1e-15
     subsonic_mach_max = 1.0 - subsonic_mach_min
     supersonic_mach_min = 1.0
@@ -112,12 +115,12 @@ def bracket_mach_from_flow_regime(
             np.atleast_1d(supersonic_mach_min),
             np.atleast_1d(supersonic_mach_max),
         )
-    elif flow_regime is FlowSpeedRegime.subsonic:
+    if flow_regime is FlowSpeedRegime.subsonic:
         return (
             np.atleast_1d(subsonic_mach_min),
             np.atleast_1d(subsonic_mach_max),
         )
-    elif isinstance(flow_regime, np.ndarray | list):
+    if isinstance(flow_regime, np.ndarray | list):
         return (
             np.where(
                 flow_regime == FlowSpeedRegime.supersonic,
@@ -130,8 +133,6 @@ def bracket_mach_from_flow_regime(
                 subsonic_mach_max,
             ),
         )
-    else:
-        raise InvalidFlowRegimeError(
-            "Use ArraylikeFlowSpeedRegime to set flow_regime"
-        )
-
+    raise InvalidFlowRegimeError(
+        "Use ArraylikeFlowSpeedRegime to set flow_regime",
+    )

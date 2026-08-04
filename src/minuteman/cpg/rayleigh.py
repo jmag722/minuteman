@@ -1,6 +1,7 @@
-"""
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
 
-```python
+"""```python
  import minuteman.cpg.rayleigh as rayleigh
 ```
 
@@ -8,19 +9,22 @@ This module computes 1D, calorically perfect flow with heat addition
 (Rayleigh flow).
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 from scipy.optimize.elementwise import find_root
 
-import minuteman.cpg.isentropic_flow as isentropic_flow
-from minuteman.cpg import ArraylikeFlowSpeedRegime, FlowSpeedRegime
+from minuteman.cpg import (
+    ArraylikeFlowSpeedRegime,
+    FlowSpeedRegime,
+    isentropic_flow,
+)
 from minuteman.cpg.base import bracket_mach_from_flow_regime
 from minuteman.utils.types import (
     ArraylikeFloat,
+    NDArrayFloat,
     RootFindingError,
-    ndarray_f,
 )
 
 
@@ -28,38 +32,39 @@ from minuteman.utils.types import (
 class RayleighFlowTable:
     r"""Rayleigh flow table where the initial Mach number $M_1=M^*=1.0$"""
 
-    mach: ndarray_f
+    mach: NDArrayFloat
     r"""Mach number, $M$."""
 
-    temperature_ratio: ndarray_f
+    temperature_ratio: NDArrayFloat
     r"""Static temperature ratio, $T / T^*$"""
 
-    pressure_ratio: ndarray_f
+    pressure_ratio: NDArrayFloat
     r"""Static pressure ratio, $p / p^*$"""
 
-    density_ratio: ndarray_f
+    density_ratio: NDArrayFloat
     r"""Density ratio, $\rho / \rho^*$"""
 
     @property
-    def velocity_ratio(self) -> ndarray_f:
+    def velocity_ratio(self) -> NDArrayFloat:
         r"""Velocity ratio, $u / u^*$"""
         return 1.0 / self.density_ratio
 
-    total_pressure_ratio: ndarray_f
+    total_pressure_ratio: NDArrayFloat
     r"""Total pressure ratio, $p_0 / p_0^*$"""
 
-    total_temperature_ratio: ndarray_f
+    total_temperature_ratio: NDArrayFloat
     r"""Total temperature ratio, $T_0 / T_0^*$"""
 
-    entropy_ratio: ndarray_f
+    entropy_ratio: NDArrayFloat
     r"""Specific entropy ratio, $(s^* - s) / R$"""
 
-    specific_heat_ratio: ndarray_f
+    specific_heat_ratio: NDArrayFloat
     r"""Ratio of specific heats, $\gamma$"""
 
 
 def lookup_table_by_mach(
-    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat = 1.4
+    mach: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat = 1.4,
 ) -> RayleighFlowTable:
     r"""Look up a Rayleigh flow table result from the Mach number, $M$
 
@@ -70,6 +75,7 @@ def lookup_table_by_mach(
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
+
     """
     m1 = 1.0
     m2 = np.atleast_1d(mach)
@@ -77,22 +83,34 @@ def lookup_table_by_mach(
     return RayleighFlowTable(
         mach=m2,
         temperature_ratio=temperature_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         pressure_ratio=pressure_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         density_ratio=density_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         total_pressure_ratio=total_pressure_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         total_temperature_ratio=total_temperature_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         entropy_ratio=_rev_entropy_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         specific_heat_ratio=gam,
     )
@@ -112,6 +130,7 @@ def lookup_table_by_pressure(
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
+
     """
     p_ratio = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -141,6 +160,7 @@ def _lookup_table_by_ratio(
 
     Returns:
         RayleighFlowTable: Rayleigh flow table
+
     """
     _ratio = np.atleast_1d(ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -149,7 +169,9 @@ def _lookup_table_by_ratio(
 
     def get_mach_by_ratio(_m, _r, _g):
         return _r - mach_func(
-            mach_initial=1.0, mach_final=_m, specific_heat_ratio=_g
+            mach_initial=1.0,
+            mach_final=_m,
+            specific_heat_ratio=_g,
         )
 
     res = find_root(get_mach_by_ratio, mach_brackets, args=(_ratio, gam))
@@ -178,6 +200,7 @@ def lookup_table_by_temperature(
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
+
     """
     return _lookup_table_by_ratio(
         ratio=temperature_ratio,
@@ -202,6 +225,7 @@ def lookup_table_by_density(
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
+
     """
     m1 = 1.0
     r_ratio = np.atleast_1d(density_ratio)
@@ -229,6 +253,7 @@ def lookup_table_by_total_pressure(
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
+
     """
     return _lookup_table_by_ratio(
         ratio=total_pressure_ratio,
@@ -257,6 +282,7 @@ def lookup_table_by_total_temperature(
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
+
     """
     return _lookup_table_by_ratio(
         ratio=total_temperature_ratio,
@@ -285,6 +311,7 @@ def lookup_table_by_entropy(
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
+
     """
     return _lookup_table_by_ratio(
         ratio=entropy_ratio,
@@ -298,7 +325,7 @@ def _rev_entropy_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     """This function computes (s1-s2)/R. This is handy because s1 becomes
     the critical/sonic point, s*, and this allows you to get the typical
     positive value back out
@@ -307,7 +334,9 @@ def _rev_entropy_ratio_by_mach(
     m2 = np.atleast_1d(mach_final)
     gam = np.atleast_1d(specific_heat_ratio)
     return -entropy_ratio_by_mach(
-        mach_final=m2, mach_initial=m1, specific_heat_ratio=gam
+        mach_final=m2,
+        mach_initial=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -315,7 +344,7 @@ def entropy_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the specific entropy ratio $(s_2-s_1) / R$ from the
     Mach number $M$ for Rayleigh flow.
 
@@ -328,15 +357,16 @@ def entropy_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: entropy ratio, $(s_2-s_1) / R$
+        NDArrayFloat: entropy ratio, $(s_2-s_1) / R$
             ($(s - s^*) / R$ if $M_1=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
     gam = np.atleast_1d(specific_heat_ratio)
     return np.log(
         ((1 + gam * m1**2) / (1 + gam * m2**2)) ** (gam + 1)
-        * (m2 / m1) ** (2 * gam)
+        * (m2 / m1) ** (2 * gam),
     ) / (gam - 1)
 
 
@@ -344,7 +374,7 @@ def total_pressure_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the total pressure ratio $p_{02} / p_{01}$ from the Mach number
     for Rayleigh flow.
 
@@ -357,21 +387,26 @@ def total_pressure_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: total pressure ratio, $p_{02} / p_{01}$
+        NDArrayFloat: total pressure ratio, $p_{02} / p_{01}$
             ($p_0 / p_0^*$ if $M_1=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
     gam = np.atleast_1d(specific_heat_ratio)
     return (
         pressure_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         )
         * isentropic_flow.total_pressure_ratio(
-            mach=m2, specific_heat_ratio=gam
+            mach=m2,
+            specific_heat_ratio=gam,
         )
         / isentropic_flow.total_pressure_ratio(
-            mach=m1, specific_heat_ratio=gam
+            mach=m1,
+            specific_heat_ratio=gam,
         )
     )
 
@@ -380,7 +415,7 @@ def total_temperature_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the total temperature ratio $T_{02} / T_{01}$ from the Mach
     number $M$ for Rayleigh flow.
 
@@ -393,21 +428,26 @@ def total_temperature_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: total temperature ratio, $T_{02} / T_{01}$
+        NDArrayFloat: total temperature ratio, $T_{02} / T_{01}$
             ($T_0 / T_0^*$ if $M_1=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
     gam = np.atleast_1d(specific_heat_ratio)
     return (
         temperature_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         )
         * isentropic_flow.total_temperature_ratio(
-            mach=m2, specific_heat_ratio=gam
+            mach=m2,
+            specific_heat_ratio=gam,
         )
         / isentropic_flow.total_temperature_ratio(
-            mach=m1, specific_heat_ratio=gam
+            mach=m1,
+            specific_heat_ratio=gam,
         )
     )
 
@@ -416,7 +456,7 @@ def pressure_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the static pressure ratio $p_2 / p_1$ from the Mach number $M$
     for Rayleigh flow.
 
@@ -429,8 +469,9 @@ def pressure_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: static pressure ratio, $p_2 / p_1$
+        NDArrayFloat: static pressure ratio, $p_2 / p_1$
             ($p / p^*$ if $M_1=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
@@ -442,7 +483,7 @@ def temperature_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the static temperature ratio $T_2 / T_1$ from the Mach number
     for Rayleigh flow.
 
@@ -455,8 +496,9 @@ def temperature_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: static temperature ratio, $T_2 / T_1$
+        NDArrayFloat: static temperature ratio, $T_2 / T_1$
             ($T / T^*$ if $M_1=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
@@ -468,7 +510,7 @@ def density_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the density ratio $\rho_2 / \rho_1$ from the Mach number
     for Rayleigh flow.
 
@@ -481,11 +523,11 @@ def density_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: density ratio, $\rho_2 / \rho_1$
+        NDArrayFloat: density ratio, $\rho_2 / \rho_1$
             ($\rho / \rho^*$ if $M_1=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
     gam = np.atleast_1d(specific_heat_ratio)
     return (1 + gam * m2**2) / (1 + gam * m1**2) * (m1 / m2) ** 2
-

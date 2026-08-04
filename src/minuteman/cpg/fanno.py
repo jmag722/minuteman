@@ -1,6 +1,7 @@
-r"""
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
 
-```python
+r"""```python
  import minuteman.cpg.fanno as fanno
 ```
 
@@ -8,8 +9,8 @@ This module computes 1D, calorically perfect gas with friction
 (Fanno flow).
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 from scipy.optimize.elementwise import find_root
@@ -18,8 +19,8 @@ from minuteman.cpg import ArraylikeFlowSpeedRegime, FlowSpeedRegime
 from minuteman.cpg.base import bracket_mach_from_flow_regime
 from minuteman.utils.types import (
     ArraylikeFloat,
+    NDArrayFloat,
     RootFindingError,
-    ndarray_f,
 )
 
 
@@ -27,38 +28,39 @@ from minuteman.utils.types import (
 class FannoFlowTable:
     r"""Fanno flow table where the initial Mach number $M_1=M^*=1.0$"""
 
-    mach: ndarray_f
+    mach: NDArrayFloat
     r"""Mach number, $M$"""
 
-    temperature_ratio: ndarray_f
+    temperature_ratio: NDArrayFloat
     r"""Temperature ratio, $T / T^*$"""
 
-    pressure_ratio: ndarray_f
+    pressure_ratio: NDArrayFloat
     r"""Static pressure ratio, $p / p^*$"""
 
-    density_ratio: ndarray_f
+    density_ratio: NDArrayFloat
     r"""Density ratio, $\rho / \rho^*$"""
 
     @property
-    def velocity_ratio(self) -> ndarray_f:
+    def velocity_ratio(self) -> NDArrayFloat:
         r"""Velocity ratio, $u / u^*$"""
         return 1.0 / self.density_ratio
 
-    total_pressure_ratio: ndarray_f
+    total_pressure_ratio: NDArrayFloat
     r"""Total pressure ratio, $p_0 / p_0^*$"""
 
-    fanno_parameter: ndarray_f
+    fanno_parameter: NDArrayFloat
     r"""Fanno parameter, $4 f L^* / D$"""
 
-    entropy_ratio: ndarray_f
+    entropy_ratio: NDArrayFloat
     r"""Specific entropy ratio, $(s^* - s) / R$"""
 
-    specific_heat_ratio: ndarray_f
+    specific_heat_ratio: NDArrayFloat
     r"""Ratio of specific heats, $\gamma$"""
 
 
 def lookup_table_by_mach(
-    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat = 1.4
+    mach: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat = 1.4,
 ) -> FannoFlowTable:
     r"""Look up a Fanno flow table result from the Mach number, $M$
 
@@ -69,6 +71,7 @@ def lookup_table_by_mach(
 
     Returns:
         FannoFlowTable: Fanno flow output table
+
     """
     m1 = 1.0
     m2 = np.atleast_1d(mach)
@@ -76,22 +79,34 @@ def lookup_table_by_mach(
     return FannoFlowTable(
         mach=m2,
         temperature_ratio=temperature_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         pressure_ratio=pressure_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         density_ratio=density_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         total_pressure_ratio=total_pressure_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         fanno_parameter=_rev_fanno_parameter_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         entropy_ratio=_rev_entropy_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         ),
         specific_heat_ratio=gam,
     )
@@ -111,6 +126,7 @@ def lookup_table_by_pressure(
 
     Returns:
         FannoFlowTable: Fanno flow output table
+
     """
     m1 = 1.0
     pratio = np.atleast_1d(pressure_ratio)
@@ -137,6 +153,7 @@ def lookup_table_by_temperature(
 
     Returns:
         FannoFlowTable: Fanno flow output table
+
     """
     m1 = 1.0
     tratio = np.atleast_1d(temperature_ratio)
@@ -159,6 +176,7 @@ def lookup_table_by_density(
 
     Returns:
         FannoFlowTable: Fanno flow output table
+
     """
     m1 = 1.0
     rratio = np.atleast_1d(density_ratio)
@@ -188,6 +206,7 @@ def _lookup_table_by_ratio(
 
     Returns:
         FannoFlowTable: Fanno flow table
+
     """
     _ratio = np.atleast_1d(ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -196,7 +215,9 @@ def _lookup_table_by_ratio(
 
     def get_mach_by_ratio(_m, _r, _g):
         return _r - mach_func(
-            mach_initial=1.0, mach_final=_m, specific_heat_ratio=_g
+            mach_initial=1.0,
+            mach_final=_m,
+            specific_heat_ratio=_g,
         )
 
     res = find_root(get_mach_by_ratio, mach_brackets, args=(_ratio, gam))
@@ -225,6 +246,7 @@ def lookup_table_by_total_pressure(
 
     Returns:
         FannoFlowTable: Fanno flow output table
+
     """
     return _lookup_table_by_ratio(
         ratio=total_pressure_ratio,
@@ -252,6 +274,7 @@ def lookup_table_by_entropy(
 
     Returns:
         FannoFlowTable: Fanno flow output table
+
     """
     return _lookup_table_by_ratio(
         ratio=entropy_ratio,
@@ -280,6 +303,7 @@ def lookup_table_by_fanno_parameter(
 
     Returns:
         FannoFlowTable: Fanno flow output table
+
     """
     return _lookup_table_by_ratio(
         ratio=fanno_parameter,
@@ -293,7 +317,7 @@ def temperature_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the static temperature ratio $T_2 / T_1$ from the Mach number
     for Fanno flow.
 
@@ -306,8 +330,9 @@ def temperature_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: static temperature ratio, $T_2 / T_1$
+        NDArrayFloat: static temperature ratio, $T_2 / T_1$
             ($T / T^*$ if $M_2=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
@@ -319,7 +344,7 @@ def pressure_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the static pressure ratio $p_2 / p_1$ from the Mach number $M$
     for Fanno flow.
 
@@ -332,8 +357,9 @@ def pressure_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: static pressure ratio, $p_2 / p_1$
+        NDArrayFloat: static pressure ratio, $p_2 / p_1$
             ($p / p^*$ if $M_2=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
@@ -342,7 +368,9 @@ def pressure_ratio_by_mach(
         m1
         / m2
         * temperature_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         )
         ** 0.5
     )
@@ -352,7 +380,7 @@ def density_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the density ratio $\rho_2 / \rho_1$ from the Mach number
     for Fanno flow.
 
@@ -367,8 +395,9 @@ def density_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: density ratio, $\rho_2 / \rho_1$
+        NDArrayFloat: density ratio, $\rho_2 / \rho_1$
             ($\rho / \rho^*$ if $M_2=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
@@ -377,7 +406,9 @@ def density_ratio_by_mach(
         m1
         / m2
         * temperature_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         )
         ** -0.5
     )
@@ -387,7 +418,7 @@ def total_pressure_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute total pressure ratio $p_{02} / p_{01}$ for Fanno flow.
 
     Args:
@@ -399,8 +430,9 @@ def total_pressure_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: total pressure ratio, $p_{02} / p_{01}$
+        NDArrayFloat: total pressure ratio, $p_{02} / p_{01}$
             ($p_0 / p_0^*$ if $M_2=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
@@ -409,7 +441,9 @@ def total_pressure_ratio_by_mach(
         m1
         / m2
         * temperature_ratio_by_mach(
-            mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+            mach_initial=m1,
+            mach_final=m2,
+            specific_heat_ratio=gam,
         )
         ** (-(gam + 1) / (2 * (gam - 1)))
     )
@@ -419,7 +453,7 @@ def _rev_entropy_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     """This function computes (s1-s2)/R. This is handy because s1 becomes
     the critical/sonic point, s*, and this allows you to get the typical
     positive value back out
@@ -428,7 +462,9 @@ def _rev_entropy_ratio_by_mach(
     m2 = np.atleast_1d(mach_final)
     gam = np.atleast_1d(specific_heat_ratio)
     return -1.0 * entropy_ratio_by_mach(
-        mach_final=m2, mach_initial=m1, specific_heat_ratio=gam
+        mach_final=m2,
+        mach_initial=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -436,7 +472,7 @@ def entropy_ratio_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute specific entropy ratio $(s_2 - s_1) / R$ for Fanno flow.
 
     Args:
@@ -448,8 +484,9 @@ def entropy_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: specific entropy ratio, $(s_2 - s_1) / R$
+        NDArrayFloat: specific entropy ratio, $(s_2 - s_1) / R$
             ($(s - s^*) / R$ if ``mach_initial==1.0``)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
@@ -458,7 +495,7 @@ def entropy_ratio_by_mach(
         m2
         / m1
         * ((2 + (gam - 1) * m1**2) / (2 + (gam - 1) * m2**2))
-        ** (0.5 * (gam + 1) / (gam - 1))
+        ** (0.5 * (gam + 1) / (gam - 1)),
     )
 
 
@@ -466,8 +503,8 @@ def entropy_ratio_by_mach(
 #     pass
 
 
-# def _check_valid_mach(mach_initial: ndarray_f,
-#                       mach_final: ndarray_f):
+# def _check_valid_mach(mach_initial: NDArrayFloat,
+#                       mach_final: NDArrayFloat):
 #     valid_mach = (mach_initial > 0.0) & (mach_final > 0.0)
 #     if not valid_mach.all():
 #         raise InvalidMachError("Mach must be positive")
@@ -502,7 +539,7 @@ def fanno_parameter_by_mach(
     mach_initial: ArraylikeFloat,
     mach_final: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute Fanno parameter, $4L f / D$ where $L=x_2 - x_1$
 
     Args:
@@ -514,8 +551,9 @@ def fanno_parameter_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: Fanno parameter, $4L f / D$
+        NDArrayFloat: Fanno parameter, $4L f / D$
             ($4 L^* f / D$ if $M_2=1.0$)
+
     """
     m1 = np.atleast_1d(mach_initial)
     m2 = np.atleast_1d(mach_final)
@@ -523,7 +561,7 @@ def fanno_parameter_by_mach(
 
     def fanno_integrand(m, g):
         return -1.0 / (g * m**2) - (g + 1) / (2 * g) * np.log(
-            m**2 / (1 + (g - 1) / 2 * m**2)
+            m**2 / (1 + (g - 1) / 2 * m**2),
         )
 
     return fanno_integrand(m2, gam) - fanno_integrand(m1, gam)
@@ -533,7 +571,7 @@ def duct_length(
     fanno_parameter: ArraylikeFloat,
     diameter: ArraylikeFloat,
     friction_coeff: ArraylikeFloat = 0.005,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute duct length $L$ for a given Fanno parameter $4 f L / D$.
 
     Args:
@@ -544,7 +582,8 @@ def duct_length(
             The default holds for $Re > 1e5$ and surface roughness of $0.001 D$
 
     Returns:
-        ndarray_f: duct length $L$ or $L^*$
+        NDArrayFloat: duct length $L$ or $L^*$
+
     """
     fanparam = np.atleast_1d(fanno_parameter)
     d = np.atleast_1d(diameter)

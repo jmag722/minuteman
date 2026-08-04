@@ -1,6 +1,7 @@
-r"""
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
 
-```python
+r"""```python
  import minuteman.cpg.normal_shock as normal_shock
 ```
 
@@ -18,11 +19,11 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize.elementwise import find_root
 
-import minuteman.cpg.isentropic_flow as isentropic_flow
+from minuteman.cpg import isentropic_flow
 from minuteman.utils.types import (
     ArraylikeFloat,
+    NDArrayFloat,
     RootFindingError,
-    ndarray_f,
 )
 
 
@@ -30,28 +31,28 @@ from minuteman.utils.types import (
 class NormalShockTable:
     """Normal shock table, for a stationary, calorically perfect gas"""
 
-    mach_upstream: ndarray_f
+    mach_upstream: NDArrayFloat
     r"""Upstream mach number, $M_1$"""
 
-    mach_downstream: ndarray_f
+    mach_downstream: NDArrayFloat
     r"""Downstream mach number, $M_2$"""
 
-    temperature_ratio: ndarray_f
+    temperature_ratio: NDArrayFloat
     r"""Temperature ratio, $T_2 / T_1$"""
 
-    pressure_ratio: ndarray_f
+    pressure_ratio: NDArrayFloat
     r"""Static pressure ratio, $p_2 / p_1$"""
 
-    density_ratio: ndarray_f
+    density_ratio: NDArrayFloat
     r"""Density ratio, $\rho_2 / \rho_1$"""
 
-    total_pressure_ratio: ndarray_f
+    total_pressure_ratio: NDArrayFloat
     r"""Total pressure ratio, $p_{02} / p_{01}$"""
 
-    pitot_pressure_ratio: ndarray_f
+    pitot_pressure_ratio: NDArrayFloat
     r"""Rayleigh Pitot tube pressure ratio, $p_{02} / p_1$"""
 
-    specific_heat_ratio: ndarray_f
+    specific_heat_ratio: NDArrayFloat
     r"""Ratio of specific heats, $\gamma$"""
 
 
@@ -69,25 +70,31 @@ def lookup_table_by_upstream_mach(
 
     Returns:
         NormalShockTable: normal shock table result
+
     """
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
     p02_p01 = total_pressure_ratio_by_mach(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
     p01_p1 = isentropic_flow.total_pressure_ratio(
-        mach=m1, specific_heat_ratio=gam
+        mach=m1,
+        specific_heat_ratio=gam,
     )
     return NormalShockTable(
         mach_upstream=m1,
         mach_downstream=mach_downstream(
-            mach_upstream=m1, specific_heat_ratio=gam
+            mach_upstream=m1,
+            specific_heat_ratio=gam,
         ),
         temperature_ratio=temperature_ratio_by_upstream_mach(
-            mach_upstream=m1, specific_heat_ratio=gam
+            mach_upstream=m1,
+            specific_heat_ratio=gam,
         ),
         pressure_ratio=pressure_ratio(
-            mach_upstream=m1, specific_heat_ratio=gam
+            mach_upstream=m1,
+            specific_heat_ratio=gam,
         ),
         density_ratio=density_ratio(mach_upstream=m1, specific_heat_ratio=gam),
         total_pressure_ratio=p02_p01,
@@ -110,6 +117,7 @@ def lookup_table_by_temperature(
 
     Returns:
         NormalShockTable: normal shock table result
+
     """
     t21 = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -119,15 +127,18 @@ def lookup_table_by_temperature(
     # invert the temperature-mach relationship
     def tfunc(mguess, _t, _g):
         return _t - temperature_ratio_by_upstream_mach(
-            mach_upstream=mguess, specific_heat_ratio=_g
+            mach_upstream=mguess,
+            specific_heat_ratio=_g,
         )
+
     res = find_root(tfunc, m1_bracket, args=(t21, gam))
     if not np.all(res.success):
         raise RootFindingError(f"find_root did not succeed: {res.status}")
     m1 = res.x
 
     return lookup_table_by_upstream_mach(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -145,13 +156,15 @@ def lookup_table_by_pressure(
 
     Returns:
         NormalShockTable: normal shock table result
+
     """
     p21 = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
     # invert the pressure-mach relationship
     m1 = ((p21 - 1) * (gam + 1) / (2 * gam) + 1) ** 0.5
     return lookup_table_by_upstream_mach(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -169,13 +182,15 @@ def lookup_table_by_density(
 
     Returns:
         NormalShockTable: normal shock table result
+
     """
     r21 = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
     # invert the density-mach relationship
     m1 = (2.0 / ((gam + 1) / r21 - gam + 1)) ** 0.5
     return lookup_table_by_upstream_mach(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -194,6 +209,7 @@ def lookup_table_by_total_pressure(
 
     Returns:
         NormalShockTable: normal shock table result
+
     """
     p02_p01 = np.atleast_1d(total_pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -203,7 +219,8 @@ def lookup_table_by_total_pressure(
     # invert the total pressure-mach relationship
     def pfunc(mguess, _p021, _g):
         return _p021 - total_pressure_ratio_by_mach(
-            mach_upstream=mguess, specific_heat_ratio=_g
+            mach_upstream=mguess,
+            specific_heat_ratio=_g,
         )
 
     res = find_root(pfunc, m1_bracket, args=(p02_p01, gam))
@@ -212,7 +229,8 @@ def lookup_table_by_total_pressure(
     m1 = res.x
 
     return lookup_table_by_upstream_mach(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -231,6 +249,7 @@ def lookup_table_by_pitot_pressure(
 
     Returns:
         NormalShockTable: normal shock table result
+
     """
     p02_p1 = np.atleast_1d(pitot_pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -240,9 +259,11 @@ def lookup_table_by_pitot_pressure(
     # invert the rayleigh pitot pressure-mach relationship
     def pfunc(mguess, _p021, _g):
         return _p021 - total_pressure_ratio_by_mach(
-            mach_upstream=mguess, specific_heat_ratio=_g
+            mach_upstream=mguess,
+            specific_heat_ratio=_g,
         ) * isentropic_flow.total_pressure_ratio(
-            mach=mguess, specific_heat_ratio=_g
+            mach=mguess,
+            specific_heat_ratio=_g,
         )
 
     res = find_root(pfunc, m1_bracket, args=(p02_p1, gam))
@@ -251,7 +272,8 @@ def lookup_table_by_pitot_pressure(
     m1 = res.x
 
     return lookup_table_by_upstream_mach(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -269,6 +291,7 @@ def lookup_table_by_downstream_mach(
 
     Returns:
         NormalShockTable: normal shock table result
+
     """
     m2 = np.atleast_1d(mach_downstream)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -278,13 +301,15 @@ def lookup_table_by_downstream_mach(
         (1 + m2**2 * 0.5 * (gam - 1)) / (gam * m2**2 - 0.5 * (gam - 1))
     ) ** 0.5
     return lookup_table_by_upstream_mach(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
 
 def mach_downstream(
-    mach_upstream: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach_upstream: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the Mach number downstream of a normal shock, $M_2$.
 
     Args:
@@ -293,7 +318,8 @@ def mach_downstream(
             $\gamma$
 
     Returns:
-        ndarray_f: downstream Mach number, $M_2$
+        NDArrayFloat: downstream Mach number, $M_2$
+
     """
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -303,8 +329,9 @@ def mach_downstream(
 
 
 def density_ratio(
-    mach_upstream: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach_upstream: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the density ratio across a normal shock, $\rho_2 / \rho_1$.
 
     The density ratio $\rho_2 / \rho_1$ is equivalent to the inverse velocity
@@ -316,7 +343,8 @@ def density_ratio(
             $\gamma$
 
     Returns:
-        ndarray_f: density ratio, $\rho_2 / \rho_1$
+        NDArrayFloat: density ratio, $\rho_2 / \rho_1$
+
     """
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -324,8 +352,9 @@ def density_ratio(
 
 
 def pressure_ratio(
-    mach_upstream: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach_upstream: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the static pressure ratio across a normal shock, $p_2 / p_1$.
 
     Args:
@@ -334,7 +363,8 @@ def pressure_ratio(
             $\gamma$
 
     Returns:
-        ndarray_f: static pressure ratio, $p_2 / p_1$
+        NDArrayFloat: static pressure ratio, $p_2 / p_1$
+
     """
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -342,8 +372,9 @@ def pressure_ratio(
 
 
 def total_pressure_ratio_by_mach(
-    mach_upstream: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach_upstream: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the total pressure ratio across a normal shock,
     $p_{02} / p_{01}$.
 
@@ -353,7 +384,8 @@ def total_pressure_ratio_by_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: total pressure ratio across shock, $p_{02} / p_{01}$
+        NDArrayFloat: total pressure ratio across shock, $p_{02} / p_{01}$
+
     """
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -363,8 +395,9 @@ def total_pressure_ratio_by_mach(
 
 
 def temperature_ratio_by_upstream_mach(
-    mach_upstream: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach_upstream: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the temperature ratio across a normal shock, $T_2 / T_1$.
 
     This is also equivalent to the enthalpy ratio across the normal shock,
@@ -376,7 +409,8 @@ def temperature_ratio_by_upstream_mach(
             $\gamma$
 
     Returns:
-        ndarray_f: temperature ratio across shock, $T_2 / T_1$
+        NDArrayFloat: temperature ratio across shock, $T_2 / T_1$
+
     """
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -388,8 +422,9 @@ def temperature_ratio_by_upstream_mach(
 
 
 def entropy_change(
-    total_pressure_ratio: ArraylikeFloat, gas_constant: ArraylikeFloat
-) -> ndarray_f:
+    total_pressure_ratio: ArraylikeFloat,
+    gas_constant: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Compute the change in specific entropy across a normal shock,
     $s_2 - s_1$
 
@@ -399,7 +434,8 @@ def entropy_change(
         gas_constant (ArraylikeFloat): specific gas constant, $R$
 
     Returns:
-        ndarray_f: change in specific entropy, $s_2 - s_1$
+        NDArrayFloat: change in specific entropy, $s_2 - s_1$
+
     """
     p02_p01 = np.atleast_1d(total_pressure_ratio)
     gc = np.atleast_1d(gas_constant)
@@ -411,7 +447,7 @@ def internal_energy_change(
     pressure_downstream: ArraylikeFloat,
     density_upstream: ArraylikeFloat,
     density_downstream: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Computes the change in specific internal energy across a normal shock,
     $e$. This is the Hugoniot relation.
 
@@ -428,7 +464,8 @@ def internal_energy_change(
             $\rho_2$
 
     Returns:
-        ndarray_f: change in specific internal energy, $e$
+        NDArrayFloat: change in specific internal energy, $e$
+
     """
     p1 = np.atleast_1d(pressure_upstream)
     # compute specific volumes
@@ -436,4 +473,3 @@ def internal_energy_change(
     v2 = 1.0 / np.atleast_1d(density_downstream)
     p2 = np.atleast_1d(pressure_downstream)
     return 0.5 * (p1 + p2) * (v1 - v2)
-

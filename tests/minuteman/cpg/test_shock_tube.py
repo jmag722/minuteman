@@ -1,8 +1,11 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 import pytest
 
-import minuteman.cpg.shock_tube as shock_tube
 from minuteman import cpg
+from minuteman.cpg import shock_tube
 
 
 def test_speed_of_sound_from_pressure():
@@ -13,10 +16,14 @@ def test_speed_of_sound_from_pressure():
     r4 = 1
     r1 = 0.125
     a4 = cpg.speed_of_sound_from_pressure(
-        specific_heat_ratio=gam4, pressure=p4, density=r4
+        specific_heat_ratio=gam4,
+        pressure=p4,
+        density=r4,
     )[0]
     a1 = cpg.speed_of_sound_from_pressure(
-        specific_heat_ratio=gam1, pressure=p1, density=r1
+        specific_heat_ratio=gam1,
+        pressure=p1,
+        density=r1,
     )[0]
     actual = shock_tube.moving_shock_pressure_ratio(
         pressure_ratio=p4 / p1,
@@ -34,7 +41,7 @@ def test_contact_surface_speed():
     gam = 1.4
     a1 = (gam * 287 * T) ** 0.5
     assert shock_tube.contact_surface_speed(pratio, a1, gam) == pytest.approx(
-        756.0737668928916
+        756.0737668928916,
     )
 
 
@@ -53,7 +60,8 @@ def test_moving_shock_temperature_ratio():
     pratio = 10
     gam = 1.4
     assert shock_tube.moving_shock_temperature_ratio(
-        pratio, gam
+        pratio,
+        gam,
     ) == pytest.approx(2.622950819672131)
 
 
@@ -62,7 +70,7 @@ def test_moving_shock_density_ratio():
     pratio = 10
     gam = 1.4
     assert shock_tube.moving_shock_density_ratio(pratio, gam) == pytest.approx(
-        3.8125
+        3.8125,
     )
 
 
@@ -74,7 +82,8 @@ def test_expansion_fan_velocity():
         specfic_heat_ratio_driver=1.4,
     )
     np.testing.assert_allclose(
-        actual, np.array([258.33333333, 266.66666667, 275.0])
+        actual,
+        np.array([258.33333333, 266.66666667, 275.0]),
     )
 
 
@@ -100,27 +109,63 @@ def test_shock_tube():
         specific_heat_ratio_r=1.4,
     )
     # tested with https://onlineflowcalculator.com/pages/CFLOW/calculator.html
-    actual.pressure[actual.region_1].mean() == pytest.approx(1e4)
-    actual.pressure[actual.region_2].mean() == pytest.approx(3.03130e4)
-    actual.pressure[actual.region_3].mean() == pytest.approx(3.03130e4)
-    actual.pressure[actual.region_4].mean() == pytest.approx(1e5)
+    assert actual.pressure[actual.region_1].mean() == pytest.approx(1e4)
+    assert actual.pressure[actual.region_2].mean() == pytest.approx(3.03130e4)
+    assert actual.pressure[actual.region_3].mean() == pytest.approx(3.03130e4)
+    assert actual.pressure[actual.region_4].mean() == pytest.approx(1e5)
 
-    actual.temperature[actual.region_1].mean() == pytest.approx(278.75)
-    actual.temperature[actual.region_2].mean() == pytest.approx(397.71)
-    actual.temperature[actual.region_3].mean() == pytest.approx(247.75)
-    actual.temperature[actual.region_4].mean() == pytest.approx(348.43)
+    assert actual.temperature[actual.region_1].mean() == pytest.approx(
+        278.75,
+        rel=1e-4,
+    )
+    assert actual.temperature[actual.region_2].mean() == pytest.approx(
+        397.71,
+        rel=1e-4,
+    )
+    assert actual.temperature[actual.region_3].mean() == pytest.approx(
+        247.75,
+        rel=1e-4,
+    )
+    assert actual.temperature[actual.region_4].mean() == pytest.approx(
+        348.43,
+        rel=1e-4,
+    )
 
-    actual.density[actual.region_1].mean() == pytest.approx(0.125)
-    actual.density[actual.region_2].mean() == pytest.approx(0.27)
-    actual.density[actual.region_3].mean() == pytest.approx(0.43)
-    actual.density[actual.region_4].mean() == pytest.approx(1)
+    assert actual.density[actual.region_1].mean() == pytest.approx(0.125)
+    assert actual.density[actual.region_2].mean() == pytest.approx(
+        0.27,
+        rel=2e-2,
+    )
+    assert actual.density[actual.region_3].mean() == pytest.approx(
+        0.43,
+        rel=1e-2,
+    )
+    assert actual.density[actual.region_4].mean() == pytest.approx(1)
 
-    actual.speed_of_sound[actual.region_1].mean() == pytest.approx(334.66)
-    actual.speed_of_sound[actual.region_2].mean() == pytest.approx(399.75)
-    actual.speed_of_sound[actual.region_3].mean() == pytest.approx(315.51)
-    actual.speed_of_sound[actual.region_4].mean() == pytest.approx(374.17)
+    assert actual.speed_of_sound[actual.region_1].mean() == pytest.approx(
+        334.66,
+        rel=1e-4,
+    )
+    assert actual.speed_of_sound[actual.region_2].mean() == pytest.approx(
+        399.75,
+        rel=1e-4,
+    )
+    assert actual.speed_of_sound[actual.region_3].mean() == pytest.approx(
+        315.51,
+        rel=1e-4,
+    )
+    assert actual.speed_of_sound[actual.region_4].mean() == pytest.approx(
+        374.17,
+        rel=1e-4,
+    )
 
-    actual.velocity[actual.region_1].mean() == 0.0
-    actual.velocity[actual.region_2].mean() == pytest.approx(293.29)
-    actual.velocity[actual.region_3].mean() == pytest.approx(293.29)
-    actual.velocity[actual.region_4].mean() == 0.0
+    assert actual.velocity[actual.region_1].mean() == 0.0
+    assert actual.velocity[actual.region_2].mean() == pytest.approx(
+        293.29,
+        rel=1e-4,
+    )
+    assert actual.velocity[actual.region_3].mean() == pytest.approx(
+        293.29,
+        rel=1e-4,
+    )
+    assert actual.velocity[actual.region_4].mean() == 0.0

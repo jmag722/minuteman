@@ -1,6 +1,7 @@
-r"""
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
 
-```python
+r"""```python
  import minuteman.cpg.isentropic_flow as isentropic_flow
 ```
 
@@ -20,13 +21,12 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize.elementwise import find_root
 
-import minuteman.cpg.thermo as thermo
-from minuteman.cpg import ArraylikeFlowSpeedRegime, FlowSpeedRegime
+from minuteman.cpg import ArraylikeFlowSpeedRegime, FlowSpeedRegime, thermo
 from minuteman.cpg.base import bracket_mach_from_flow_regime
 from minuteman.utils.types import (
     ArraylikeFloat,
+    NDArrayFloat,
     RootFindingError,
-    ndarray_f,
 )
 
 
@@ -36,24 +36,25 @@ class IsentropicFlowTable:
     for a given Mach number and specific heat ratio
     """
 
-    mach: ndarray_f
+    mach: NDArrayFloat
     r"""Mach number, $M$"""
-    temperature: ndarray_f
+    temperature: NDArrayFloat
     r"""total temperature ratio, $T_0 / T$"""
-    pressure: ndarray_f
+    pressure: NDArrayFloat
     r"""total pressure ratio, $p_0 / p$"""
-    density: ndarray_f
+    density: NDArrayFloat
     r"""total density ratio, $\rho_0 / \rho$"""
-    speed_of_sound: ndarray_f
+    speed_of_sound: NDArrayFloat
     r"""total speed of sound ratio, $a_0 / a$"""
-    area_ratio: ndarray_f
+    area_ratio: NDArrayFloat
     r"""area ratio, $A / A^*$"""
-    specific_heat_ratio: ndarray_f
+    specific_heat_ratio: NDArrayFloat
     r"""ratio of specific heats, $\gamma$"""
 
 
 def lookup_table_by_mach(
-    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat = 1.4
+    mach: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat = 1.4,
 ) -> IsentropicFlowTable:
     r"""Lookup the isentropic flow table based on Mach number, $M$
 
@@ -64,6 +65,7 @@ def lookup_table_by_mach(
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
+
     """
     m = np.atleast_1d(mach)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -98,10 +100,12 @@ def lookup_table_by_temperature(
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     mach = mach_from_temperature(
-        temperature_ratio=temperature_ratio, specific_heat_ratio=gam
+        temperature_ratio=temperature_ratio,
+        specific_heat_ratio=gam,
     )
     return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
 
@@ -120,13 +124,16 @@ def lookup_table_by_pressure(
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     t0_ratio = thermo.isentropic_process_from_pressure(
-        pressure_ratio=pressure_ratio, specific_heat_ratio=gam
+        pressure_ratio=pressure_ratio,
+        specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
-        temperature_ratio=t0_ratio, specific_heat_ratio=specific_heat_ratio
+        temperature_ratio=t0_ratio,
+        specific_heat_ratio=specific_heat_ratio,
     )
 
 
@@ -145,13 +152,16 @@ def lookup_table_by_density(
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     t0_ratio = thermo.isentropic_process_from_density(
-        density_ratio=density_ratio, specific_heat_ratio=gam
+        density_ratio=density_ratio,
+        specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
-        temperature_ratio=t0_ratio, specific_heat_ratio=specific_heat_ratio
+        temperature_ratio=t0_ratio,
+        specific_heat_ratio=specific_heat_ratio,
     )
 
 
@@ -170,13 +180,16 @@ def lookup_table_by_speed_of_sound(
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     t0_ratio = thermo.isentropic_process_from_speed_of_sound(
-        speed_of_sound_ratio=speed_of_sound_ratio, specific_heat_ratio=gam
+        speed_of_sound_ratio=speed_of_sound_ratio,
+        specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
-        temperature_ratio=t0_ratio, specific_heat_ratio=specific_heat_ratio
+        temperature_ratio=t0_ratio,
+        specific_heat_ratio=specific_heat_ratio,
     )
 
 
@@ -196,19 +209,21 @@ def lookup_table_by_area_ratio(
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     mach = mach_from_area_ratio(
         area_ratio=area_ratio,
         specific_heat_ratio=gam,
-        flow_regime=flow_regime
+        flow_regime=flow_regime,
     )
     return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
 
 
 def total_temperature_ratio(
-    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the stagnation or total temperature ratio, $T_0 / T$
 
     Args:
@@ -217,7 +232,8 @@ def total_temperature_ratio(
             $\gamma$
 
     Returns:
-        ndarray_f: total temperature ratio, $T_0 / T$
+        NDArrayFloat: total temperature ratio, $T_0 / T$
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     m = np.atleast_1d(mach)
@@ -227,7 +243,7 @@ def total_temperature_ratio(
 def mach_from_temperature(
     temperature_ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Computes the Mach number $M$ from total temperature ratio $T_0 / T$
 
     Args:
@@ -238,6 +254,7 @@ def mach_from_temperature(
 
     Returns:
         ArraylikeFloat: Mach number, $M$
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     tratio = np.atleast_1d(temperature_ratio)
@@ -245,8 +262,9 @@ def mach_from_temperature(
 
 
 def total_pressure_ratio(
-    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the stagnation or total pressure ratio, $p_0 / p$
 
     Args:
@@ -255,7 +273,8 @@ def total_pressure_ratio(
             $\gamma$
 
     Returns:
-        ndarray_f: total pressure ratio, $p_0 / p$
+        NDArrayFloat: total pressure ratio, $p_0 / p$
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return total_temperature_ratio(mach=mach, specific_heat_ratio=gam) ** (
@@ -264,8 +283,9 @@ def total_pressure_ratio(
 
 
 def total_density_ratio(
-    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the stagnation or total density ratio, $\rho_0 / \rho$
 
     Args:
@@ -274,7 +294,8 @@ def total_density_ratio(
             $\gamma$
 
     Returns:
-        ndarray_f: total density ratio, $\rho_0 / \rho$
+        NDArrayFloat: total density ratio, $\rho_0 / \rho$
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return total_temperature_ratio(mach=mach, specific_heat_ratio=gam) ** (
@@ -283,8 +304,9 @@ def total_density_ratio(
 
 
 def total_speed_of_sound_ratio(
-    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the stagnation or total speed of sound ratio, $a_0 / a$
 
     Args:
@@ -293,7 +315,8 @@ def total_speed_of_sound_ratio(
             $\gamma$
 
     Returns:
-        ndarray_f: total speed of sound ratio, $a_0 / a$
+        NDArrayFloat: total speed of sound ratio, $a_0 / a$
+
     """
     gam = np.atleast_1d(specific_heat_ratio)
     return (total_temperature_ratio(mach=mach, specific_heat_ratio=gam)) ** 0.5
@@ -308,8 +331,9 @@ def _area_mach_relation_sqr(m, gam):
 
 
 def area_mach_relation(
-    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
-) -> ndarray_f:
+    mach: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
     r"""Computes the area ratio $A / A^*$ for an isentropic nozzle.
 
     This is the standard area-Mach number relation
@@ -320,7 +344,8 @@ def area_mach_relation(
             $\gamma$
 
     Returns:
-        ndarray_f: area ratio, $A / A^*$
+        NDArrayFloat: area ratio, $A / A^*$
+
     """
     return _area_mach_relation_sqr(m=mach, gam=specific_heat_ratio) ** 0.5
 
@@ -329,7 +354,7 @@ def mach_from_area_ratio(
     area_ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
     flow_regime: ArraylikeFlowSpeedRegime,
-) -> ndarray_f:
+) -> NDArrayFloat:
     r"""Compute the Mach number for a known area ratio, $A / A^*$
 
     Args:
@@ -341,6 +366,7 @@ def mach_from_area_ratio(
     Returns:
         ArraylikeFloat: supersonic or subsonic Mach solution
             for a given area ratio
+
     """
     aratios = np.atleast_1d(area_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -353,18 +379,18 @@ def mach_from_area_ratio(
     res = find_root(compute_mach, mach_brackets, args=(aratios, gam))
     if not np.all(res.success):
         raise RootFindingError(f"find_root did not succeed: {res.status}")
-    mach = res.x
-    return mach
+    return res.x
 
 
-def mach_angle(mach: ArraylikeFloat) -> ndarray_f:
+def mach_angle(mach: ArraylikeFloat) -> NDArrayFloat:
     r"""Compute the Mach angle, $\mu$ [radians].
 
     Args:
         mach (ArraylikeFloat): Mach number, $M$
 
     Returns:
-        ndarray_f: Mach angle, $\mu$ [radians]
+        NDArrayFloat: Mach angle, $\mu$ [radians]
+
     """
     m = np.atleast_1d(mach)
     return np.asin(1.0 / np.atleast_1d(m))

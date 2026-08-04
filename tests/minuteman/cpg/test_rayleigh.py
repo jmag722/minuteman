@@ -1,28 +1,42 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 
-import minuteman.cpg.rayleigh as rayleigh
-from minuteman.cpg import FlowSpeedRegime
+from minuteman.cpg import FlowSpeedRegime, rayleigh
 from minuteman.cpg.rayleigh import RayleighFlowTable
 
 
 def compare_tables(
-    actual: RayleighFlowTable, expected: RayleighFlowTable, **kwargs
+    actual: RayleighFlowTable,
+    expected: RayleighFlowTable,
+    **kwargs,
 ):
     np.testing.assert_allclose(actual.mach, expected.mach, **kwargs)
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio, **kwargs
+        actual.temperature_ratio,
+        expected.temperature_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.pressure_ratio, expected.pressure_ratio, **kwargs
+        actual.pressure_ratio,
+        expected.pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.density_ratio, expected.density_ratio, **kwargs
+        actual.density_ratio,
+        expected.density_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.velocity_ratio, expected.velocity_ratio, **kwargs
+        actual.velocity_ratio,
+        expected.velocity_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.total_pressure_ratio, expected.total_pressure_ratio, **kwargs
+        actual.total_pressure_ratio,
+        expected.total_pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
         actual.total_temperature_ratio,
@@ -30,10 +44,14 @@ def compare_tables(
         **kwargs,
     )
     np.testing.assert_allclose(
-        actual.entropy_ratio, expected.entropy_ratio, **kwargs
+        actual.entropy_ratio,
+        expected.entropy_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        **kwargs,
     )
 
 
@@ -47,7 +65,11 @@ def test_lookup_table_by_mach():
         total_pressure_ratio=np.array([1.50309597, 1.00019443]),
         total_temperature_ratio=np.array([0.79338842, 0.99971472]),
         entropy_ratio=np.array([1.21757520, 0.001193033]),
-        specific_heat_ratio=np.array([1.4,]),
+        specific_heat_ratio=np.array(
+            [
+                1.4,
+            ],
+        ),
     )
     compare_tables(actual, expected, rtol=1e-5)
 
@@ -75,7 +97,7 @@ def test_lookup_table_by_temperature():
         temperature_ratio=np.array([0.5, 0.1]),
         specific_heat_ratio=np.array([1.3, 1.35]),
         flow_regime=np.array(
-            [FlowSpeedRegime.supersonic, FlowSpeedRegime.subsonic]
+            [FlowSpeedRegime.supersonic, FlowSpeedRegime.subsonic],
         ),
     )
     expected = RayleighFlowTable(
@@ -113,7 +135,7 @@ def test_lookup_table_by_total_pressure():
         total_pressure_ratio=np.array([90.0, 1.2]),
         specific_heat_ratio=np.array([1.2, 1.33]),
         flow_regime=np.array(
-            [FlowSpeedRegime.supersonic, FlowSpeedRegime.subsonic]
+            [FlowSpeedRegime.supersonic, FlowSpeedRegime.subsonic],
         ),
     )
     expected = RayleighFlowTable(
@@ -134,7 +156,7 @@ def test_lookup_table_by_total_temperature():
         total_temperature_ratio=np.array([0.6, 0.1]),
         specific_heat_ratio=np.array([1.5, 1.5]),
         flow_regime=np.array(
-            [FlowSpeedRegime.supersonic, FlowSpeedRegime.subsonic]
+            [FlowSpeedRegime.supersonic, FlowSpeedRegime.subsonic],
         ),
     )
     expected = RayleighFlowTable(
@@ -157,15 +179,19 @@ def test_lookup_table_by_pressure_compare_direct():
     p1 = 10.0
 
     p1_pstar = rayleigh.lookup_table_by_mach(
-        mach=m1, specific_heat_ratio=gam
+        mach=m1,
+        specific_heat_ratio=gam,
     ).pressure_ratio
     p2_pstar = rayleigh.lookup_table_by_mach(
-        mach=m2, specific_heat_ratio=gam
+        mach=m2,
+        specific_heat_ratio=gam,
     ).pressure_ratio
     p2_from_ref = p2_pstar * (1 / p1_pstar) * p1
 
     p2_p1 = rayleigh.pressure_ratio_by_mach(
-        mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        mach_initial=m1,
+        mach_final=m2,
+        specific_heat_ratio=gam,
     )
     p2_direct = p2_p1 * p1
     np.testing.assert_allclose(p2_from_ref, 3.05, rtol=1e-3)
@@ -178,15 +204,19 @@ def test_lookup_table_by_temperature_compare_direct():
     m2 = 3.0
 
     tt1_ttstar = rayleigh.lookup_table_by_mach(
-        mach=m1, specific_heat_ratio=gam
+        mach=m1,
+        specific_heat_ratio=gam,
     ).total_temperature_ratio
     tt2_ttstar = rayleigh.lookup_table_by_mach(
-        mach=m2, specific_heat_ratio=gam
+        mach=m2,
+        specific_heat_ratio=gam,
     ).total_temperature_ratio
     tt2_tt1_from_ref = tt2_ttstar / tt1_ttstar
 
     tt2_tt1_direct = rayleigh.total_temperature_ratio_by_mach(
-        mach_initial=m1, mach_final=m2, specific_heat_ratio=gam
+        mach_initial=m1,
+        mach_final=m2,
+        specific_heat_ratio=gam,
     )
     np.testing.assert_allclose(tt2_tt1_direct, 0.719, rtol=1e-3)
     np.testing.assert_allclose(tt2_tt1_direct, tt2_tt1_from_ref)
@@ -197,7 +227,7 @@ def test_lookup_table_by_entropy():
         entropy_ratio=np.array([2.0, 4.0]),
         specific_heat_ratio=np.array([1.4, 1.4]),
         flow_regime=np.array(
-            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic],
         ),
     )
     expected = RayleighFlowTable(

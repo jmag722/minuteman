@@ -1,21 +1,32 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 import pytest
 
-import minuteman.cpg.oblique_shock as oblique_shock
+from minuteman.cpg import oblique_shock
 from minuteman.cpg.oblique_shock import ObliqueShockTable, ObliqueShockType
 
 
 def compare_tables(
-    actual: ObliqueShockTable, expected: ObliqueShockTable, **kwargs
+    actual: ObliqueShockTable,
+    expected: ObliqueShockTable,
+    **kwargs,
 ):
     np.testing.assert_allclose(
-        actual.mach_upstream, expected.mach_upstream, **kwargs
+        actual.mach_upstream,
+        expected.mach_upstream,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.mach_downstream, expected.mach_downstream, **kwargs
+        actual.mach_downstream,
+        expected.mach_downstream,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.mach_upstream_normal, expected.mach_upstream_normal, **kwargs
+        actual.mach_upstream_normal,
+        expected.mach_upstream_normal,
+        **kwargs,
     )
     np.testing.assert_allclose(
         actual.mach_downstream_normal,
@@ -23,19 +34,29 @@ def compare_tables(
         **kwargs,
     )
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio, **kwargs
+        actual.temperature_ratio,
+        expected.temperature_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.pressure_ratio, expected.pressure_ratio, **kwargs
+        actual.pressure_ratio,
+        expected.pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.density_ratio, expected.density_ratio, **kwargs
+        actual.density_ratio,
+        expected.density_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.deflection_angle, expected.deflection_angle, **kwargs
+        actual.deflection_angle,
+        expected.deflection_angle,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.total_pressure_ratio, expected.total_pressure_ratio, **kwargs
+        actual.total_pressure_ratio,
+        expected.total_pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
         actual.shock_angle,
@@ -43,7 +64,9 @@ def compare_tables(
         **kwargs,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        **kwargs,
     )
 
 
@@ -115,7 +138,7 @@ def test_lookup_table_by_mach_upstream_normal():
 
 
 @pytest.mark.parametrize(
-    "m1, beta, gam, expected",
+    ("m1", "beta", "gam", "expected"),
     [
         # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
         (2.5, np.radians(65.0), 1.35, 0.53010844),
@@ -124,16 +147,18 @@ def test_lookup_table_by_mach_upstream_normal():
 )
 def test_mach_upstream_normal_component(m1, beta, gam, expected):
     mn1 = oblique_shock.mach_upstream_normal_component(
-        mach_upstream=m1, shock_angle=beta
+        mach_upstream=m1,
+        shock_angle=beta,
     )
     actual = oblique_shock.mach_downstream_normal_component(
-        mach_upstream_normal=mn1, specific_heat_ratio=gam
+        mach_upstream_normal=mn1,
+        specific_heat_ratio=gam,
     )
     assert actual == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "m1, beta, gam, expected",
+    ("m1", "beta", "gam", "expected"),
     [
         # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
         (3.3, np.radians(35), 1.4, 2.21741000),
@@ -142,22 +167,28 @@ def test_mach_upstream_normal_component(m1, beta, gam, expected):
 )
 def test_mach_downstream_by_postshock(m1, beta, gam, expected):
     mn1 = oblique_shock.mach_upstream_normal_component(
-        mach_upstream=m1, shock_angle=beta
+        mach_upstream=m1,
+        shock_angle=beta,
     )
     mn2 = oblique_shock.mach_downstream_normal_component(
-        mach_upstream_normal=mn1, specific_heat_ratio=gam
+        mach_upstream_normal=mn1,
+        specific_heat_ratio=gam,
     )
     theta = oblique_shock.deflection_angle_by_shock_mach(
-        mach_upstream=m1, shock_angle=beta, specific_heat_ratio=gam
+        mach_upstream=m1,
+        shock_angle=beta,
+        specific_heat_ratio=gam,
     )
     actual = oblique_shock.mach_downstream_by_postshock(
-        mach_downstream_normal=mn2, shock_angle=beta, deflection_angle=theta
+        mach_downstream_normal=mn2,
+        shock_angle=beta,
+        deflection_angle=theta,
     )
     assert actual == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "m1, beta, gam, expected",
+    ("m1", "beta", "gam", "expected"),
     [
         # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
         (2.0, np.radians(65.0), 1.4, np.radians(22.9704761)),
@@ -166,12 +197,14 @@ def test_mach_downstream_by_postshock(m1, beta, gam, expected):
 )
 def test_deflection_angle(m1, beta, gam, expected):
     assert oblique_shock.deflection_angle_by_shock_mach(
-        mach_upstream=m1, shock_angle=beta, specific_heat_ratio=gam
+        mach_upstream=m1,
+        shock_angle=beta,
+        specific_heat_ratio=gam,
     ) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
-    "m1, theta, shock_type, gam, expected",
+    ("m1", "theta", "shock_type", "gam", "expected"),
     [
         # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
         (
@@ -230,7 +263,7 @@ def test_shock_angle(m1, theta, shock_type, gam, expected):
 
 
 @pytest.mark.parametrize(
-    "theta, m1, gam",
+    ("theta", "m1", "gam"),
     [
         (30.0, 3.0, 1.4),
         (20.0, 2.0, 1.4),
@@ -248,7 +281,7 @@ def test_check_deflection_angle(theta, m1, gam):
         oblique_shock.check_deflection_angle(np.radians(90.1), 2, 1.4)
 
 
-@pytest.mark.parametrize("beta, m", [(45, 2), (35, 4), (65, 1.2)])
+@pytest.mark.parametrize(("beta", "m"), [(45, 2), (35, 4), (65, 1.2)])
 def test_check_shock_angle(beta, m):
     beta = np.radians(beta)
     oblique_shock.check_shock_angle(shock_angle=beta, mach=m)
@@ -259,17 +292,20 @@ def test_check_shock_angle(beta, m):
 
 
 @pytest.mark.parametrize(
-    "m1, gam", [(3, 1.35), (11, 1.45), (1.3, 1.6), (5, 1.4), (25, 1.25)]
+    ("m1", "gam"),
+    [(3, 1.35), (11, 1.45), (1.3, 1.6), (5, 1.4), (25, 1.25)],
 )
 def test_max_shock_deflection_angle(m1, gam):
     actual = oblique_shock.shock_angle_max(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
     # check that max_shock_angle agrees with shock_angle prediction
     #  (to numerical precision)
     theta_max = oblique_shock.deflection_angle_max(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
     expected = oblique_shock.shock_angle_by_deflection_mach(
         mach_upstream=m1,
@@ -288,7 +324,7 @@ def test_max_shock_deflection_angle(m1, gam):
 
 
 @pytest.mark.parametrize(
-    "m1, gam, expected",
+    ("m1", "gam", "expected"),
     [
         # expected values from https://www.pdas.com/flowcalc.html
         (3, 1.4, 63.76658),
@@ -300,7 +336,8 @@ def test_max_shock_deflection_angle(m1, gam):
 )
 def test_shock_angle_sonic(m1, gam, expected):
     beta = oblique_shock.shock_angle_sonic(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
     if expected is not None:
         expected = expected * np.pi / 180
@@ -308,15 +345,21 @@ def test_shock_angle_sonic(m1, gam, expected):
     # in case online calculator wrong or not specific_heat_ratio=1.4,
     # check downstream Mach
     mn1 = oblique_shock.mach_upstream_normal_component(
-        mach_upstream=m1, shock_angle=beta
+        mach_upstream=m1,
+        shock_angle=beta,
     )
     mn2 = oblique_shock.mach_downstream_normal_component(
-        mach_upstream_normal=mn1, specific_heat_ratio=gam
+        mach_upstream_normal=mn1,
+        specific_heat_ratio=gam,
     )
     theta = oblique_shock.deflection_angle_by_shock_mach(
-        mach_upstream=m1, shock_angle=beta, specific_heat_ratio=gam
+        mach_upstream=m1,
+        shock_angle=beta,
+        specific_heat_ratio=gam,
     )
     m2 = oblique_shock.mach_downstream_by_postshock(
-        mach_downstream_normal=mn2, shock_angle=beta, deflection_angle=theta
+        mach_downstream_normal=mn2,
+        shock_angle=beta,
+        deflection_angle=theta,
     )
     assert m2 == pytest.approx(1.0)

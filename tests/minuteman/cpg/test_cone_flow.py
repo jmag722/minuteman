@@ -1,3 +1,5 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
 import numpy as np
 import pytest
 
@@ -30,7 +32,8 @@ def test_lookup_solution_by_cone_angle():
     assert soln.cone_angle == pytest.approx(np.radians(20.0))
     assert soln.mach[-1] == pytest.approx(3.60371550, rel=1.2e-3)
     assert soln.flow_angle[0] == pytest.approx(
-        np.radians(15.9562569), rel=1e-2
+        np.radians(15.9562569),
+        rel=1e-2,
     )
     # assuming solution between first and last index is good too
     assert soln.total_pressure_ratio == pytest.approx(0.66020989, rel=4e-3)
@@ -53,7 +56,8 @@ def test_lookup_solution_by_shock_angle():
     assert soln.cone_angle == pytest.approx(np.radians(35.3876897), rel=5e-3)
     assert soln.mach[-1] == pytest.approx(2.52919698, rel=1.2e-3)
     assert soln.flow_angle[0] == pytest.approx(
-        np.radians(31.0900981), rel=1e-2
+        np.radians(31.0900981),
+        rel=1e-2,
     )
     # assuming solution between first and last index is good too
     assert soln.total_pressure_ratio == pytest.approx(0.00066886, rel=4e-3)
@@ -76,7 +80,8 @@ def test_lookup_solution_by_surface_mach():
     assert soln.cone_angle == pytest.approx(np.radians(65.3639505), rel=1e-3)
     assert soln.mach[-1] == pytest.approx(0.695)
     assert soln.flow_angle[0] == pytest.approx(
-        np.radians(53.9374063), rel=1e-3
+        np.radians(53.9374063),
+        rel=1e-3,
     )
     # assuming solution between first and last index is good too
     assert soln.total_pressure_ratio == pytest.approx(1.89623e-6, rel=4e-4)
@@ -89,7 +94,15 @@ def test_lookup_solution_by_surface_mach():
 
 
 @pytest.mark.parametrize(
-    "M1, shock_angle, gam, theta_c, mach_c, rtol_theta, rtol_mach",
+    (
+        "M1",
+        "shock_angle",
+        "gam",
+        "theta_c",
+        "mach_c",
+        "rtol_theta",
+        "rtol_mach",
+    ),
     [
         # VT
         (1.5, 42.0, 1.4, 6.67715193, 1.43307833, 1e-3, None),
@@ -105,7 +118,13 @@ def test_lookup_solution_by_surface_mach():
     ],
 )
 def test_solve_taylor_maccoll_by_shock_angle(
-    M1, shock_angle, gam, theta_c, mach_c, rtol_theta, rtol_mach
+    M1,
+    shock_angle,
+    gam,
+    theta_c,
+    mach_c,
+    rtol_theta,
+    rtol_mach,
 ):
     rtol_theta = rtol_theta if rtol_theta is not None else 5e-6
     rtol_mach = rtol_mach if rtol_mach is not None else 5e-6
@@ -122,7 +141,15 @@ def test_solve_taylor_maccoll_by_shock_angle(
 
 
 @pytest.mark.parametrize(
-    "M1, cone_angle, gam, theta_shock, mach_c, rtol_theta, rtol_mach",
+    (
+        "M1",
+        "cone_angle",
+        "gam",
+        "theta_shock",
+        "mach_c",
+        "rtol_theta",
+        "rtol_mach",
+    ),
     [
         # SAEMiller
         (5.0, 10.0, 1.4, 15.608275334274234, 4.292164349604961, None, None),
@@ -137,7 +164,13 @@ def test_solve_taylor_maccoll_by_shock_angle(
     ],
 )
 def test_solve_taylor_maccoll_by_cone_angle(
-    M1, cone_angle, gam, theta_shock, mach_c, rtol_theta, rtol_mach
+    M1,
+    cone_angle,
+    gam,
+    theta_shock,
+    mach_c,
+    rtol_theta,
+    rtol_mach,
 ):
     theta, vr, vtheta = cf.solve_taylor_maccoll_by_cone_angle(
         cone_angle=np.radians(cone_angle),
@@ -153,7 +186,15 @@ def test_solve_taylor_maccoll_by_cone_angle(
 
 
 @pytest.mark.parametrize(
-    "m1, cone_mach, gam, theta_shock, theta_cone, rtol_shock, rtol_cone",
+    (
+        "m1",
+        "cone_mach",
+        "gam",
+        "theta_shock",
+        "theta_cone",
+        "rtol_shock",
+        "rtol_cone",
+    ),
     [
         # VT
         (5.0, 3.0, 1.4, 29.3616760, 24.2337037, 1e-3, 1e-3),
@@ -166,10 +207,18 @@ def test_solve_taylor_maccoll_by_cone_angle(
     ],
 )
 def test_solve_taylor_maccoll_by_surface_mach(
-    m1, cone_mach, gam, theta_shock, theta_cone, rtol_shock, rtol_cone
+    m1,
+    cone_mach,
+    gam,
+    theta_shock,
+    theta_cone,
+    rtol_shock,
+    rtol_cone,
 ):
     theta, vr, vtheta = cf.solve_taylor_maccoll_by_surface_mach(
-        surface_mach=cone_mach, mach_upstream=m1, specific_heat_ratio=gam
+        surface_mach=cone_mach,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
     theta = np.degrees(theta)
     v = cf.nondimensional_velocity_from_components(vr, vtheta)

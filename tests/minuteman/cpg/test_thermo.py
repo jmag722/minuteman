@@ -1,7 +1,10 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 import pytest
 
-import minuteman.cpg.thermo as thermo
+from minuteman.cpg import thermo
 
 
 def test_boltzmann():
@@ -11,20 +14,24 @@ def test_boltzmann():
 def test_universal_gas_constant():
     assert thermo.universal_gas_constant_si == pytest.approx(8314.462)
     assert thermo.universal_gas_constant_imperial_lbm == pytest.approx(
-        1545.35, rel=1e-5
+        1545.35,
+        rel=1e-5,
     )
     assert thermo.universal_gas_constant_imperial_slug == pytest.approx(
-        49720.0, rel=1e-5
+        49720.0,
+        rel=1e-5,
     )
 
 
 def test_gas_constant_air():
     assert thermo.gas_constant_air_si == pytest.approx(287.055)
     assert thermo.gas_constant_air_imperial_lbm == pytest.approx(
-        53.353, rel=1e-5
+        53.353,
+        rel=1e-5,
     )
     assert thermo.gas_constant_air_imperial_slug == pytest.approx(
-        1716.57, rel=1e-5
+        1716.57,
+        rel=1e-5,
     )
 
 
@@ -63,7 +70,8 @@ def test_entropy_pv():
 
 def test_isentropic_process_from_temperature():
     actual = thermo.isentropic_process_from_temperature(
-        temperature_ratio=0.7, specific_heat_ratio=1.35
+        temperature_ratio=0.7,
+        specific_heat_ratio=1.35,
     )
     expected = thermo.IsentropicProcessResult(
         temperature_ratio=np.array([0.7]),
@@ -73,21 +81,27 @@ def test_isentropic_process_from_temperature():
         specific_heat_ratio=np.array([1.35]),
     )
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio, rtol=0.0
+        actual.temperature_ratio,
+        expected.temperature_ratio,
+        rtol=0.0,
     )
     np.testing.assert_allclose(actual.pressure_ratio, expected.pressure_ratio)
     np.testing.assert_allclose(actual.density_ratio, expected.density_ratio)
     np.testing.assert_allclose(
-        actual.speed_of_sound_ratio, expected.speed_of_sound_ratio
+        actual.speed_of_sound_ratio,
+        expected.speed_of_sound_ratio,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, rtol=0.0
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        rtol=0.0,
     )
 
 
 def test_isentropic_process_from_pressure():
     actual = thermo.isentropic_process_from_pressure(
-        pressure_ratio=1.2, specific_heat_ratio=1.4
+        pressure_ratio=1.2,
+        specific_heat_ratio=1.4,
     )
     expected = thermo.IsentropicProcessResult(
         temperature_ratio=np.array([1.053472524]),
@@ -97,23 +111,30 @@ def test_isentropic_process_from_pressure():
         specific_heat_ratio=np.array([1.4]),
     )
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio
+        actual.temperature_ratio,
+        expected.temperature_ratio,
     )
     np.testing.assert_allclose(
-        actual.pressure_ratio, expected.pressure_ratio, rtol=0.0
+        actual.pressure_ratio,
+        expected.pressure_ratio,
+        rtol=0.0,
     )
     np.testing.assert_allclose(actual.density_ratio, expected.density_ratio)
     np.testing.assert_allclose(
-        actual.speed_of_sound_ratio, expected.speed_of_sound_ratio
+        actual.speed_of_sound_ratio,
+        expected.speed_of_sound_ratio,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, rtol=0.0
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        rtol=0.0,
     )
 
 
 def test_isentropic_process_from_density():
     actual = thermo.isentropic_process_from_density(
-        density_ratio=2, specific_heat_ratio=1.3
+        density_ratio=2,
+        specific_heat_ratio=1.3,
     )
     expected = thermo.IsentropicProcessResult(
         temperature_ratio=np.array([1.231144413]),
@@ -123,23 +144,30 @@ def test_isentropic_process_from_density():
         specific_heat_ratio=np.array([1.3]),
     )
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio
+        actual.temperature_ratio,
+        expected.temperature_ratio,
     )
     np.testing.assert_allclose(actual.pressure_ratio, expected.pressure_ratio)
     np.testing.assert_allclose(
-        actual.density_ratio, expected.density_ratio, rtol=0.0
+        actual.density_ratio,
+        expected.density_ratio,
+        rtol=0.0,
     )
     np.testing.assert_allclose(
-        actual.speed_of_sound_ratio, expected.speed_of_sound_ratio
+        actual.speed_of_sound_ratio,
+        expected.speed_of_sound_ratio,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, rtol=0.0
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        rtol=0.0,
     )
 
 
 def test_isentropic_process_from_speed_of_sound():
     actual = thermo.isentropic_process_from_speed_of_sound(
-        speed_of_sound_ratio=1.125, specific_heat_ratio=1.4
+        speed_of_sound_ratio=1.125,
+        specific_heat_ratio=1.4,
     )
     expected = thermo.IsentropicProcessResult(
         temperature_ratio=np.array([1.265625]),
@@ -149,21 +177,29 @@ def test_isentropic_process_from_speed_of_sound():
         specific_heat_ratio=np.array([1.4]),
     )
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio
+        actual.temperature_ratio,
+        expected.temperature_ratio,
     )
     np.testing.assert_allclose(actual.pressure_ratio, expected.pressure_ratio)
     np.testing.assert_allclose(actual.density_ratio, expected.density_ratio)
     np.testing.assert_allclose(
-        actual.speed_of_sound_ratio, expected.speed_of_sound_ratio, rtol=0.0
+        actual.speed_of_sound_ratio,
+        expected.speed_of_sound_ratio,
+        rtol=0.0,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, rtol=0.0
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        rtol=0.0,
     )
 
 
 def test_entropy_state():
     actual = thermo.entropy_state(
-        pressure=100, density=2.5, specific_heat_ratio=1.3, gas_constant=200
+        pressure=100,
+        density=2.5,
+        specific_heat_ratio=1.3,
+        gas_constant=200,
     )
     expected = np.array([2275.9948230344603])
     np.testing.assert_allclose(actual, expected)
@@ -178,5 +214,6 @@ def test_total_energy():
 
 def test_specific_enthalpy():
     np.testing.assert_equal(
-        thermo.specific_enthalpy(100, 1e4, 0.8), np.array([12600])
+        thermo.specific_enthalpy(100, 1e4, 0.8),
+        np.array([12600]),
     )

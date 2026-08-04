@@ -1,26 +1,38 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 
-import minuteman.cpg.fanno as fanno
-from minuteman.cpg import FlowSpeedRegime
+from minuteman.cpg import FlowSpeedRegime, fanno
 from minuteman.cpg.fanno import FannoFlowTable
 
 
 def compare_tables(actual: FannoFlowTable, expected: FannoFlowTable, **kwargs):
     np.testing.assert_allclose(actual.mach, expected.mach, **kwargs)
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio, **kwargs
+        actual.temperature_ratio,
+        expected.temperature_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.pressure_ratio, expected.pressure_ratio, **kwargs
+        actual.pressure_ratio,
+        expected.pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.density_ratio, expected.density_ratio, **kwargs
+        actual.density_ratio,
+        expected.density_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.velocity_ratio, expected.velocity_ratio, **kwargs
+        actual.velocity_ratio,
+        expected.velocity_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.total_pressure_ratio, expected.total_pressure_ratio, **kwargs
+        actual.total_pressure_ratio,
+        expected.total_pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
         actual.fanno_parameter,
@@ -28,10 +40,14 @@ def compare_tables(actual: FannoFlowTable, expected: FannoFlowTable, **kwargs):
         **kwargs,
     )
     np.testing.assert_allclose(
-        actual.entropy_ratio, expected.entropy_ratio, **kwargs
+        actual.entropy_ratio,
+        expected.entropy_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        **kwargs,
     )
 
 
@@ -67,7 +83,8 @@ def test_lookup_table_by_pressure():
 
 def test_mach2_by_pressure():
     actual = fanno.lookup_table_by_pressure(
-        np.array([4.0, 0.5]), specific_heat_ratio=np.array([1.4, 1.3])
+        np.array([4.0, 0.5]),
+        specific_heat_ratio=np.array([1.4, 1.3]),
     ).mach
     expected = np.array([0.27185940, 1.76924837])
     np.testing.assert_allclose(actual, expected)
@@ -75,7 +92,8 @@ def test_mach2_by_pressure():
 
 def test_lookup_table_by_density():
     actual = fanno.lookup_table_by_density(
-        6.66666666667, specific_heat_ratio=1.2
+        6.66666666667,
+        specific_heat_ratio=1.2,
     )
     expected = FannoFlowTable(
         mach=np.array([0.14316588]),
@@ -92,7 +110,8 @@ def test_lookup_table_by_density():
 
 def test_mach2_by_density():
     actual = fanno.lookup_table_by_density(
-        np.array([0.5, 5.0]), specific_heat_ratio=np.array([1.3, 1.5])
+        np.array([0.5, 5.0]),
+        specific_heat_ratio=np.array([1.3, 1.5]),
     ).mach
     expected = np.array([2.69679944, 0.17960530])
     np.testing.assert_allclose(actual, expected)
@@ -115,7 +134,8 @@ def test_lookup_table_by_temperature():
 
 def test_mach2_by_temperature():
     actual = fanno.lookup_table_by_temperature(
-        np.array([0.5, 1.1]), specific_heat_ratio=np.array([1.3, 1.5])
+        np.array([0.5, 1.1]),
+        specific_heat_ratio=np.array([1.3, 1.5]),
     ).mach
     expected = np.array([2.94392028, 0.73854894])
     np.testing.assert_allclose(actual, expected)
@@ -126,7 +146,7 @@ def test_lookup_table_by_entropy():
         entropy_ratio=np.array([1.1, 1.5]),
         specific_heat_ratio=np.array([1.5, 1.1]),
         flow_regime=np.array(
-            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic],
         ),
     )
     expected = FannoFlowTable(
@@ -149,10 +169,12 @@ def test_mach1_by_entropy():
                 2.0,
                 0.6,
                 fanno.entropy_ratio_by_mach(
-                    mach_initial=4.0, mach_final=1.0, specific_heat_ratio=1.4
+                    mach_initial=4.0,
+                    mach_final=1.0,
+                    specific_heat_ratio=1.4,
                 )[0]
                 - 0.3,
-            ]
+            ],
         ),
         specific_heat_ratio=np.array([1.5, 1.3, 1.4]),
         flow_regime=np.array(
@@ -160,7 +182,7 @@ def test_mach1_by_entropy():
                 FlowSpeedRegime.subsonic,
                 FlowSpeedRegime.supersonic,
                 FlowSpeedRegime.supersonic,
-            ]
+            ],
         ),
     ).mach
     expected = np.array([0.07776356, 2.02884749, 3.66913016])
@@ -172,7 +194,7 @@ def test_lookup_table_by_total_pressure():
         total_pressure_ratio=np.array([5.0, 1.5]),
         specific_heat_ratio=np.array([1.4, 1.1]),
         flow_regime=np.array(
-            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic],
         ),
     )
     expected = FannoFlowTable(
@@ -193,7 +215,7 @@ def test_mach2_by_total_pressure():
         np.array([2.0, 3.0]),
         specific_heat_ratio=np.array([1.3, 1.2]),
         flow_regime=np.array(
-            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic],
         ),
     ).mach
     expected = np.array([0.30900860, 2.39713187])
@@ -205,7 +227,7 @@ def test_lookup_table_by_fanno_parameter():
         fanno_parameter=np.array([33, 0.01]),
         specific_heat_ratio=np.array([1.4, 1.3]),
         flow_regime=np.array(
-            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic],
         ),
     )
     expected = FannoFlowTable(
@@ -226,7 +248,7 @@ def test_upstream_mach_by_fanno_parameter():
         fanno_parameter=np.array([1.2, 0.4]),
         specific_heat_ratio=np.array([1.3, 1.35]),
         flow_regime=np.array(
-            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic]
+            [FlowSpeedRegime.subsonic, FlowSpeedRegime.supersonic],
         ),
     ).mach
     expected = np.array([0.49693601, 2.23092883])
@@ -237,7 +259,9 @@ def test_upstream_mach_by_fanno_parameter():
         fanno_parameter=(
             0.2
             + fanno.fanno_parameter_by_mach(
-                mach_initial=2.0, mach_final=1.0, specific_heat_ratio=1.4
+                mach_initial=2.0,
+                mach_final=1.0,
+                specific_heat_ratio=1.4,
             )
         ),
         specific_heat_ratio=1.4,
@@ -273,7 +297,7 @@ def test_density_ratio_by_mach():
         specific_heat_ratio=np.array([1.6, 1.5, 1.3]),
     )
     expected = np.array(
-        [1 / 1.07427738, 1 / 0.54232614, 2.09863177 / 1.69558249]
+        [1 / 1.07427738, 1 / 0.54232614, 2.09863177 / 1.69558249],
     )
     np.testing.assert_allclose(actual, expected)
 
@@ -312,7 +336,7 @@ def test_fanno_parameter_by_mach():
         specific_heat_ratio=specific_heat_ratio,
     )
     expected = np.array(
-        [5.29925, 1.29925, 4.0, 0.57108656, 0.32955389, 0.24153267]
+        [5.29925, 1.29925, 4.0, 0.57108656, 0.32955389, 0.24153267],
     )
     np.testing.assert_allclose(actual, expected, rtol=1e-6)
 

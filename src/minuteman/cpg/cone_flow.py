@@ -1,6 +1,7 @@
-r"""
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
 
-```python
+r"""```python
  import minuteman.cpg.cone_flow as cone_flow
 ```
 
@@ -16,13 +17,12 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq, fminbound
 
-import minuteman.cpg.isentropic_flow as isentropic_flow
-import minuteman.cpg.oblique_shock as oblique_shock
+from minuteman.cpg import isentropic_flow, oblique_shock
 from minuteman.cpg.oblique_shock import ObliqueShockType
 from minuteman.utils.types import (
     DeveloperError,
     Floatlike,
-    ndarray_f,
+    NDArrayFloat,
 )
 
 _delta: float = 1e-9
@@ -33,12 +33,13 @@ _delta: float = 1e-9
 class ConeFlowSolution:
     r"""Flowfield solution for cone flow for a calorically perfect gas.
 
-    Array-like quantities vary as a function of the polar angle, $\theta$."""
+    Array-like quantities vary as a function of the polar angle, $\theta$.
+    """
 
     mach_upstream: float
     r"""Upstream mach number, $M_1$"""
 
-    polar_angle: ndarray_f
+    polar_angle: NDArrayFloat
     r"""Polar or cross-flow angle decreasing from the shock to the
         cone surface, $\theta$ [radians]"""
 
@@ -55,28 +56,28 @@ class ConeFlowSolution:
     specific_heat_ratio: float
     r"""Ratio of specific heats, $\gamma$"""
 
-    flow_angle: ndarray_f
+    flow_angle: NDArrayFloat
     r"""Flow angle w.r.t. the cone axis, $\psi$ [radians]"""
 
-    velocity_radial: ndarray_f
+    velocity_radial: NDArrayFloat
     r"""Nondimensional radial velocity, $V'_r$"""
 
-    velocity_polar: ndarray_f
+    velocity_polar: NDArrayFloat
     r"""Nondimensional polar velocity, $V'_{\theta}$"""
 
-    velocity: ndarray_f
+    velocity: NDArrayFloat
     r"""Nondimensional velocity magnitude, $V'$"""
 
-    mach: ndarray_f
+    mach: NDArrayFloat
     r"""Downstream mach number, $M$"""
 
-    pressure_ratio: ndarray_f
+    pressure_ratio: NDArrayFloat
     r"""Pressure ratio, $p / p_1$"""
 
-    temperature_ratio: ndarray_f
+    temperature_ratio: NDArrayFloat
     r"""Temperature ratio, $T / T_1$"""
 
-    density_ratio: ndarray_f
+    density_ratio: NDArrayFloat
     r"""Density ratio, $\rho / \rho_1$"""
 
     total_pressure_ratio: float
@@ -84,7 +85,8 @@ class ConeFlowSolution:
 
 
 def nondimensional_velocity_from_mach(
-    mach: Any, specific_heat_ratio: Any
+    mach: Any,
+    specific_heat_ratio: Any,
 ) -> Any:
     r"""Compute the nondimensional velocity $V'$ useful to nondimensionalizing
     the Taylor Maccoll equations.
@@ -98,12 +100,14 @@ def nondimensional_velocity_from_mach(
 
     Returns:
         Any: nondimensional velocity $V'$
+
     """
     return (2.0 / ((specific_heat_ratio - 1.0) * mach**2) + 1.0) ** -0.5
 
 
 def nondimensional_velocity_from_components(
-    velocity_radial: Any, velocity_polar: Any
+    velocity_radial: Any,
+    velocity_polar: Any,
 ) -> Any:
     r"""Compute the nondimensional velocity $V'$ useful to nondimensionalizing
     the Taylor Maccoll equations from its radial and polar components.
@@ -114,12 +118,14 @@ def nondimensional_velocity_from_components(
 
     Returns:
         Any: nondimensional velocity $V'$
+
     """
     return np.linalg.norm((velocity_radial, velocity_polar), axis=0)
 
 
 def mach_from_nondimensional_velocity(
-    velocity: Any, specific_heat_ratio: Any
+    velocity: Any,
+    specific_heat_ratio: Any,
 ) -> Any:
     r"""Compute Mach number $M$ from nondimensional velocity $V'$
 
@@ -129,12 +135,15 @@ def mach_from_nondimensional_velocity(
 
     Returns:
         Any: Mach number $M$
+
     """
     return (0.5 * (specific_heat_ratio - 1) * (velocity**-2 - 1.0)) ** -0.5
 
 
 def nondimensional_velocity_polar(
-    velocity: Any, shock_angle: Any, deflection_angle: Any
+    velocity: Any,
+    shock_angle: Any,
+    deflection_angle: Any,
 ) -> Any:
     r"""Compute the nondimensional polar velocity $V'_{\theta}$ for conic flow
 
@@ -148,12 +157,15 @@ def nondimensional_velocity_polar(
 
     Returns:
         Any: polar component of nondimensional velocity, $V'_{\theta}$
+
     """
     return -np.sin(shock_angle - deflection_angle) * velocity
 
 
 def nondimensional_velocity_radial(
-    velocity: Any, shock_angle: Any, deflection_angle: Any
+    velocity: Any,
+    shock_angle: Any,
+    deflection_angle: Any,
 ) -> Any:
     r"""Compute the nondimensional radial velocity $V'_r$ for conic flow
 
@@ -166,24 +178,28 @@ def nondimensional_velocity_radial(
 
     Returns:
         Any: radial component of nondimensional velocity, $V'_r$
+
     """
     return np.cos(shock_angle - deflection_angle) * velocity
 
 
 def deflection_angle_by_velocity_components(
-    polar_angle: ndarray_f,
-    velocity_radial: ndarray_f,
-    velocity_polar: ndarray_f,
-) -> ndarray_f:
+    polar_angle: NDArrayFloat,
+    velocity_radial: NDArrayFloat,
+    velocity_polar: NDArrayFloat,
+) -> NDArrayFloat:
     r"""Compute the flow deflection angle $\psi$ at all polar angles $\theta$
 
     Args:
-        polar_angle(ndarray_f): polar angle $\theta$ [radians]
-        velocity_radial (ndarray_f): nondimensional radial velocity $V'_r$
-        velocity_polar (ndarray_f): nondimensional polar velocity $V'_{\theta}$
+        polar_angle(NDArrayFloat): polar angle $\theta$ [radians]
+        velocity_radial (NDArrayFloat): nondimensional radial velocity, $V'_r$
+        velocity_polar (NDArrayFloat): nondimensional polar velocity,
+            $V'_{\theta}$
 
     Returns:
-        ndarray_f: flow deflection angle $\psi$ at all polar angles post-shock
+        NDArrayFloat: flow deflection angle $\psi$ at all polar angles
+            post-shock
+
     """
     return polar_angle + np.atan(velocity_polar / velocity_radial)
 
@@ -218,6 +234,7 @@ def _taylor_maccoll_odes(
 
     Returns:
         tuple[float, float]: ($\frac{dy_1}{d\theta}$, $\frac{dy_2}{d\theta}$)
+
     """
     y1, y2 = nondim_velocity_components
     dy1_dtheta = y2  # irrotational condition
@@ -232,7 +249,8 @@ def _taylor_maccoll_odes(
 
 
 def cone_shock_angle_maxes(
-    mach_upstream: Floatlike, specific_heat_ratio: Floatlike
+    mach_upstream: Floatlike,
+    specific_heat_ratio: Floatlike,
 ) -> tuple[float, float]:
     r"""Compute the max cone angle $\theta_{c,max}$ for a given upstream
     condition before the shock detaches, as well as the shock angle at that
@@ -249,13 +267,16 @@ def cone_shock_angle_maxes(
 
     Raises:
         DeveloperError: Solver did not converge
+
     """
     m1 = float(mach_upstream)
     gam = float(specific_heat_ratio)
 
     def shock_angle_for_max_defl(_theta_shock, _m1, _g):
         _theta, _, _ = solve_taylor_maccoll_by_shock_angle(
-            _theta_shock, mach_upstream=_m1, specific_heat_ratio=_g
+            _theta_shock,
+            mach_upstream=_m1,
+            specific_heat_ratio=_g,
         )
         # we want to maximixe the cone angle
         return -_theta[-1]
@@ -295,6 +316,7 @@ def lookup_solution_by_cone_angle(
 
     Returns:
         ConeFlowSolution: cone flow solution
+
     """
     m1 = float(mach_upstream)
     theta_c = float(cone_angle)
@@ -308,13 +330,17 @@ def lookup_solution_by_cone_angle(
     )
 
     v = nondimensional_velocity_from_components(
-        velocity_radial=v_r, velocity_polar=v_theta
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
     )
     mach = mach_from_nondimensional_velocity(
-        velocity=v, specific_heat_ratio=gam
+        velocity=v,
+        specific_heat_ratio=gam,
     )
     flow_angle = deflection_angle_by_velocity_components(
-        polar_angle=theta, velocity_radial=v_r, velocity_polar=v_theta
+        polar_angle=theta,
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
     )
 
     p02_p01, p_p1, t_t1, r_r1 = _get_thermo_qty(
@@ -342,15 +368,13 @@ def lookup_solution_by_cone_angle(
 class InvalidConeAngleError(Exception):
     """Input cone angle is invalid"""
 
-    pass
-
 
 def solve_taylor_maccoll_by_cone_angle(
     cone_angle: Floatlike,
     mach_upstream: Floatlike,
     specific_heat_ratio: Floatlike,
     shock_type: ObliqueShockType,
-) -> tuple[ndarray_f, ndarray_f, ndarray_f]:
+) -> tuple[NDArrayFloat, NDArrayFloat, NDArrayFloat]:
     r"""Solve the Taylor-Maccoll equations for a given cone angle, $\theta_c$
 
     Args:
@@ -362,6 +386,7 @@ def solve_taylor_maccoll_by_cone_angle(
     Returns:
         tuple[3*float]: polar angle $\theta$, nondimensional radial velocity
             $V'_r$, and polar velocity $V'_{\theta}$
+
     """
     theta_c = float(cone_angle)
     m1 = float(mach_upstream)
@@ -369,16 +394,17 @@ def solve_taylor_maccoll_by_cone_angle(
 
     if theta_c < 0.0 or theta_c >= 0.5 * np.pi:
         raise InvalidConeAngleError(
-            "Must be nonnegative but less than 90 deg."
+            "Must be nonnegative but less than 90 deg.",
         )
 
     theta_c_max, theta_s_at_cone_max = cone_shock_angle_maxes(
-        mach_upstream=m1, specific_heat_ratio=gam
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
     if theta_c > theta_c_max:
         raise InvalidConeAngleError(
             "Max cone angle for an attached shock is"
-            + f" {np.degrees(theta_c_max)} deg at this flight condition"
+            f" {np.degrees(theta_c_max)} deg at this flight condition",
         )
 
     mu = isentropic_flow.mach_angle(mach=m1)[0]
@@ -391,7 +417,9 @@ def solve_taylor_maccoll_by_cone_angle(
 
     def find_matching_cone_angle(_theta_shock, _theta_cone, _m1, _g):
         theta, _, _ = solve_taylor_maccoll_by_shock_angle(
-            shock_angle=_theta_shock, mach_upstream=_m1, specific_heat_ratio=_g
+            shock_angle=_theta_shock,
+            mach_upstream=_m1,
+            specific_heat_ratio=_g,
         )
         return theta[-1] - _theta_cone
 
@@ -406,7 +434,9 @@ def solve_taylor_maccoll_by_cone_angle(
     if not result.converged:
         raise DeveloperError(f"Root-finding failed: {result.flag}")
     return solve_taylor_maccoll_by_shock_angle(
-        shock_angle=shock_angle, mach_upstream=m1, specific_heat_ratio=gam
+        shock_angle=shock_angle,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -425,6 +455,7 @@ def lookup_solution_by_surface_mach(
 
     Returns:
         ConeFlowSolution: cone flow solution
+
     """
     m1 = float(mach_upstream)
     m_c = float(surface_mach)
@@ -437,13 +468,17 @@ def lookup_solution_by_surface_mach(
     )
 
     v = nondimensional_velocity_from_components(
-        velocity_radial=v_r, velocity_polar=v_theta
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
     )
     mach = mach_from_nondimensional_velocity(
-        velocity=v, specific_heat_ratio=gam
+        velocity=v,
+        specific_heat_ratio=gam,
     )
     flow_angle = deflection_angle_by_velocity_components(
-        polar_angle=theta, velocity_radial=v_r, velocity_polar=v_theta
+        polar_angle=theta,
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
     )
 
     p02_p01, p_p1, t_t1, r_r1 = _get_thermo_qty(
@@ -471,14 +506,12 @@ def lookup_solution_by_surface_mach(
 class InvalidSurfaceMachError(Exception):
     """Input surface Mach number is invalid"""
 
-    pass
-
 
 def solve_taylor_maccoll_by_surface_mach(
     surface_mach: Floatlike,
     mach_upstream: Floatlike,
     specific_heat_ratio: Floatlike,
-) -> tuple[ndarray_f, ndarray_f, ndarray_f]:
+) -> tuple[NDArrayFloat, NDArrayFloat, NDArrayFloat]:
     r"""Compute the solution to the Taylor-Maccoll equations for a given
     Mach number at the surface of the cone, $M_c$.
 
@@ -488,13 +521,14 @@ def solve_taylor_maccoll_by_surface_mach(
         specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$
 
     Returns:
-        tuple[ndarray_f,ndarray_f,ndarray_f]: polar angle $\theta$,
+        tuple[NDArrayFloat,NDArrayFloat,NDArrayFloat]: polar angle $\theta$,
             nondimensional radial velocity $V'_r$,
             and polar velocity $V'_{\theta}$
 
     Raises:
         InvalidSurfaceMachError: Surface Mach number is not possible for the
             given freestream condition
+
     """
     mc = float(surface_mach)
     m1 = float(mach_upstream)
@@ -505,15 +539,18 @@ def solve_taylor_maccoll_by_surface_mach(
         raise InvalidSurfaceMachError("Must be less than freestream Mach")
     # Mc cannot be lower than Mc for a shock angle of 90 degrees
     _, vr90, vtheta90 = solve_taylor_maccoll_by_shock_angle(
-        shock_angle=0.5 * np.pi, mach_upstream=m1, specific_heat_ratio=gam
+        shock_angle=0.5 * np.pi,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
     v90 = nondimensional_velocity_from_components(
-        velocity_radial=vr90, velocity_polar=vtheta90
+        velocity_radial=vr90,
+        velocity_polar=vtheta90,
     )
     m90 = mach_from_nondimensional_velocity(v90, specific_heat_ratio=gam)[-1]
     if mc < m90:
         raise InvalidSurfaceMachError(
-            f"Must be greater than {m90:.3f} for this freestream condition"
+            f"Must be greater than {m90:.3f} for this freestream condition",
         )
 
     min_shock_angle = isentropic_flow.mach_angle(mach=m1)[0] * (1 + _delta)
@@ -521,13 +558,17 @@ def solve_taylor_maccoll_by_surface_mach(
 
     def find_matching_surface_mach(theta_s, _mc, _m1, _gam):
         _, vr, vtheta = solve_taylor_maccoll_by_shock_angle(
-            shock_angle=theta_s, mach_upstream=_m1, specific_heat_ratio=_gam
+            shock_angle=theta_s,
+            mach_upstream=_m1,
+            specific_heat_ratio=_gam,
         )
         vprime = nondimensional_velocity_from_components(
-            velocity_radial=vr, velocity_polar=vtheta
+            velocity_radial=vr,
+            velocity_polar=vtheta,
         )
         mach = mach_from_nondimensional_velocity(
-            velocity=vprime, specific_heat_ratio=gam
+            velocity=vprime,
+            specific_heat_ratio=gam,
         )[-1]
         return mach - _mc
 
@@ -541,7 +582,9 @@ def solve_taylor_maccoll_by_surface_mach(
     if not result.converged:
         raise DeveloperError(f"Root-finding failed: {result.flag}")
     return solve_taylor_maccoll_by_shock_angle(
-        shock_angle=shock_angle, mach_upstream=m1, specific_heat_ratio=gam
+        shock_angle=shock_angle,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
 
 
@@ -560,6 +603,7 @@ def lookup_solution_by_shock_angle(
 
     Returns:
         ConeFlowSolution: cone flow solution
+
     """
     m1 = float(mach_upstream)
     theta_s = float(shock_angle)
@@ -572,13 +616,17 @@ def lookup_solution_by_shock_angle(
     )
 
     v = nondimensional_velocity_from_components(
-        velocity_radial=v_r, velocity_polar=v_theta
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
     )
     mach = mach_from_nondimensional_velocity(
-        velocity=v, specific_heat_ratio=gam
+        velocity=v,
+        specific_heat_ratio=gam,
     )
     flow_angle = deflection_angle_by_velocity_components(
-        polar_angle=theta, velocity_radial=v_r, velocity_polar=v_theta
+        polar_angle=theta,
+        velocity_radial=v_r,
+        velocity_polar=v_theta,
     )
 
     p02_p01, p_p1, t_t1, r_r1 = _get_thermo_qty(
@@ -604,31 +652,35 @@ def lookup_solution_by_shock_angle(
 
 
 def _get_thermo_qty(
-    mach: ndarray_f,
+    mach: NDArrayFloat,
     shock_angle: float,
     mach_upstream: float,
     specific_heat_ratio: float,
-) -> tuple[float, ndarray_f, ndarray_f, ndarray_f]:
+) -> tuple[float, NDArrayFloat, NDArrayFloat, NDArrayFloat]:
     m1 = mach_upstream
     gam = specific_heat_ratio
 
     # get isentropic quantities post-shock (e.g., p0/p)
     isentropic_postshock = isentropic_flow.lookup_table_by_mach(
-        mach=mach, specific_heat_ratio=gam
+        mach=mach,
+        specific_heat_ratio=gam,
     )
     p0_p = isentropic_postshock.pressure
     t0_t = isentropic_postshock.temperature
     r0_r = isentropic_postshock.density
     # get isentropic quantities upstream (e.g., p01/p1)
     isentropic_upstream = isentropic_flow.lookup_table_by_mach(
-        mach=m1, specific_heat_ratio=gam
+        mach=m1,
+        specific_heat_ratio=gam,
     )
     p01_p1 = isentropic_upstream.pressure
     t01_t1 = isentropic_upstream.temperature
     r01_r1 = isentropic_upstream.density
     # get quantities across shock (e.g., p02/p01)
     across_shock_21 = oblique_shock.lookup_table_by_shock_angle(
-        shock_angle=shock_angle, mach_upstream=m1, specific_heat_ratio=gam
+        shock_angle=shock_angle,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )
     p02_p01 = across_shock_21.total_pressure_ratio.item()
     t02_t01 = 1.0  # shocks are adiabatic
@@ -643,20 +695,16 @@ def _get_thermo_qty(
 class SolveIVPError(Exception):
     """solve_ivp call failed"""
 
-    pass
-
 
 class InvalidPolarVelocityError(Exception):
     """Normal velocity is invalid"""
-
-    pass
 
 
 def solve_taylor_maccoll_by_shock_angle(
     shock_angle: Floatlike,
     mach_upstream: Floatlike,
     specific_heat_ratio: Floatlike,
-) -> tuple[ndarray_f, ndarray_f, ndarray_f]:
+) -> tuple[NDArrayFloat, NDArrayFloat, NDArrayFloat]:
     r"""Compute the solution to the Taylor Maccoll equations for a given
     shock angle, $\theta_s$.
 
@@ -673,20 +721,25 @@ def solve_taylor_maccoll_by_shock_angle(
         InvalidPolarVelocityError: Normal velocity has the wrong sign,
             check inputs
         SolveIVPError: IVP solver failed, check inputs
+
     """
     theta_s = float(shock_angle)
     m1 = float(mach_upstream)
     gam = float(specific_heat_ratio)
     oblique_shock.check_shock_angle(shock_angle=theta_s, mach=m1)
     mn1 = oblique_shock.mach_upstream_normal_component(
-        mach_upstream=m1, shock_angle=theta_s
+        mach_upstream=m1,
+        shock_angle=theta_s,
     )[0]
     # compute quantities immediately behind oblique shock
     mn2 = oblique_shock.mach_downstream_normal_component(
-        mach_upstream_normal=mn1, specific_heat_ratio=gam
+        mach_upstream_normal=mn1,
+        specific_heat_ratio=gam,
     )[0]
     deflection_angle = oblique_shock.deflection_angle_by_shock_mach(
-        shock_angle=theta_s, mach_upstream=m1, specific_heat_ratio=gam
+        shock_angle=theta_s,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
     )[0]
     m2 = oblique_shock.mach_downstream_by_postshock(
         mach_downstream_normal=mn2,
@@ -694,7 +747,8 @@ def solve_taylor_maccoll_by_shock_angle(
         deflection_angle=deflection_angle,
     )[0]
     v_shock = nondimensional_velocity_from_mach(
-        mach=m2, specific_heat_ratio=gam
+        mach=m2,
+        specific_heat_ratio=gam,
     )
     vr_shock = nondimensional_velocity_radial(
         velocity=v_shock,
@@ -717,7 +771,10 @@ def solve_taylor_maccoll_by_shock_angle(
 
         # pyrefly: ignore
         def __call__(
-            self, t: float, y: tuple[float, float], gam: float
+            self,
+            t: float,  # noqa: ARG002
+            y: tuple[float, float],
+            gam: float,  # noqa: ARG002
         ) -> float:
             return y[1]
 

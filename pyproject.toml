@@ -55,15 +55,35 @@ docstring-code-format = true
 docstring-code-line-length = 79
 
 [tool.ruff.lint]
+select = ["ALL"]
 fixable = ["ALL"]
-select = [
-    "E",
-    "W",
-    "F",
+ignore = [
+    "ANN001", # missing type annotation for function
+    "ANN202", # return types for private functions
+    "ANN401", # using Any as a type
+    "COM812", # trailing commas, `ruff format` already manages (avoid warning)
+    "D", # docstring related errors
+    "EM101", # raw string in exception
+    "EM102", # f-string in exception
+    "ERA001", # commented-out-code
+    "PLR0913", # too-many-arguments
+    "PLR0915", # too-many-statements
+    "PLR0917", # too-many-positional-arguments
+    "TRY003", # raise-vanilla-args
 ]
-extend-select = [
-    "I",
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ANN", # typing
+    "D", # docstrings
+    "INP001", # implicit-namespace-package
+    "N803", # invalid-argument-name
+    "N806", # non-lowercase-variable-in-function
+    "S101", # flags use of assert
+    "PLR", # magic values, too many args
 ]
+[tool.ruff.lint.flake8-copyright]
+author = "Jared Magnusson"
+min-file-size = 1
 
 [project.urls]
 "Homepage" = "https://github.com/jmag722/minuteman"
@@ -74,7 +94,7 @@ project-includes = [
     "src",
     "tests",
 ]
-search_path = ["."]
+search_path = ["src", "."]
 
 [build-system]
 requires = ["hatchling"]

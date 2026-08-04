@@ -1,35 +1,56 @@
+# Copyright (c) 2022-2026 Jared Magnusson
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 
-import minuteman.cpg.normal_shock as normal_shock
+from minuteman.cpg import normal_shock
 from minuteman.cpg.normal_shock import NormalShockTable
 
 
 def compare_tables(
-    actual: NormalShockTable, expected: NormalShockTable, **kwargs
+    actual: NormalShockTable,
+    expected: NormalShockTable,
+    **kwargs,
 ):
     np.testing.assert_allclose(
-        actual.mach_upstream, expected.mach_upstream, **kwargs
+        actual.mach_upstream,
+        expected.mach_upstream,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.mach_downstream, expected.mach_downstream, **kwargs
+        actual.mach_downstream,
+        expected.mach_downstream,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.temperature_ratio, expected.temperature_ratio, **kwargs
+        actual.temperature_ratio,
+        expected.temperature_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.pressure_ratio, expected.pressure_ratio, **kwargs
+        actual.pressure_ratio,
+        expected.pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.density_ratio, expected.density_ratio, **kwargs
+        actual.density_ratio,
+        expected.density_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.total_pressure_ratio, expected.total_pressure_ratio, **kwargs
+        actual.total_pressure_ratio,
+        expected.total_pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.pitot_pressure_ratio, expected.pitot_pressure_ratio, **kwargs
+        actual.pitot_pressure_ratio,
+        expected.pitot_pressure_ratio,
+        **kwargs,
     )
     np.testing.assert_allclose(
-        actual.specific_heat_ratio, expected.specific_heat_ratio, **kwargs
+        actual.specific_heat_ratio,
+        expected.specific_heat_ratio,
+        **kwargs,
     )
 
 
@@ -140,7 +161,8 @@ def test_lookup_table_by_pitot_pressure():
 
 def test_entropy_change():
     ds = normal_shock.entropy_change(
-        total_pressure_ratio=0.5615, gas_constant=1716
+        total_pressure_ratio=0.5615,
+        gas_constant=1716,
     )
     np.testing.assert_allclose(ds, np.array([990.4]), rtol=1e-4)
 
