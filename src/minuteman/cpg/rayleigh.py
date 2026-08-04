@@ -400,11 +400,11 @@ def total_pressure_ratio_by_mach(
             mach_final=m2,
             specific_heat_ratio=gam,
         )
-        * isentropic_flow.total_pressure_ratio(
+        * isentropic_flow.total_pressure_ratio_by_mach(
             mach=m2,
             specific_heat_ratio=gam,
         )
-        / isentropic_flow.total_pressure_ratio(
+        / isentropic_flow.total_pressure_ratio_by_mach(
             mach=m1,
             specific_heat_ratio=gam,
         )
@@ -441,11 +441,11 @@ def total_temperature_ratio_by_mach(
             mach_final=m2,
             specific_heat_ratio=gam,
         )
-        * isentropic_flow.total_temperature_ratio(
+        * isentropic_flow.total_temperature_ratio_by_mach(
             mach=m2,
             specific_heat_ratio=gam,
         )
-        / isentropic_flow.total_temperature_ratio(
+        / isentropic_flow.total_temperature_ratio_by_mach(
             mach=m1,
             specific_heat_ratio=gam,
         )

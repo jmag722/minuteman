@@ -250,7 +250,7 @@ class IsentropicProcessResult:
     r"""Ratio of specific heats, $\gamma$"""
 
 
-def isentropic_process_from_temperature(
+def isentropic_process_by_temperature(
     temperature_ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> IsentropicProcessResult:
@@ -278,7 +278,7 @@ def isentropic_process_from_temperature(
     )
 
 
-def isentropic_process_from_pressure(
+def isentropic_process_by_pressure(
     pressure_ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> IsentropicProcessResult:
@@ -306,7 +306,7 @@ def isentropic_process_from_pressure(
     )
 
 
-def isentropic_process_from_density(
+def isentropic_process_by_density(
     density_ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> IsentropicProcessResult:
@@ -334,7 +334,7 @@ def isentropic_process_from_density(
     )
 
 
-def isentropic_process_from_speed_of_sound(
+def isentropic_process_by_speed_of_sound(
     speed_of_sound_ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> IsentropicProcessResult:

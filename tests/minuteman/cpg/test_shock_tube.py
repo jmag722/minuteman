@@ -8,19 +8,19 @@ from minuteman import cpg
 from minuteman.cpg import shock_tube
 
 
-def test_speed_of_sound_from_pressure():
+def test_speed_of_sound_by_pressure():
     gam4 = 1.4
     gam1 = 1.4
     p4 = 1e5
     p1 = 1e4
     r4 = 1
     r1 = 0.125
-    a4 = cpg.speed_of_sound_from_pressure(
+    a4 = cpg.speed_of_sound_by_pressure(
         specific_heat_ratio=gam4,
         pressure=p4,
         density=r4,
     )[0]
-    a1 = cpg.speed_of_sound_from_pressure(
+    a1 = cpg.speed_of_sound_by_pressure(
         specific_heat_ratio=gam1,
         pressure=p1,
         density=r1,

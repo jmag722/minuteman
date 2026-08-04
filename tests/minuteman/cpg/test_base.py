@@ -5,8 +5,8 @@ import numpy as np
 from minuteman.cpg import base
 
 
-def test_speed_of_sound_from_temperature():
-    actual = base.speed_of_sound_from_temperature(
+def test_speed_of_sound_by_temperature():
+    actual = base.speed_of_sound_by_temperature(
         temperature=300,
         gas_constant=287,
         specific_heat_ratio=1.4,
@@ -15,8 +15,8 @@ def test_speed_of_sound_from_temperature():
     np.testing.assert_allclose(actual, expected)
 
 
-def test_speed_of_sound_from_pressure():
-    actual = base.speed_of_sound_from_pressure(
+def test_speed_of_sound_by_pressure():
+    actual = base.speed_of_sound_by_pressure(
         specific_heat_ratio=1.1,
         pressure=1e5,
         density=1.2,
