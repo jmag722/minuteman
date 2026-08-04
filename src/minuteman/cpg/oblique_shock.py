@@ -124,15 +124,15 @@ def lookup_table_by_deflection_angle(
         mach_downstream_normal=mn2,
         deflection_angle=theta,
         shock_angle=beta,
-        temperature_ratio=normal_shock.temperature_ratio_by_upstream_mach(
+        temperature_ratio=normal_shock.temperature_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),
-        pressure_ratio=normal_shock.pressure_ratio(
+        pressure_ratio=normal_shock.pressure_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),
-        density_ratio=normal_shock.density_ratio(
+        density_ratio=normal_shock.density_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),
@@ -186,15 +186,15 @@ def lookup_table_by_shock_angle(
         mach_downstream_normal=mn2,
         deflection_angle=theta,
         shock_angle=beta,
-        temperature_ratio=normal_shock.temperature_ratio_by_upstream_mach(
+        temperature_ratio=normal_shock.temperature_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),
-        pressure_ratio=normal_shock.pressure_ratio(
+        pressure_ratio=normal_shock.pressure_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),
-        density_ratio=normal_shock.density_ratio(
+        density_ratio=normal_shock.density_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),
@@ -251,15 +251,15 @@ def lookup_table_by_mach_upstream_normal(
         mach_downstream_normal=mn2,
         deflection_angle=theta,
         shock_angle=beta,
-        temperature_ratio=normal_shock.temperature_ratio_by_upstream_mach(
+        temperature_ratio=normal_shock.temperature_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),
-        pressure_ratio=normal_shock.pressure_ratio(
+        pressure_ratio=normal_shock.pressure_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),
-        density_ratio=normal_shock.density_ratio(
+        density_ratio=normal_shock.density_ratio_by_mach(
             mach_upstream=mn1,
             specific_heat_ratio=gam,
         ),

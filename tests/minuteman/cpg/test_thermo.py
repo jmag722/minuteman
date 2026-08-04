@@ -68,8 +68,8 @@ def test_entropy_pv():
     np.testing.assert_allclose(actual, expected)
 
 
-def test_isentropic_process_from_temperature():
-    actual = thermo.isentropic_process_from_temperature(
+def test_isentropic_process_by_temperature():
+    actual = thermo.isentropic_process_by_temperature(
         temperature_ratio=0.7,
         specific_heat_ratio=1.35,
     )
@@ -98,8 +98,8 @@ def test_isentropic_process_from_temperature():
     )
 
 
-def test_isentropic_process_from_pressure():
-    actual = thermo.isentropic_process_from_pressure(
+def test_isentropic_process_by_pressure():
+    actual = thermo.isentropic_process_by_pressure(
         pressure_ratio=1.2,
         specific_heat_ratio=1.4,
     )
@@ -131,8 +131,8 @@ def test_isentropic_process_from_pressure():
     )
 
 
-def test_isentropic_process_from_density():
-    actual = thermo.isentropic_process_from_density(
+def test_isentropic_process_by_density():
+    actual = thermo.isentropic_process_by_density(
         density_ratio=2,
         specific_heat_ratio=1.3,
     )
@@ -164,8 +164,8 @@ def test_isentropic_process_from_density():
     )
 
 
-def test_isentropic_process_from_speed_of_sound():
-    actual = thermo.isentropic_process_from_speed_of_sound(
+def test_isentropic_process_by_speed_of_sound():
+    actual = thermo.isentropic_process_by_speed_of_sound(
         speed_of_sound_ratio=1.125,
         specific_heat_ratio=1.4,
     )

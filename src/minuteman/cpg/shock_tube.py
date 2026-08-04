@@ -119,7 +119,7 @@ def solve_sod(
 
     # derived driver quantities
     p41 = p4 / p1
-    a4 = cpg.speed_of_sound_from_pressure(
+    a4 = cpg.speed_of_sound_by_pressure(
         specific_heat_ratio=gam4,
         pressure=p4,
         density=r4,
@@ -128,7 +128,7 @@ def solve_sod(
     u4 = 0.0
 
     # derived driven quantities
-    a1 = cpg.speed_of_sound_from_pressure(
+    a1 = cpg.speed_of_sound_by_pressure(
         pressure=p1,
         density=r1,
         specific_heat_ratio=gam1,
@@ -148,7 +148,7 @@ def solve_sod(
         pressure_ratio=p21,
         specific_heat_ratio_driven=gam1,
     )
-    a2 = cpg.speed_of_sound_from_pressure(
+    a2 = cpg.speed_of_sound_by_pressure(
         pressure=p2,
         density=r2,
         specific_heat_ratio=gam1,
@@ -171,7 +171,7 @@ def solve_sod(
 
     # compute expansion fan properties
     p34 = p21 / p41  # because p2/p1 = p3/p1
-    expansion34 = thermo.isentropic_process_from_pressure(
+    expansion34 = thermo.isentropic_process_by_pressure(
         pressure_ratio=p34,
         specific_heat_ratio=gam4,
     )
@@ -233,7 +233,7 @@ def solve_sod(
 
     u5 = expansion_fan_velocity(a4, x_soln[region5], time, gam4)
     a5 = expansion_fan_speed_of_sound(a4, u5, gam4)
-    expansion54 = thermo.isentropic_process_from_speed_of_sound(
+    expansion54 = thermo.isentropic_process_by_speed_of_sound(
         speed_of_sound_ratio=a5 / a4,
         specific_heat_ratio=gam4,
     )

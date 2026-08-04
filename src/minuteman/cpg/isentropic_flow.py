@@ -38,16 +38,22 @@ class IsentropicFlowTable:
 
     mach: NDArrayFloat
     r"""Mach number, $M$"""
+
     temperature: NDArrayFloat
     r"""total temperature ratio, $T_0 / T$"""
+
     pressure: NDArrayFloat
     r"""total pressure ratio, $p_0 / p$"""
+
     density: NDArrayFloat
     r"""total density ratio, $\rho_0 / \rho$"""
+
     speed_of_sound: NDArrayFloat
     r"""total speed of sound ratio, $a_0 / a$"""
+
     area_ratio: NDArrayFloat
     r"""area ratio, $A / A^*$"""
+
     specific_heat_ratio: NDArrayFloat
     r"""ratio of specific heats, $\gamma$"""
 
@@ -69,11 +75,13 @@ def lookup_table_by_mach(
     """
     m = np.atleast_1d(mach)
     gam = np.atleast_1d(specific_heat_ratio)
-    p0_ratio = total_pressure_ratio(mach=m, specific_heat_ratio=gam)
-    r0_ratio = total_density_ratio(mach=m, specific_heat_ratio=gam)
-    t0_ratio = total_temperature_ratio(mach=m, specific_heat_ratio=gam)
-    a0_ratio = total_speed_of_sound_ratio(mach=m, specific_heat_ratio=gam)
-    area_ratio = area_mach_relation(mach=m, specific_heat_ratio=gam)
+    p0_ratio = total_pressure_ratio_by_mach(mach=m, specific_heat_ratio=gam)
+    r0_ratio = total_density_ratio_by_mach(mach=m, specific_heat_ratio=gam)
+    t0_ratio = total_temperature_ratio_by_mach(mach=m, specific_heat_ratio=gam)
+    a0_ratio = total_speed_of_sound_ratio_by_mach(
+        mach=m, specific_heat_ratio=gam
+    )
+    area_ratio = area_ratio_by_mach(mach=m, specific_heat_ratio=gam)
     return IsentropicFlowTable(
         mach=m,
         temperature=t0_ratio,
@@ -103,7 +111,7 @@ def lookup_table_by_temperature(
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    mach = mach_from_temperature(
+    mach = mach_by_temperature(
         temperature_ratio=temperature_ratio,
         specific_heat_ratio=gam,
     )
@@ -127,7 +135,7 @@ def lookup_table_by_pressure(
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    t0_ratio = thermo.isentropic_process_from_pressure(
+    t0_ratio = thermo.isentropic_process_by_pressure(
         pressure_ratio=pressure_ratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
@@ -155,7 +163,7 @@ def lookup_table_by_density(
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    t0_ratio = thermo.isentropic_process_from_density(
+    t0_ratio = thermo.isentropic_process_by_density(
         density_ratio=density_ratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
@@ -183,7 +191,7 @@ def lookup_table_by_speed_of_sound(
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    t0_ratio = thermo.isentropic_process_from_speed_of_sound(
+    t0_ratio = thermo.isentropic_process_by_speed_of_sound(
         speed_of_sound_ratio=speed_of_sound_ratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
@@ -212,7 +220,7 @@ def lookup_table_by_area_ratio(
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    mach = mach_from_area_ratio(
+    mach = mach_by_area_ratio(
         area_ratio=area_ratio,
         specific_heat_ratio=gam,
         flow_regime=flow_regime,
@@ -220,7 +228,7 @@ def lookup_table_by_area_ratio(
     return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
 
 
-def total_temperature_ratio(
+def total_temperature_ratio_by_mach(
     mach: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -240,7 +248,7 @@ def total_temperature_ratio(
     return 1 + 0.5 * (gam - 1) * m**2
 
 
-def mach_from_temperature(
+def mach_by_temperature(
     temperature_ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -261,7 +269,7 @@ def mach_from_temperature(
     return (2.0 / (gam - 1) * (tratio - 1)) ** 0.5
 
 
-def total_pressure_ratio(
+def total_pressure_ratio_by_mach(
     mach: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -277,12 +285,12 @@ def total_pressure_ratio(
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    return total_temperature_ratio(mach=mach, specific_heat_ratio=gam) ** (
-        gam / (gam - 1)
-    )
+    return total_temperature_ratio_by_mach(
+        mach=mach, specific_heat_ratio=gam
+    ) ** (gam / (gam - 1))
 
 
-def total_density_ratio(
+def total_density_ratio_by_mach(
     mach: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -298,12 +306,12 @@ def total_density_ratio(
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    return total_temperature_ratio(mach=mach, specific_heat_ratio=gam) ** (
-        1.0 / (gam - 1)
-    )
+    return total_temperature_ratio_by_mach(
+        mach=mach, specific_heat_ratio=gam
+    ) ** (1.0 / (gam - 1))
 
 
-def total_speed_of_sound_ratio(
+def total_speed_of_sound_ratio_by_mach(
     mach: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -319,18 +327,21 @@ def total_speed_of_sound_ratio(
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
-    return (total_temperature_ratio(mach=mach, specific_heat_ratio=gam)) ** 0.5
+    return (
+        total_temperature_ratio_by_mach(mach=mach, specific_heat_ratio=gam)
+        ** 0.5
+    )
 
 
-def _area_mach_relation_sqr(m, gam):
+def _area_ratio_by_mach_sqr(m, gam):
     return m**-2 * (
         2.0
         / (gam + 1)
-        * total_temperature_ratio(mach=m, specific_heat_ratio=gam)
+        * total_temperature_ratio_by_mach(mach=m, specific_heat_ratio=gam)
     ) ** ((gam + 1) / (gam - 1))
 
 
-def area_mach_relation(
+def area_ratio_by_mach(
     mach: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -347,10 +358,10 @@ def area_mach_relation(
         NDArrayFloat: area ratio, $A / A^*$
 
     """
-    return _area_mach_relation_sqr(m=mach, gam=specific_heat_ratio) ** 0.5
+    return _area_ratio_by_mach_sqr(m=mach, gam=specific_heat_ratio) ** 0.5
 
 
-def mach_from_area_ratio(
+def mach_by_area_ratio(
     area_ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
     flow_regime: ArraylikeFlowSpeedRegime,
@@ -374,7 +385,7 @@ def mach_from_area_ratio(
     mach_brackets = bracket_mach_from_flow_regime(flow_regime)
 
     def compute_mach(_m, _aratio, _gam):
-        return _aratio**2 - _area_mach_relation_sqr(m=_m, gam=_gam)
+        return _aratio**2 - _area_ratio_by_mach_sqr(m=_m, gam=_gam)
 
     res = find_root(compute_mach, mach_brackets, args=(aratios, gam))
     if not np.all(res.success):

@@ -52,7 +52,7 @@ def mach_number(
     return np.atleast_1d(velocity) / np.atleast_1d(speed_of_sound)
 
 
-def speed_of_sound_from_temperature(
+def speed_of_sound_by_temperature(
     gas_constant: ArraylikeFloat,
     temperature: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
@@ -76,7 +76,7 @@ def speed_of_sound_from_temperature(
     return (gam * gc * t) ** 0.5
 
 
-def speed_of_sound_from_pressure(
+def speed_of_sound_by_pressure(
     pressure: ArraylikeFloat,
     density: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,

@@ -6,13 +6,13 @@
       members: no
 
 ## High-level API
-::: minuteman.cpg.thermo.isentropic_process_from_density
+::: minuteman.cpg.thermo.isentropic_process_by_density
 
-::: minuteman.cpg.thermo.isentropic_process_from_pressure
+::: minuteman.cpg.thermo.isentropic_process_by_pressure
 
-::: minuteman.cpg.thermo.isentropic_process_from_speed_of_sound
+::: minuteman.cpg.thermo.isentropic_process_by_speed_of_sound
 
-::: minuteman.cpg.thermo.isentropic_process_from_temperature
+::: minuteman.cpg.thermo.isentropic_process_by_temperature
 
 ## Low-level API
 

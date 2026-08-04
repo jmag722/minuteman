@@ -21,21 +21,21 @@
 
 ## Low-level API
 
-::: minuteman.cpg.isentropic_flow.area_mach_relation
+::: minuteman.cpg.isentropic_flow.area_ratio_by_mach
 
 ::: minuteman.cpg.isentropic_flow.mach_angle
 
-::: minuteman.cpg.isentropic_flow.mach_from_area_ratio
+::: minuteman.cpg.isentropic_flow.mach_by_area_ratio
 
-::: minuteman.cpg.isentropic_flow.mach_from_temperature
+::: minuteman.cpg.isentropic_flow.mach_by_temperature
 
-::: minuteman.cpg.isentropic_flow.total_density_ratio
+::: minuteman.cpg.isentropic_flow.total_density_ratio_by_mach
 
-::: minuteman.cpg.isentropic_flow.total_pressure_ratio
+::: minuteman.cpg.isentropic_flow.total_pressure_ratio_by_mach
 
-::: minuteman.cpg.isentropic_flow.total_speed_of_sound_ratio
+::: minuteman.cpg.isentropic_flow.total_speed_of_sound_ratio_by_mach
 
-::: minuteman.cpg.isentropic_flow.total_temperature_ratio
+::: minuteman.cpg.isentropic_flow.total_temperature_ratio_by_mach
 
 ## Data Structures
 

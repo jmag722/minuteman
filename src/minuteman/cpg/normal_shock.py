@@ -78,25 +78,27 @@ def lookup_table_by_upstream_mach(
         mach_upstream=m1,
         specific_heat_ratio=gam,
     )
-    p01_p1 = isentropic_flow.total_pressure_ratio(
+    p01_p1 = isentropic_flow.total_pressure_ratio_by_mach(
         mach=m1,
         specific_heat_ratio=gam,
     )
     return NormalShockTable(
         mach_upstream=m1,
-        mach_downstream=mach_downstream(
+        mach_downstream=mach_downstream_by_mach(
             mach_upstream=m1,
             specific_heat_ratio=gam,
         ),
-        temperature_ratio=temperature_ratio_by_upstream_mach(
+        temperature_ratio=temperature_ratio_by_mach(
             mach_upstream=m1,
             specific_heat_ratio=gam,
         ),
-        pressure_ratio=pressure_ratio(
+        pressure_ratio=pressure_ratio_by_mach(
             mach_upstream=m1,
             specific_heat_ratio=gam,
         ),
-        density_ratio=density_ratio(mach_upstream=m1, specific_heat_ratio=gam),
+        density_ratio=density_ratio_by_mach(
+            mach_upstream=m1, specific_heat_ratio=gam
+        ),
         total_pressure_ratio=p02_p01,
         pitot_pressure_ratio=p02_p01 * p01_p1,
         specific_heat_ratio=gam,
@@ -126,7 +128,7 @@ def lookup_table_by_temperature(
 
     # invert the temperature-mach relationship
     def tfunc(mguess, _t, _g):
-        return _t - temperature_ratio_by_upstream_mach(
+        return _t - temperature_ratio_by_mach(
             mach_upstream=mguess,
             specific_heat_ratio=_g,
         )
@@ -261,7 +263,7 @@ def lookup_table_by_pitot_pressure(
         return _p021 - total_pressure_ratio_by_mach(
             mach_upstream=mguess,
             specific_heat_ratio=_g,
-        ) * isentropic_flow.total_pressure_ratio(
+        ) * isentropic_flow.total_pressure_ratio_by_mach(
             mach=mguess,
             specific_heat_ratio=_g,
         )
@@ -306,7 +308,7 @@ def lookup_table_by_downstream_mach(
     )
 
 
-def mach_downstream(
+def mach_downstream_by_mach(
     mach_upstream: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -328,7 +330,7 @@ def mach_downstream(
     ) ** 0.5
 
 
-def density_ratio(
+def density_ratio_by_mach(
     mach_upstream: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -351,7 +353,7 @@ def density_ratio(
     return (gam + 1) * m1**2 / (2 + (gam - 1) * m1**2)
 
 
-def pressure_ratio(
+def pressure_ratio_by_mach(
     mach_upstream: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:
@@ -394,7 +396,7 @@ def total_pressure_ratio_by_mach(
     ) ** (gam / (gam - 1))
 
 
-def temperature_ratio_by_upstream_mach(
+def temperature_ratio_by_mach(
     mach_upstream: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
 ) -> NDArrayFloat:

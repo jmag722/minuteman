@@ -24,17 +24,17 @@
 
 ## Low-level API
 
-::: minuteman.cpg.normal_shock.density_ratio
+::: minuteman.cpg.normal_shock.density_ratio_by_mach
 
 ::: minuteman.cpg.normal_shock.entropy_change
 
 ::: minuteman.cpg.normal_shock.internal_energy_change
 
-::: minuteman.cpg.normal_shock.mach_downstream
+::: minuteman.cpg.normal_shock.mach_downstream_by_mach
 
-::: minuteman.cpg.normal_shock.pressure_ratio
+::: minuteman.cpg.normal_shock.pressure_ratio_by_mach
 
-::: minuteman.cpg.normal_shock.temperature_ratio_by_upstream_mach
+::: minuteman.cpg.normal_shock.temperature_ratio_by_mach
 
 ::: minuteman.cpg.normal_shock.total_pressure_ratio_by_mach
 

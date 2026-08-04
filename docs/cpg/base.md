@@ -9,11 +9,15 @@
 
 ::: minuteman.cpg.base.mach_number
 
-::: minuteman.cpg.base.speed_of_sound_from_pressure
+::: minuteman.cpg.base.speed_of_sound_by_pressure
 
-::: minuteman.cpg.base.speed_of_sound_from_temperature
+::: minuteman.cpg.base.speed_of_sound_by_temperature
 
 ## Data Structures
+
+::: minuteman.cpg.base.ArraylikeFlowSpeedRegime
+    options:
+      separate_signature: false
 
 ::: minuteman.cpg.base.FlowSpeedRegime
     options:
