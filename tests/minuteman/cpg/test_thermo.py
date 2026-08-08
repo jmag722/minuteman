@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from minuteman.cpg import thermo
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 
 def test_boltzmann():
@@ -192,6 +193,20 @@ def test_isentropic_process_by_speed_of_sound():
         expected.specific_heat_ratio,
         rtol=0.0,
     )
+
+
+@pytest.mark.parametrize(
+    ("func", "val"),
+    [
+        (thermo.isentropic_process_by_density, -0.9),
+        (thermo.isentropic_process_by_pressure, 0.0),
+        (thermo.isentropic_process_by_temperature, -50.9),
+        (thermo.isentropic_process_by_speed_of_sound, -3),
+    ],
+)
+def test_out_of_bounds(func, val):
+    with pytest.raises(OutOfBoundsError):
+        func(val, 1.4)
 
 
 def test_entropy_state():

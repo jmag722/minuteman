@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
+import pytest
 
 from minuteman.cpg import normal_shock
 from minuteman.cpg.normal_shock import NormalShockTable
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 
 def compare_tables(
@@ -55,15 +57,15 @@ def compare_tables(
 
 
 def test_lookup_table_by_upstream_mach():
-    actual = normal_shock.lookup_table_by_upstream_mach(3.0)
+    actual = normal_shock.lookup_table_by_upstream_mach([3.0, 1.0])
     expected = NormalShockTable(
-        mach_upstream=np.array([3.0]),
-        mach_downstream=np.array([0.4752]),
-        temperature_ratio=np.array([2.679]),
-        pressure_ratio=np.array([10.33]),
-        density_ratio=np.array([3.857]),
-        total_pressure_ratio=np.array([0.3283]),
-        pitot_pressure_ratio=np.array([12.06]),
+        mach_upstream=np.array([3.0, 1.0]),
+        mach_downstream=np.array([0.4752, 1.0]),
+        temperature_ratio=np.array([2.679, 1.0]),
+        pressure_ratio=np.array([10.33, 1.0]),
+        density_ratio=np.array([3.857, 1.0]),
+        total_pressure_ratio=np.array([0.3283, 1.0]),
+        pitot_pressure_ratio=np.array([12.06, 1.8929]),
         specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
@@ -157,6 +159,26 @@ def test_lookup_table_by_pitot_pressure():
         specific_heat_ratio=np.array([1.35]),
     )
     compare_tables(actual, expected)
+
+
+@pytest.mark.parametrize(
+    ("func", "val"),
+    [
+        (normal_shock.lookup_table_by_upstream_mach, 0.99),
+        (normal_shock.lookup_table_by_downstream_mach, 1.1),
+        (normal_shock.lookup_table_by_downstream_mach, 0.37),
+        (normal_shock.lookup_table_by_pressure, 0.9),
+        (normal_shock.lookup_table_by_temperature, 0.6),
+        (normal_shock.lookup_table_by_total_pressure, 1.01),
+        (normal_shock.lookup_table_by_total_pressure, 0.0),
+        (normal_shock.lookup_table_by_pitot_pressure, 1.88),
+        (normal_shock.lookup_table_by_density, 1 - 1e-3),
+        (normal_shock.lookup_table_by_density, 6.01),
+    ],
+)
+def test_out_of_bounds(func, val):
+    with pytest.raises(OutOfBoundsError):
+        func(val, 1.4)
 
 
 def test_entropy_change():

@@ -23,6 +23,11 @@ from scipy.optimize.elementwise import find_root
 
 from minuteman.cpg import ArraylikeFlowSpeedRegime, FlowSpeedRegime, thermo
 from minuteman.cpg.base import bracket_mach_from_flow_regime
+from minuteman.utils.bounds_check import (
+    OutOfBoundsError,
+    check_positive,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
@@ -75,6 +80,8 @@ def lookup_table_by_mach(
     """
     m = np.atleast_1d(mach)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(m)
+    check_specific_heat_ratio(gam)
     p0_ratio = total_pressure_ratio_by_mach(mach=m, specific_heat_ratio=gam)
     r0_ratio = total_density_ratio_by_mach(mach=m, specific_heat_ratio=gam)
     t0_ratio = total_temperature_ratio_by_mach(mach=m, specific_heat_ratio=gam)
@@ -110,9 +117,14 @@ def lookup_table_by_temperature(
         IsentropicFlowTable: isentropic flow table result
 
     """
+    tratio = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(tratio <= 1.0):
+        raise OutOfBoundsError("Temperature ratio T0/T must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     mach = mach_by_temperature(
-        temperature_ratio=temperature_ratio,
+        temperature_ratio=tratio,
         specific_heat_ratio=gam,
     )
     return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
@@ -134,14 +146,19 @@ def lookup_table_by_pressure(
         IsentropicFlowTable: isentropic flow table result
 
     """
+    pratio = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(pratio <= 1.0):
+        raise OutOfBoundsError("Pressure ratio p0/p must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     t0_ratio = thermo.isentropic_process_by_pressure(
-        pressure_ratio=pressure_ratio,
+        pressure_ratio=pratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
         temperature_ratio=t0_ratio,
-        specific_heat_ratio=specific_heat_ratio,
+        specific_heat_ratio=gam,
     )
 
 
@@ -162,14 +179,19 @@ def lookup_table_by_density(
         IsentropicFlowTable: isentropic flow table result
 
     """
+    rratio = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(rratio <= 1.0):
+        raise OutOfBoundsError("Density ratio rho0/rho must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     t0_ratio = thermo.isentropic_process_by_density(
-        density_ratio=density_ratio,
+        density_ratio=rratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
         temperature_ratio=t0_ratio,
-        specific_heat_ratio=specific_heat_ratio,
+        specific_heat_ratio=gam,
     )
 
 
@@ -190,14 +212,19 @@ def lookup_table_by_speed_of_sound(
         IsentropicFlowTable: isentropic flow table result
 
     """
+    aratio = np.atleast_1d(speed_of_sound_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(aratio <= 1.0):
+        raise OutOfBoundsError("Speed of sound ratio a0/a must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     t0_ratio = thermo.isentropic_process_by_speed_of_sound(
-        speed_of_sound_ratio=speed_of_sound_ratio,
+        speed_of_sound_ratio=aratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
         temperature_ratio=t0_ratio,
-        specific_heat_ratio=specific_heat_ratio,
+        specific_heat_ratio=gam,
     )
 
 
@@ -219,9 +246,14 @@ def lookup_table_by_area_ratio(
         IsentropicFlowTable: isentropic flow table result
 
     """
+    aratio = np.atleast_1d(area_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(aratio <= 1.0):
+        raise OutOfBoundsError("Area ratio A/A* must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     mach = mach_by_area_ratio(
-        area_ratio=area_ratio,
+        area_ratio=aratio,
         specific_heat_ratio=gam,
         flow_regime=flow_regime,
     )

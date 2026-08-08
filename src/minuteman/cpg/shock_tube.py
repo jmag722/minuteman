@@ -15,6 +15,10 @@ from scipy.optimize import fsolve
 
 from minuteman import cpg
 from minuteman.cpg import thermo
+from minuteman.utils.bounds_check import (
+    check_positive,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     Floatlike,
     NDArrayBool,
@@ -106,6 +110,17 @@ def solve_sod(
         ShockTubeSolution: Sod shock tube solution
 
     """
+    check_positive(time)
+    check_positive(pressure_l)
+    check_positive(pressure_r)
+    check_positive(density_l)
+    check_positive(density_r)
+    check_specific_heat_ratio(specific_heat_ratio_l)
+    check_specific_heat_ratio(specific_heat_ratio_r)
+    check_positive(gas_constant_l)
+    check_positive(gas_constant_r)
+    check_positive(tube_length)
+
     # initialize driver gas (region 4) and driven gas (region 1)
     left_driver = pressure_l >= pressure_r
     p4 = pressure_l if left_driver else pressure_r

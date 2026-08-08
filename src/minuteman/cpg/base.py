@@ -106,7 +106,7 @@ class InvalidFlowRegimeError(Exception):
 def bracket_mach_from_flow_regime(
     flow_regime: ArraylikeFlowSpeedRegime,
 ) -> tuple[NDArrayFloat, NDArrayFloat]:
-    subsonic_mach_min = 1e-15
+    subsonic_mach_min = 1e-50
     subsonic_mach_max = 1.0 - subsonic_mach_min
     supersonic_mach_min = 1.0
     supersonic_mach_max = 1e10

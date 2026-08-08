@@ -19,6 +19,10 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.constants as scc
 
+from minuteman.utils.bounds_check import (
+    check_positive,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
@@ -269,6 +273,8 @@ def isentropic_process_by_temperature(
     """
     t21 = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(t21)
+    check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
         temperature_ratio=t21,
         pressure_ratio=t21 ** (gam / (gam - 1)),
@@ -297,6 +303,8 @@ def isentropic_process_by_pressure(
     """
     p21 = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(p21)
+    check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
         temperature_ratio=p21 ** ((gam - 1) / gam),
         pressure_ratio=p21,
@@ -325,6 +333,8 @@ def isentropic_process_by_density(
     """
     r21 = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(r21)
+    check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
         temperature_ratio=r21 ** (gam - 1),
         pressure_ratio=r21**gam,
@@ -354,6 +364,8 @@ def isentropic_process_by_speed_of_sound(
     """
     a21 = np.atleast_1d(speed_of_sound_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(a21)
+    check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
         temperature_ratio=a21**2,
         pressure_ratio=a21 ** (2 * gam / (gam - 1)),
