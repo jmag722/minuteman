@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
+import pytest
 
 from minuteman.cpg import FlowSpeedRegime, fanno
 from minuteman.cpg.fanno import FannoFlowTable
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 
 def compare_tables(actual: FannoFlowTable, expected: FannoFlowTable, **kwargs):
@@ -348,3 +350,52 @@ def test_duct_length():
     actual = fanno.duct_length(fanno_param, diameter, f)
     expected = np.array([75.0])
     np.testing.assert_allclose(actual, expected)
+
+
+@pytest.mark.parametrize(
+    (
+        "func",
+        "val",
+    ),
+    [
+        (fanno.lookup_table_by_temperature, 0.0),
+        (fanno.lookup_table_by_temperature, 1.21),
+        (fanno.lookup_table_by_pressure, 0.0),
+        (fanno.lookup_table_by_pressure, -1.0),
+        (fanno.lookup_table_by_density, 0.407),
+        (fanno.lookup_table_by_entropy, -0.0001),
+    ],
+)
+def test_out_of_bounds(func, val):
+    with pytest.raises(OutOfBoundsError):
+        func(val, 1.4)
+
+
+@pytest.mark.parametrize(
+    ("func", "val", "fr"),
+    [
+        (
+            fanno.lookup_table_by_fanno_parameter,
+            -1e-3,
+            FlowSpeedRegime.subsonic,
+        ),
+        (
+            fanno.lookup_table_by_fanno_parameter,
+            0.83,
+            FlowSpeedRegime.supersonic,
+        ),
+        (
+            fanno.lookup_table_by_total_pressure,
+            0.999,
+            FlowSpeedRegime.subsonic,
+        ),
+        (
+            fanno.lookup_table_by_total_pressure,
+            0.5,
+            FlowSpeedRegime.supersonic,
+        ),
+    ],
+)
+def test_out_of_bounds_by_regime(func, val, fr):
+    with pytest.raises(OutOfBoundsError):
+        func(val, 1.4, flow_regime=fr)

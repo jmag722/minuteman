@@ -17,8 +17,15 @@ from scipy.optimize.elementwise import find_root
 
 from minuteman.cpg import ArraylikeFlowSpeedRegime, FlowSpeedRegime
 from minuteman.cpg.base import bracket_mach_from_flow_regime
+from minuteman.utils.bounds_check import (
+    OutOfBoundsError,
+    check_nonnegative,
+    check_positive,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     ArraylikeFloat,
+    InvalidArrayShapeError,
     NDArrayFloat,
     RootFindingError,
 )
@@ -76,6 +83,9 @@ def lookup_table_by_mach(
     m1 = 1.0
     m2 = np.atleast_1d(mach)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(m2)
+    check_specific_heat_ratio(gam)
+
     return FannoFlowTable(
         mach=m2,
         temperature_ratio=temperature_ratio_by_mach(
@@ -131,6 +141,10 @@ def lookup_table_by_pressure(
     m1 = 1.0
     pratio = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+
+    check_positive(pratio)
+    check_specific_heat_ratio(gam)
+
     # expression obtained with wolfram alpha, real-only root kept
     a = 2.0 / (gam - 1)
     b = -1.0 / (gam - 1) * (m1 / pratio) ** 2 * (2 + (gam - 1) * m1**2)
@@ -158,6 +172,15 @@ def lookup_table_by_temperature(
     m1 = 1.0
     tratio = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_specific_heat_ratio(gam)
+
+    tratio_max = 0.5 * (gam + 1)
+
+    if np.any((tratio <= 0.0) | (tratio >= tratio_max)):
+        raise OutOfBoundsError(
+            f"Temperature ratio T/T* must be within (0.0, {tratio_max})"
+        )
+
     m2 = (((2 + (gam - 1) * m1**2) / tratio - 2) / (gam - 1)) ** 0.5
     return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
 
@@ -181,6 +204,14 @@ def lookup_table_by_density(
     m1 = 1.0
     rratio = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+
+    check_specific_heat_ratio(gam)
+    rratio_min = ((gam - 1) / (gam + 1)) ** 0.5
+
+    if np.any(rratio <= rratio_min):
+        raise OutOfBoundsError(
+            f"Density ratio rho/rho* must be > {rratio_min})"
+        )
     a = (rratio / m1) ** 2 * (2 + (gam - 1) * m1**2)
     m2 = (2.0 / (a - (gam - 1))) ** 0.5
     return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
@@ -208,8 +239,7 @@ def _lookup_table_by_ratio(
         FannoFlowTable: Fanno flow table
 
     """
-    _ratio = np.atleast_1d(ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    gam = specific_heat_ratio
 
     mach_brackets = bracket_mach_from_flow_regime(flow_regime)
 
@@ -220,7 +250,7 @@ def _lookup_table_by_ratio(
             specific_heat_ratio=_g,
         )
 
-    res = find_root(get_mach_by_ratio, mach_brackets, args=(_ratio, gam))
+    res = find_root(get_mach_by_ratio, mach_brackets, args=(ratio, gam))
     if not np.all(res.success):
         raise RootFindingError(f"find_root did not succeed: {res.status}")
     m2 = res.x
@@ -248,9 +278,14 @@ def lookup_table_by_total_pressure(
         FannoFlowTable: Fanno flow output table
 
     """
+    p0_ratio = np.atleast_1d(total_pressure_ratio)
+    gam = np.atleast_1d(specific_heat_ratio)
+    check_specific_heat_ratio(gam)
+    if np.any(p0_ratio < 1.0):
+        raise OutOfBoundsError("Total pressure ratio p0/p0* must be >= 1")
     return _lookup_table_by_ratio(
-        ratio=total_pressure_ratio,
-        specific_heat_ratio=specific_heat_ratio,
+        ratio=p0_ratio,
+        specific_heat_ratio=gam,
         flow_regime=flow_regime,
         mach_func=total_pressure_ratio_by_mach,
     )
@@ -276,9 +311,13 @@ def lookup_table_by_entropy(
         FannoFlowTable: Fanno flow output table
 
     """
+    s_ratio = np.atleast_1d(entropy_ratio)
+    gam = np.atleast_1d(specific_heat_ratio)
+    check_specific_heat_ratio(gam)
+    check_nonnegative(s_ratio)
     return _lookup_table_by_ratio(
-        ratio=entropy_ratio,
-        specific_heat_ratio=specific_heat_ratio,
+        ratio=s_ratio,
+        specific_heat_ratio=gam,
         flow_regime=flow_regime,
         mach_func=_rev_entropy_ratio_by_mach,
     )
@@ -305,9 +344,39 @@ def lookup_table_by_fanno_parameter(
         FannoFlowTable: Fanno flow output table
 
     """
+    fparam = np.atleast_1d(fanno_parameter)
+    gam = np.atleast_1d(specific_heat_ratio)
+    if isinstance(flow_regime, FlowSpeedRegime):
+        fr = np.full(fparam.shape, flow_regime)
+    else:
+        fr = np.atleast_1d(np.asarray(flow_regime))
+
+    if fparam.shape != fr.shape:
+        raise InvalidArrayShapeError(
+            "fanno_parameter and flow_regime shapes must match,"
+            "or flow_regime must be a scalar"
+        )
+
+    check_specific_heat_ratio(gam)
+    fparam_max_sup = -1.0 / gam + (gam + 1.0) / (2 * gam) * np.log(
+        (gam + 1.0) / (gam - 1.0)
+    )
+
+    if np.any(fparam[fr == FlowSpeedRegime.subsonic] < 0.0):
+        raise OutOfBoundsError(
+            "Fanno parameter 4fL*/D must be >= 0.0 for subsonic flow"
+        )
+    if np.any(
+        (fparam[fr == FlowSpeedRegime.supersonic] < 0.0)
+        | (fparam[fr == FlowSpeedRegime.supersonic] >= fparam_max_sup)
+    ):
+        raise OutOfBoundsError(
+            f"Fanno parameter 4fL*/D must be within [0.0, "
+            f"{fparam_max_sup}) for supersonic flow"
+        )
     return _lookup_table_by_ratio(
-        ratio=fanno_parameter,
-        specific_heat_ratio=specific_heat_ratio,
+        ratio=fparam,
+        specific_heat_ratio=gam,
         flow_regime=flow_regime,
         mach_func=_rev_fanno_parameter_by_mach,
     )
