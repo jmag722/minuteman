@@ -6,6 +6,7 @@ import pytest
 
 from minuteman.cpg import oblique_shock
 from minuteman.cpg.oblique_shock import ObliqueShockTable, ObliqueShockType
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 
 def compare_tables(
@@ -138,9 +139,75 @@ def test_lookup_table_by_mach_upstream_normal():
 
 
 @pytest.mark.parametrize(
+    ("func", "theta", "m1", "st"),
+    [
+        (
+            oblique_shock.lookup_table_by_deflection_angle,
+            np.radians(0.0),
+            2.8,
+            ObliqueShockType.weak,
+        ),
+        (
+            oblique_shock.lookup_table_by_deflection_angle,
+            np.radians(10.0),
+            0.8,
+            ObliqueShockType.weak,
+        ),
+        (
+            oblique_shock.lookup_table_by_deflection_angle,
+            np.radians(55.0),
+            10.0,
+            ObliqueShockType.weak,
+        ),
+        (
+            oblique_shock.lookup_table_by_deflection_angle,
+            np.radians(55.0),
+            10.0,
+            ObliqueShockType.strong,
+        ),
+    ],
+)
+def test_out_of_bounds_deflection_angle(func, theta, m1, st):
+    with pytest.raises(OutOfBoundsError):
+        func(theta, m1, 1.4, shock_type=st)
+
+
+@pytest.mark.parametrize(
+    (
+        "func",
+        "theta",
+        "m1",
+    ),
+    [
+        (oblique_shock.lookup_table_by_shock_angle, np.radians(0.0), 55.0),
+        (oblique_shock.lookup_table_by_shock_angle, np.radians(5.0), 2.0),
+        (oblique_shock.lookup_table_by_shock_angle, np.radians(100.0), 55.0),
+        (oblique_shock.lookup_table_by_shock_angle, np.radians(30.0), 0.99),
+    ],
+)
+def test_out_of_bounds_shock_angle(func, theta, m1):
+    with pytest.raises(OutOfBoundsError):
+        func(theta, m1, 1.4)
+
+
+@pytest.mark.parametrize(
+    ("func", "mn1", "m1"),
+    [
+        (oblique_shock.lookup_table_by_mach_upstream_normal, 0.9, 0.8),
+        (oblique_shock.lookup_table_by_mach_upstream_normal, 0.9, 1.1),
+        (oblique_shock.lookup_table_by_mach_upstream_normal, 1.0, 1.1),
+        (oblique_shock.lookup_table_by_mach_upstream_normal, 2.0, 1.1),
+    ],
+)
+def test_out_of_bounds_mach_upstream_normal(func, mn1, m1):
+    with pytest.raises(OutOfBoundsError):
+        func(mn1, m1, 1.4)
+
+
+@pytest.mark.parametrize(
+    # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
     ("m1", "beta", "gam", "expected"),
     [
-        # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
         (2.5, np.radians(65.0), 1.35, 0.53010844),
         (30, np.radians(18.0), 1.67, 0.45612707),
     ],
@@ -158,9 +225,9 @@ def test_mach_upstream_normal_component(m1, beta, gam, expected):
 
 
 @pytest.mark.parametrize(
+    # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
     ("m1", "beta", "gam", "expected"),
     [
-        # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
         (3.3, np.radians(35), 1.4, 2.21741000),
         (6.3, np.radians(87), 1.2, 0.35603772),
     ],
@@ -188,9 +255,9 @@ def test_mach_downstream_by_postshock(m1, beta, gam, expected):
 
 
 @pytest.mark.parametrize(
+    # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
     ("m1", "beta", "gam", "expected"),
     [
-        # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
         (2.0, np.radians(65.0), 1.4, np.radians(22.9704761)),
         (6.0, np.radians(15.0), 1.2, np.radians(7.85416103)),
     ],
@@ -204,9 +271,9 @@ def test_deflection_angle(m1, beta, gam, expected):
 
 
 @pytest.mark.parametrize(
+    # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
     ("m1", "theta", "shock_type", "gam", "expected"),
     [
-        # expected values from https://devenport.aoe.vt.edu/aoe3114/calc.html
         (
             6.0,
             np.radians(15.0),
@@ -228,67 +295,15 @@ def test_deflection_angle(m1, beta, gam, expected):
             1.45,
             np.radians(83.9497031),
         ),
-        (
-            1.1,
-            np.radians(5.0),
-            ObliqueShockType.strong,
-            1.5,
-            oblique_shock.InvalidDeflectionAngleError,
-        ),
-        (
-            4,
-            np.radians(89.0),
-            ObliqueShockType.weak,
-            1.3,
-            oblique_shock.InvalidDeflectionAngleError,
-        ),
     ],
 )
 def test_shock_angle(m1, theta, shock_type, gam, expected):
-    if isinstance(expected, float):
-        assert oblique_shock.shock_angle_by_deflection_mach(
-            mach_upstream=m1,
-            deflection_angle=theta,
-            shock_type=shock_type,
-            specific_heat_ratio=gam,
-        ) == pytest.approx(expected)
-    else:
-        with pytest.raises(expected):
-            oblique_shock.shock_angle_by_deflection_mach(
-                mach_upstream=m1,
-                deflection_angle=theta,
-                shock_type=shock_type,
-                specific_heat_ratio=gam,
-            )
-
-
-@pytest.mark.parametrize(
-    ("theta", "m1", "gam"),
-    [
-        (30.0, 3.0, 1.4),
-        (20.0, 2.0, 1.4),
-        (0.0, 15.0, 1.4),
-        (10.0, 25.0, 1.5),
-        (25.0, 10.0, 1.3),
-    ],
-)
-def test_check_deflection_angle(theta, m1, gam):
-    theta = np.radians(theta)
-    oblique_shock.check_deflection_angle(theta, m1, gam)
-    with pytest.raises(oblique_shock.InvalidDeflectionAngleError):
-        oblique_shock.check_deflection_angle(np.radians(-5), 1.05, 1.3)
-    with pytest.raises(oblique_shock.InvalidDeflectionAngleError):
-        oblique_shock.check_deflection_angle(np.radians(90.1), 2, 1.4)
-
-
-@pytest.mark.parametrize(("beta", "m"), [(45, 2), (35, 4), (65, 1.2)])
-def test_check_shock_angle(beta, m):
-    beta = np.radians(beta)
-    oblique_shock.check_shock_angle(shock_angle=beta, mach=m)
-    with pytest.raises(oblique_shock.InvalidShockAngleError):
-        oblique_shock.check_shock_angle(np.radians(5), mach=2)
-    with pytest.raises(oblique_shock.InvalidShockAngleError):
-        oblique_shock.check_shock_angle(np.radians(90.1), mach=1.1)
+    assert oblique_shock.shock_angle_by_deflection_mach(
+        mach_upstream=m1,
+        deflection_angle=theta,
+        shock_type=shock_type,
+        specific_heat_ratio=gam,
+    ) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
@@ -314,19 +329,11 @@ def test_max_shock_deflection_angle(m1, gam):
     )
     assert actual == pytest.approx(expected)
 
-    # check that shock_angle errors out just above max
-    with pytest.raises(oblique_shock.InvalidDeflectionAngleError):
-        oblique_shock.shock_angle_by_deflection_mach(
-            mach_upstream=m1,
-            deflection_angle=theta_max + 1e-10,
-            specific_heat_ratio=gam,
-        )
-
 
 @pytest.mark.parametrize(
+    # expected values from https://www.pdas.com/flowcalc.html
     ("m1", "gam", "expected"),
     [
-        # expected values from https://www.pdas.com/flowcalc.html
         (3, 1.4, 63.76658),
         (11, 1.45, None),
         (1.3, 1.6, None),

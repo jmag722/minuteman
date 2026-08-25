@@ -34,3 +34,9 @@ def check_specific_heat_ratio(specific_heat_ratio: ArraylikeFloat) -> None:
         raise OutOfBoundsError(
             f"Specific heat ratio must be within [{gam_min}, {gam_max}]"
         )
+
+
+def check_mach_supersonic(mach: ArraylikeFloat) -> None:
+    m = np.atleast_1d(mach)
+    if np.any(m <= 1.0):
+        raise OutOfBoundsError("Mach number must be > 1.0")

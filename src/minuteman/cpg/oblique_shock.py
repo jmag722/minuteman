@@ -17,6 +17,11 @@ import numpy as np
 import numpy.typing as npt
 
 from minuteman.cpg import isentropic_flow, normal_shock
+from minuteman.utils.bounds_check import (
+    OutOfBoundsError,
+    check_mach_supersonic,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
@@ -101,6 +106,13 @@ def lookup_table_by_deflection_angle(
     theta = np.atleast_1d(deflection_angle)
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
+
+    check_specific_heat_ratio(gam)
+    check_mach_supersonic(m1)
+    check_deflection_angle(
+        deflection_angle=theta, mach_upstream=m1, specific_heat_ratio=gam
+    )
+
     beta = shock_angle_by_deflection_mach(
         deflection_angle=theta,
         mach_upstream=m1,
@@ -164,6 +176,11 @@ def lookup_table_by_shock_angle(
     beta = np.atleast_1d(shock_angle)
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
+
+    check_specific_heat_ratio(gam)
+    check_mach_supersonic(m1)
+    check_shock_angle(beta, m1)
+
     theta = deflection_angle_by_shock_mach(
         shock_angle=beta,
         mach_upstream=m1,
@@ -228,6 +245,15 @@ def lookup_table_by_mach_upstream_normal(
     mn1 = np.atleast_1d(mach_upstream_normal)
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
+
+    check_specific_heat_ratio(gam)
+    check_mach_supersonic(m1)
+    if np.any((mn1 <= 1.0) | (mn1 >= m1)):
+        raise OutOfBoundsError(
+            "Normal component of Mach Mn1 must be > 1.0 "
+            "and < upstream Mach, M1"
+        )
+
     mn2 = mach_downstream_normal_component(
         mach_upstream_normal=mn1,
         specific_heat_ratio=gam,
@@ -331,25 +357,21 @@ def mach_downstream_by_postshock(
             [radians]
 
     Raises:
-        InvalidDeflectionAngleError: Deflection angle must be smaller than
+        OutOfBoundsError: Deflection angle must be smaller than
             shock angle
 
     Returns:
-        NDArrayFloat: downstream Mach number, $M_{n2}$
+        NDArrayFloat: downstream Mach number, $M_2$
 
     """
     mn2 = np.atleast_1d(mach_downstream_normal)
     beta = np.atleast_1d(shock_angle)
     theta = np.atleast_1d(deflection_angle)
     if np.any(theta >= beta):
-        raise InvalidDeflectionAngleError(
-            "Deflection angle must be smaller than shock angle.",
+        raise OutOfBoundsError(
+            "Deflection angle theta must be smaller than shock angle beta.",
         )
     return mn2 / np.sin(beta - theta)
-
-
-class InvalidShockAngleError(Exception):
-    r"""Shock angle $\beta$ is invalid"""
 
 
 def check_shock_angle(
@@ -363,21 +385,16 @@ def check_shock_angle(
         mach (ArraylikeFloat): Mach number $M$
 
     Raises:
-        InvalidShockAngleError: shock angle is out of bounds for given
+        OutOfBoundsError: shock angle is out of bounds for given
             Mach number
 
     """
     beta = np.atleast_1d(shock_angle)
     mu = isentropic_flow.mach_angle(mach)
-    valid_beta = np.all((beta >= mu) & (beta <= 0.5 * np.pi))
-    if not valid_beta:
-        raise InvalidShockAngleError(
-            f"Must be within [{np.degrees(mu)}, 90] deg",
+    if np.any((beta < mu) | (beta > 0.5 * np.pi)):
+        raise OutOfBoundsError(
+            f"Shock angle beta must be within [{np.degrees(mu)}, 90] deg",
         )
-
-
-class InvalidDeflectionAngleError(Exception):
-    r"""Deflection angle $\theta$ is invalid"""
 
 
 def check_deflection_angle(
@@ -395,17 +412,18 @@ def check_deflection_angle(
             heats, $\gamma$
 
     Raises:
-        InvalidDeflectionAngleError: deflection angle is invalid
+        OutOfBoundsError: deflection angle is invalid
 
     """
     theta = np.atleast_1d(deflection_angle)
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
     theta_max = deflection_angle_max(mach_upstream=m1, specific_heat_ratio=gam)
-    valid_theta = np.all((theta >= 0.0) & (theta <= theta_max))
-    if not valid_theta:
-        raise InvalidDeflectionAngleError(
-            f"Must be within [0, {np.degrees(theta_max)}] deg",
+
+    if np.any((theta <= 0.0) | (theta > theta_max)):
+        raise OutOfBoundsError(
+            "Deflection angle theta must be within "
+            f"(0, {np.degrees(theta_max)}] deg",
         )
 
 
@@ -431,7 +449,6 @@ def deflection_angle_by_shock_mach(
     beta = np.atleast_1d(shock_angle)
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
-    check_shock_angle(shock_angle=beta, mach=m1)
     return np.atan(
         2.0
         / np.tan(beta)
@@ -463,10 +480,6 @@ def shock_angle_by_deflection_mach(
         shock_type (ArraylikeObliqueShockType): Oblique shock
             type (weak or strong). Defaults to ``ObliqueShockType.weak``.
 
-    Raises:
-        InvalidDeflectionAngleError: Deflection angle is invalid for the given
-            upstream Mach.
-
     Returns:
         NDArrayFloat: shock angle $\beta$ [radians]
 
@@ -474,20 +487,15 @@ def shock_angle_by_deflection_mach(
     theta = np.atleast_1d(deflection_angle)
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
-    check_deflection_angle(
-        deflection_angle=theta,
-        mach_upstream=m1,
-        specific_heat_ratio=gam,
-    )
     delta = np.atleast_1d(shock_type)
 
-    # for valid solution for a given upstream Mach, lam must be real value, and
-    # xi must be within (-1, 1)
+    # For valid solution for a given upstream Mach:
+    # - `lam` must be real value
+    # - `xi` must be within [-1, 1]
+    # This means, at a minimum, `theta` > 0 and m1 > 1
     sqrt_crit = (m1**2 - 1) ** 2 - 3 * (1 + (gam - 1) / 2 * m1**2) * (
         1 + (gam + 1) / 2 * m1**2
     ) * (np.tan(theta)) ** 2
-    if sqrt_crit <= 0.0:
-        raise InvalidDeflectionAngleError
     lam = sqrt_crit**0.5
 
     xi = (
@@ -501,8 +509,6 @@ def shock_angle_by_deflection_mach(
         epsilon = 1e-9
         if np.abs(xi) - 1.0 < epsilon:
             xi = np.sign(xi) * 1.0
-        else:
-            raise InvalidDeflectionAngleError
 
     return np.atan(
         (m1**2 - 1 + 2 * lam * np.cos((4 * np.pi * delta + np.acos(xi)) / 3))
