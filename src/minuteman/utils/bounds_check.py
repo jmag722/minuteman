@@ -28,7 +28,9 @@ def check_nonnegative(val: ArraylikeFloat) -> None:
 
 def check_specific_heat_ratio(specific_heat_ratio: ArraylikeFloat) -> None:
     gam_min = 1.0
-    gam_max = 5.0 / 3.0
+    # I know gam_max should be 5/3=1.66666666..., but to prevent against
+    # user frustration I'll let them round up
+    gam_max = 1.67
     gam = np.atleast_1d(specific_heat_ratio)
     if np.any(gam < gam_min) or np.any(gam > gam_max):
         raise OutOfBoundsError(
