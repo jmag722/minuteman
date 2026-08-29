@@ -19,6 +19,11 @@ from scipy.optimize import brentq, fminbound
 
 from minuteman.cpg import isentropic_flow, oblique_shock
 from minuteman.cpg.oblique_shock import ObliqueShockType
+from minuteman.utils.bounds_check import (
+    OutOfBoundsError,
+    check_mach_supersonic,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     DeveloperError,
     Floatlike,
@@ -322,6 +327,19 @@ def lookup_solution_by_cone_angle(
     theta_c = float(cone_angle)
     gam = float(specific_heat_ratio)
 
+    check_specific_heat_ratio(gam)
+    check_mach_supersonic(m1)
+
+    theta_c_max, _ = cone_shock_angle_maxes(
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
+    )
+    if theta_c <= 0.0 or theta_c > theta_c_max:
+        raise OutOfBoundsError(
+            "Cone angle theta must be within "
+            f"(0.0, {np.degrees(theta_c_max)}] deg to have an attached shock"
+        )
+
     theta, v_r, v_theta = solve_taylor_maccoll_by_cone_angle(
         cone_angle=theta_c,
         mach_upstream=m1,
@@ -365,10 +383,6 @@ def lookup_solution_by_cone_angle(
     )
 
 
-class InvalidConeAngleError(Exception):
-    """Input cone angle is invalid"""
-
-
 def solve_taylor_maccoll_by_cone_angle(
     cone_angle: Floatlike,
     mach_upstream: Floatlike,
@@ -392,20 +406,10 @@ def solve_taylor_maccoll_by_cone_angle(
     m1 = float(mach_upstream)
     gam = float(specific_heat_ratio)
 
-    if theta_c < 0.0 or theta_c >= 0.5 * np.pi:
-        raise InvalidConeAngleError(
-            "Must be nonnegative but less than 90 deg.",
-        )
-
-    theta_c_max, theta_s_at_cone_max = cone_shock_angle_maxes(
+    _, theta_s_at_cone_max = cone_shock_angle_maxes(
         mach_upstream=m1,
         specific_heat_ratio=gam,
     )
-    if theta_c > theta_c_max:
-        raise InvalidConeAngleError(
-            "Max cone angle for an attached shock is"
-            f" {np.degrees(theta_c_max)} deg at this flight condition",
-        )
 
     mu = isentropic_flow.mach_angle(mach=m1)[0]
     if shock_type == ObliqueShockType.weak:
@@ -461,6 +465,27 @@ def lookup_solution_by_surface_mach(
     m_c = float(surface_mach)
     gam = float(specific_heat_ratio)
 
+    check_specific_heat_ratio(gam)
+    check_mach_supersonic(m1)
+    # Mc must be greater than Mc for a shock angle of 90 degrees, but < M1
+    # we're allowing the user to specify a surface Mach number that would
+    # yield the nearly impossible strong shock solution
+    # - (VTT limits to weak only?)
+    _, vr90, vtheta90 = solve_taylor_maccoll_by_shock_angle(
+        shock_angle=0.5 * np.pi,
+        mach_upstream=m1,
+        specific_heat_ratio=gam,
+    )
+    v90 = nondimensional_velocity_from_components(
+        velocity_radial=vr90,
+        velocity_polar=vtheta90,
+    )
+    m90 = mach_from_nondimensional_velocity(v90, specific_heat_ratio=gam)[-1]
+    if m_c < m90 or m_c >= m1:
+        raise OutOfBoundsError(
+            f"Surface Mach number M_c must be within [{m90}, {m1})"
+        )
+
     theta, v_r, v_theta = solve_taylor_maccoll_by_surface_mach(
         surface_mach=m_c,
         mach_upstream=m1,
@@ -503,10 +528,6 @@ def lookup_solution_by_surface_mach(
     )
 
 
-class InvalidSurfaceMachError(Exception):
-    """Input surface Mach number is invalid"""
-
-
 def solve_taylor_maccoll_by_surface_mach(
     surface_mach: Floatlike,
     mach_upstream: Floatlike,
@@ -533,25 +554,6 @@ def solve_taylor_maccoll_by_surface_mach(
     mc = float(surface_mach)
     m1 = float(mach_upstream)
     gam = float(specific_heat_ratio)
-
-    # check Mc
-    if mc >= m1:
-        raise InvalidSurfaceMachError("Must be less than freestream Mach")
-    # Mc cannot be lower than Mc for a shock angle of 90 degrees
-    _, vr90, vtheta90 = solve_taylor_maccoll_by_shock_angle(
-        shock_angle=0.5 * np.pi,
-        mach_upstream=m1,
-        specific_heat_ratio=gam,
-    )
-    v90 = nondimensional_velocity_from_components(
-        velocity_radial=vr90,
-        velocity_polar=vtheta90,
-    )
-    m90 = mach_from_nondimensional_velocity(v90, specific_heat_ratio=gam)[-1]
-    if mc < m90:
-        raise InvalidSurfaceMachError(
-            f"Must be greater than {m90:.3f} for this freestream condition",
-        )
 
     min_shock_angle = isentropic_flow.mach_angle(mach=m1)[0] * (1 + _delta)
     max_shock_angle = np.radians(90.0 - _delta)
@@ -608,6 +610,10 @@ def lookup_solution_by_shock_angle(
     m1 = float(mach_upstream)
     theta_s = float(shock_angle)
     gam = float(specific_heat_ratio)
+
+    check_specific_heat_ratio(gam)
+    check_mach_supersonic(m1)
+    oblique_shock.check_shock_angle(shock_angle=theta_s, mach=m1)
 
     theta, v_r, v_theta = solve_taylor_maccoll_by_shock_angle(
         shock_angle=theta_s,
@@ -696,10 +702,6 @@ class SolveIVPError(Exception):
     """solve_ivp call failed"""
 
 
-class InvalidPolarVelocityError(Exception):
-    """Normal velocity is invalid"""
-
-
 def solve_taylor_maccoll_by_shock_angle(
     shock_angle: Floatlike,
     mach_upstream: Floatlike,
@@ -726,7 +728,7 @@ def solve_taylor_maccoll_by_shock_angle(
     theta_s = float(shock_angle)
     m1 = float(mach_upstream)
     gam = float(specific_heat_ratio)
-    oblique_shock.check_shock_angle(shock_angle=theta_s, mach=m1)
+
     mn1 = oblique_shock.mach_upstream_normal_component(
         mach_upstream=m1,
         shock_angle=theta_s,
@@ -762,7 +764,7 @@ def solve_taylor_maccoll_by_shock_angle(
     )
 
     if vtheta_shock >= 0.0:
-        raise InvalidPolarVelocityError("Velocity must be negative")
+        raise ValueError("Polar velocity should be negative by convention")
 
     @dataclass
     class VthetaEqualsZeroEvent:
