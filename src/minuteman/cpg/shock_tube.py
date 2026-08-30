@@ -87,28 +87,35 @@ def solve_sod(
     the contact surface centered in the tube at x=0.
 
     Args:
-        time (Floatlike): time, $t$ [seconds]
-        pressure_l (Floatlike): pressure on left hand side (LHS), $p_L$ [Pa]
-        pressure_r (Floatlike): pressure on right hand side (RHS), $p_R$ [Pa]
-        density_l (Floatlike): density on LHS, $\rho_L$ [kg/$m^3$]
-        density_r (Floatlike): density on RHS, $\rho_R$ [kg/$m^3$]
+        time (Floatlike): time, $t$. Bounds: $(0, \infty)$
+        pressure_l (Floatlike): pressure on left hand side (LHS), $p_L$.
+            Bounds: $(0, \infty)$
+        pressure_r (Floatlike): pressure on right hand side (RHS), $p_R$.
+            Bounds: $(0, \infty)$
+        density_l (Floatlike): density on LHS, $\rho_L$.
+            Bounds: $(0, \infty)$
+        density_r (Floatlike): density on RHS, $\rho_R$.
+            Bounds: $(0, \infty)$
         specific_heat_ratio_l (Floatlike, optional): ratio of specific heats on
-            LHS, $\gamma_L$. Defaults to 1.4.
+            LHS, $\gamma_L$. Bounds: $[1.0, 1.67]$
         specific_heat_ratio_r (Floatlike, optional): ratio of specific heats on
-            RHS, $\gamma_R$. Defaults to 1.4.
+            RHS, $\gamma_R$. Bounds: $[1.0, 1.67]$
         gas_constant_l (Floatlike, optional): specific gas constant on LHS,
-            $R_L$. Defaults to ``thermo.gas_constant_air_si``.
+            $R_L$. Bounds: $(0, \infty)$
         gas_constant_r (Floatlike, optional): specific gas constant on RHS,
-            $R_R$. Defaults to ``thermo.gas_constant_air_si``.
+            $R_R$. Bounds: $(0, \infty)$
         tube_length (Floatlike, optional): Length of shock tube.
-            Defaults to 20.0, the Sod problem #1 length
+            Defaults to 20.0, the Sod problem #1 length. Bounds: $(0, \infty)$
         position (NDArrayFloat | None, optional): explicit positions along
             the shock tube to evaluate. This is helpful when comparing to a
-            CFD grid directly. Defaults to ``None``.
+            CFD grid directly. Defaults to ``None`` where values are chosen
+            based upon critical points.
 
     Returns:
         ShockTubeSolution: Sod shock tube solution
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     check_positive(time)
     check_positive(pressure_l)

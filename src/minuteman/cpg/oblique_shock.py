@@ -92,16 +92,19 @@ def lookup_table_by_deflection_angle(
 
     Args:
         deflection_angle (ArraylikeFloat): deflection angle, $\theta$
-            [radians]
-        mach_upstream (ArraylikeFloat): upstream Mach number $M_1$
+            [radians]. Bounds: $(0, \theta_{max}]$
+        mach_upstream (ArraylikeFloat): upstream Mach number $M_1$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$. Defaults to 1.4.
+            $\gamma$. Bounds: $[1, 1.67]$
         shock_type (ArraylikeObliqueShockType, optional):
             shock type. Defaults to ``ObliqueShockType.weak``.
 
     Returns:
         ObliqueShockTable: oblique shock table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     theta = np.atleast_1d(deflection_angle)
     m1 = np.atleast_1d(mach_upstream)
@@ -164,14 +167,18 @@ def lookup_table_by_shock_angle(
     r"""Look up the oblique shock properties from a known shock angle, $\beta$
 
     Args:
-        shock_angle (ArraylikeFloat): shock angle, $\beta$ [radians]
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
+        shock_angle (ArraylikeFloat): shock angle, $\beta$ [radians].
+            Bounds: $[\arcsin\left(\frac{1}{M1}\right), 90^\circ]$
+        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         ObliqueShockTable: oblique shock table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     beta = np.atleast_1d(shock_angle)
     m1 = np.atleast_1d(mach_upstream)
@@ -233,14 +240,17 @@ def lookup_table_by_mach_upstream_normal(
 
     Args:
         mach_upstream_normal (ArraylikeFloat): normal component of the
-            upstream Mach number, $M_{n1}$
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
+            upstream Mach number, $M_{n1}$. Bounds: $(1, M_1)$
+        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         ObliqueShockTable: oblique shock table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     mn1 = np.atleast_1d(mach_upstream_normal)
     m1 = np.atleast_1d(mach_upstream)

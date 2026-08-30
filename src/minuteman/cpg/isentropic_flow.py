@@ -70,13 +70,15 @@ def lookup_table_by_mach(
     r"""Lookup the isentropic flow table based on Mach number, $M$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
+        mach (ArraylikeFloat): Mach number, $M$. Bounds $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m = np.atleast_1d(mach)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -109,13 +111,15 @@ def lookup_table_by_temperature(
 
     Args:
         temperature_ratio (ArraylikeFloat): total temperature ratio,
-            $T_0 / T$
+            $T_0 / T$. Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     tratio = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -138,13 +142,16 @@ def lookup_table_by_pressure(
     $p_0 / p$
 
     Args:
-        pressure_ratio (ArraylikeFloat): total pressure ratio, $p_0 / p$
+        pressure_ratio (ArraylikeFloat): total pressure ratio, $p_0 / p$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     pratio = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -170,14 +177,16 @@ def lookup_table_by_density(
     $\rho_0 / \rho$
 
     Args:
-        density_ratio (ArraylikeFloat): total density ratio,
-            $\rho_0 / \rho$
+        density_ratio (ArraylikeFloat): total density ratio, $\rho_0 / \rho$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     rratio = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -204,13 +213,15 @@ def lookup_table_by_speed_of_sound(
 
     Args:
         speed_of_sound_ratio (ArraylikeFloat): total speed of sound ratio,
-            $a_0 / a$
+            $a_0 / a$. Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     aratio = np.atleast_1d(speed_of_sound_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -236,15 +247,18 @@ def lookup_table_by_area_ratio(
     r"""Lookup the isentropic flow table based on area ratio, $A / A^*$
 
     Args:
-        area_ratio (ArraylikeFloat): area ratio, $A / A^*$
+        area_ratio (ArraylikeFloat): area ratio, $A / A^*$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
         flow_regime (ArraylikeFlowSpeedRegime): Is flowfield
-            subsonic or supersonic. Default is ``FlowSpeedRegime.supersonic``
+            subsonic or supersonic.
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     aratio = np.atleast_1d(area_ratio)
     gam = np.atleast_1d(specific_heat_ratio)

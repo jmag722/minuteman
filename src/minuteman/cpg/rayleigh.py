@@ -80,13 +80,15 @@ def lookup_table_by_mach(
     r"""Look up a Rayleigh flow table result from the Mach number, $M$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
+        mach (ArraylikeFloat): Mach number, $M$. Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds $[1, 1.67]$
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
     m2 = np.atleast_1d(mach)
@@ -138,13 +140,16 @@ def lookup_table_by_pressure(
     $p / p^*$
 
     Args:
-        pressure_ratio (ArraylikeFloat): static pressure ratio, $p / p^*$
+        pressure_ratio (ArraylikeFloat): static pressure ratio, $p / p^*$.
+            Bounds: $(0, \gamma+1)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds $[1, 1.67]$
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
     p_ratio = np.atleast_1d(pressure_ratio)
@@ -268,16 +273,18 @@ def lookup_table_by_temperature(
 
     Args:
         temperature_ratio (ArraylikeFloat): static temperature ratio,
-            $T / T^*$
+            $T / T^*$. Bounds: $\left(0, \frac{1}{4} \left(\gamma +
+                \frac{1}{\gamma}\right) + \frac{1}{2} \right]$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds $[1, 1.67]$
         flow_regime (ArraylikeRayleighTemperatureRegime, optional):
             Rayleigh flow speed regime based upon $T_{max}$.
-            Defaults to ``RayleighTemperatureRegime.highspeed``.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     tratio = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -318,13 +325,16 @@ def lookup_table_by_density(
 
     Args:
         density_ratio (ArraylikeFloat): static density ratio,
-            $\rho / \rho^*$
+            $\rho / \rho^*$. Bounds: $\left(\frac{\gamma}{1+\gamma},
+            \infty \right)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds $[1, 1.67]$
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
     r_ratio = np.atleast_1d(density_ratio)
@@ -349,16 +359,20 @@ def lookup_table_by_total_pressure(
 
     Args:
         total_pressure_ratio (ArraylikeFloat): total pressure ratio,
-            $p_0 / p_0^*$
+            $p_0 / p_0^*$.
+            Subsonic Bounds: $\left[1, \left(1+\gamma\right)
+                \left(\frac{2}{\gamma+1}\right)^\frac{\gamma}{\gamma-1}\right)$
+            , Supersonic Bounds: $[1, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds $[1, 1.67]$
         flow_regime (ArraylikeFlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     p0ratio = np.atleast_1d(total_pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -407,16 +421,20 @@ def lookup_table_by_total_temperature(
 
     Args:
         total_temperature_ratio (ArraylikeFloat): total temperature ratio,
-            $T_0 / T_0^*$
+            $T_0 / T_0^*$.
+            Subsonic Bounds: $(0, 1]$,
+            Supersonic Bounds: $\left[\frac{(\gamma+1)(\gamma-1)}{\gamma^2},
+                                      1\right]$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds $[1, 1.67]$
         flow_regime (ArraylikeFlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     t0ratio = np.atleast_1d(total_temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -469,16 +487,17 @@ def lookup_table_by_entropy(
 
     Args:
         entropy_ratio (ArraylikeFloat): specific entropy ratio,
-            $(s^* - s) / R$
+            $(s^* - s) / R$. Bounds: $[0, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds $[1, 1.67]$
         flow_regime (ArraylikeFlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         RayleighFlowTable: Rayleigh flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     sratio = np.atleast_1d(entropy_ratio)
     gam = np.atleast_1d(specific_heat_ratio)

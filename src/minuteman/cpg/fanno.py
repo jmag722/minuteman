@@ -72,13 +72,15 @@ def lookup_table_by_mach(
     r"""Look up a Fanno flow table result from the Mach number, $M$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
+        mach (ArraylikeFloat): Mach number, $M$. Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1.0, 1.67]$
 
     Returns:
         FannoFlowTable: Fanno flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
     m2 = np.atleast_1d(mach)
@@ -130,13 +132,16 @@ def lookup_table_by_pressure(
     $p / p^*$
 
     Args:
-        pressure_ratio (ArraylikeFloat): static pressure ratio, $p / p^*$
+        pressure_ratio (ArraylikeFloat): static pressure ratio, $p / p^*$.
+            Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1.0, 1.67]$
 
     Returns:
         FannoFlowTable: Fanno flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
     pratio = np.atleast_1d(pressure_ratio)
@@ -161,13 +166,15 @@ def lookup_table_by_temperature(
 
     Args:
         temperature_ratio (ArraylikeFloat): static temperature ratio,
-            $T / T^*$
+            $T / T^*$. Bounds: $\left(0, \frac{\gamma+1}{2} \right)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1.0, 1.67]$
 
     Returns:
         FannoFlowTable: Fanno flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
     tratio = np.atleast_1d(temperature_ratio)
@@ -193,13 +200,16 @@ def lookup_table_by_density(
     $\rho / \rho^*$
 
     Args:
-        density_ratio (ArraylikeFloat): density ratio, $\rho / \rho^*$
+        density_ratio (ArraylikeFloat): density ratio, $\rho / \rho^*$.
+            Bounds: $\left(\sqrt{\frac{\gamma-1}{\gamma+1}}, \infty \right)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1.0, 1.67]$
 
     Returns:
         FannoFlowTable: Fanno flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
     rratio = np.atleast_1d(density_ratio)
@@ -267,16 +277,17 @@ def lookup_table_by_total_pressure(
 
     Args:
         total_pressure_ratio (ArraylikeFloat): total pressure ratio,
-            $p_0 / p_0^*$
+            $p_0 / p_0^*$. Bounds: $[1, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1.0, 1.67]$
         flow_regime (ArraylikeFlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         FannoFlowTable: Fanno flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     p0_ratio = np.atleast_1d(total_pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -300,16 +311,18 @@ def lookup_table_by_entropy(
     $(s* - s) / R$
 
     Args:
-        entropy_ratio (ArraylikeFloat): entropy ratio, $(s* - s) / R$
+        entropy_ratio (ArraylikeFloat): entropy ratio, $(s* - s) / R$.
+            Bounds: $[0, \infty)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1.0, 1.67]$
         flow_regime (ArraylikeFlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         FannoFlowTable: Fanno flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     s_ratio = np.atleast_1d(entropy_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -332,17 +345,22 @@ def lookup_table_by_fanno_parameter(
     $4 f L^* / D$
 
     Args:
-        fanno_parameter (ArraylikeFloat): Fanno parameter,
-            $4 f L^* / D$
+        fanno_parameter (ArraylikeFloat): Fanno parameter, $4 f L^* / D$.
+            Subsonic Bounds: $[0, \infty)$,
+            Supersonic Bounds: $\left[0, -\frac{1}{\gamma} +
+                \frac{\gamma+1}{2\gamma}
+                \ln\left(\frac{\gamma+1}{\gamma-1}\right) \right)$
         specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1.0, 1.67]$
         flow_regime (ArraylikeFlowSpeedRegime, optional):
             flow speed regime (either supersonic or subsonic).
-            Defaults to ``FlowSpeedRegime.supersonic``.
 
     Returns:
         FannoFlowTable: Fanno flow output table
 
+    Raises:
+        OutOfBoundsError: invalid inputs
+        InvalidArrayShapeError: input array shapes are incompatible
     """
     fparam = np.atleast_1d(fanno_parameter)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -566,30 +584,6 @@ def entropy_ratio_by_mach(
         * ((2 + (gam - 1) * m1**2) / (2 + (gam - 1) * m2**2))
         ** (0.5 * (gam + 1) / (gam - 1)),
     )
-
-
-# class InvalidMachError(Exception):
-#     pass
-
-
-# def _check_valid_mach(mach_initial: NDArrayFloat,
-#                       mach_final: NDArrayFloat):
-#     valid_mach = (mach_initial > 0.0) & (mach_final > 0.0)
-#     if not valid_mach.all():
-#         raise InvalidMachError("Mach must be positive")
-
-#     invalid_2nd_law = (((mach_initial < 1) & (mach_final < mach_initial)) |
-#                        (mach_initial >= 1) & (mach_final > mach_initial))
-#     if invalid_2nd_law.any():
-#         raise InvalidMachError(
-#             "Choice of Mach numbers violates 2nd law of thermodynamics"
-#         )
-#     choked_flow = (
-#         ((mach_initial < 1) & (mach_final > 1)) | (
-#             (mach_initial >= 1) & (mach_final < 1))
-#     )
-#     if choked_flow.any():
-#         raise InvalidMachError("Flow is choked, a normal shock will develop")
 
 
 def _rev_fanno_parameter_by_mach(

@@ -262,14 +262,17 @@ def isentropic_process_by_temperature(
     in temperature, $T_2 / T_1$.
 
     Args:
-        temperature_ratio (ArraylikeFloat): temperature ratio, $T_2 / T_1$
+        temperature_ratio (ArraylikeFloat): temperature ratio, $T_2 / T_1$.
+            Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+            $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     t21 = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -292,14 +295,17 @@ def isentropic_process_by_pressure(
     in pressure, $p_2 / p_1$.
 
     Args:
-        pressure_ratio (ArraylikeFloat): pressure ratio, $p_2 / p_1$
+        pressure_ratio (ArraylikeFloat): pressure ratio, $p_2 / p_1$.
+            Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+            $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     p21 = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -322,14 +328,17 @@ def isentropic_process_by_density(
     in density, $\rho_2 / \rho_1$.
 
     Args:
-        density_ratio (ArraylikeFloat): density ratio, $\rho_2 / \rho_1$
+        density_ratio (ArraylikeFloat): density ratio, $\rho_2 / \rho_1$.
+            Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+            $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     r21 = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
@@ -353,14 +362,16 @@ def isentropic_process_by_speed_of_sound(
 
     Args:
         speed_of_sound_ratio (ArraylikeFloat): speed of sound ratio,
-            $a_2 / a_1$
+            $a_2 / a_1$. Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+            $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     a21 = np.atleast_1d(speed_of_sound_ratio)
     gam = np.atleast_1d(specific_heat_ratio)

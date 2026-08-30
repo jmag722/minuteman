@@ -312,16 +312,20 @@ def lookup_solution_by_cone_angle(
     r"""Solve a cone flow problem with a known surface Mach number, $M_c$
 
     Args:
-        cone_angle (Floatlike): cone angle, $\theta_c$ [radians]
-        mach_upstream (Floatlike): upstream Mach number, $M_1$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$,
-            defaults to 1.4
-        shock_type(ObliqueShockType): shock type, strong or weak, defaults to
-            a weak shock (almost always what you want)
+        cone_angle (Floatlike): cone angle, $\theta_c$ [radians].
+            Bounds: $(0, \theta_{c,max}]$
+        mach_upstream (Floatlike): upstream Mach number, $M_1$.
+            Bounds: $(1, \infty)$
+        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
+        shock_type(ObliqueShockType): shock type - you almost always want
+            weak
 
     Returns:
         ConeFlowSolution: cone flow solution
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = float(mach_upstream)
     theta_c = float(cone_angle)
@@ -452,14 +456,19 @@ def lookup_solution_by_surface_mach(
     r"""Solve a cone flow problem with a known surface Mach number, $M_c$
 
     Args:
-        surface_mach (Floatlike): Mach number at the surface of the cone, $M_c$
-        mach_upstream (Floatlike): upstream Mach number, $M_1$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$,
-            defaults to 1.4
+        surface_mach (Floatlike): Mach number at the surface of the cone,
+            $M_c$. Bounds: $[M_2, M_1]$, where $M_2$ is the Mach
+            number downstream of a normal shock.
+        mach_upstream (Floatlike): upstream Mach number, $M_1$.
+            Bounds: $(1, \infty)$
+        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
         ConeFlowSolution: cone flow solution
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = float(mach_upstream)
     m_c = float(surface_mach)
@@ -547,8 +556,7 @@ def solve_taylor_maccoll_by_surface_mach(
             and polar velocity $V'_{\theta}$
 
     Raises:
-        InvalidSurfaceMachError: Surface Mach number is not possible for the
-            given freestream condition
+        DeveloperError: Root-finding failed
 
     """
     mc = float(surface_mach)
@@ -598,14 +606,18 @@ def lookup_solution_by_shock_angle(
     r"""Solve a cone flow problem with a known shock angle, $\theta_s$
 
     Args:
-        shock_angle (Floatlike): shock angle, $\theta_s$ [radians]
-        mach_upstream (Floatlike): upstream Mach number, $M_1$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$,
-            defaults to 1.4
+        shock_angle (Floatlike): shock angle, $\theta_s$ [radians].
+            Bounds: $[\arcsin\left(\frac{1}{M1}\right), 90^\circ]$
+        mach_upstream (Floatlike): upstream Mach number, $M_1$.
+            Bounds: $(1, \infty)$
+        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
         ConeFlowSolution: cone flow solution
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = float(mach_upstream)
     theta_s = float(shock_angle)
@@ -720,8 +732,8 @@ def solve_taylor_maccoll_by_shock_angle(
             $V'_r$, and polar velocity $V'_{\theta}$
 
     Raises:
-        InvalidPolarVelocityError: Normal velocity has the wrong sign,
-            check inputs
+        ValueError: polar velocity is positive (should be negative by
+            convention)
         SolveIVPError: IVP solver failed, check inputs
 
     """
