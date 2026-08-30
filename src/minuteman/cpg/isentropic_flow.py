@@ -70,12 +70,12 @@ def lookup_table_by_mach(
     r"""Lookup the isentropic flow table based on Mach number, $M$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$. Bounds $(0, \infty)$
-        specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Bounds: $[1, 1.67]$
+        mach: Mach number, $M$. Bounds $(0, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        IsentropicFlowTable: isentropic flow table result
+        Isentropic flow table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -110,13 +110,13 @@ def lookup_table_by_temperature(
     $T_0 / T$
 
     Args:
-        temperature_ratio (ArraylikeFloat): total temperature ratio,
-            $T_0 / T$. Bounds: $(1, \infty)$
-        specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Bounds: $[1, 1.67]$
+        temperature_ratio: total temperature ratio, $T_0 / T$.
+            Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        IsentropicFlowTable: isentropic flow table result
+        Isentropic flow table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -142,13 +142,12 @@ def lookup_table_by_pressure(
     $p_0 / p$
 
     Args:
-        pressure_ratio (ArraylikeFloat): total pressure ratio, $p_0 / p$.
-            Bounds: $(1, \infty)$
-        specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Bounds: $[1, 1.67]$
+        pressure_ratio: total pressure ratio, $p_0 / p$. Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        IsentropicFlowTable: isentropic flow table result
+        Isentropic flow table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -177,13 +176,13 @@ def lookup_table_by_density(
     $\rho_0 / \rho$
 
     Args:
-        density_ratio (ArraylikeFloat): total density ratio, $\rho_0 / \rho$.
+        density_ratio: total density ratio, $\rho_0 / \rho$.
             Bounds: $(1, \infty)$
-        specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Bounds: $[1, 1.67]$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        IsentropicFlowTable: isentropic flow table result
+        Isentropic flow table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -212,13 +211,13 @@ def lookup_table_by_speed_of_sound(
     $a_0 / a$
 
     Args:
-        speed_of_sound_ratio (ArraylikeFloat): total speed of sound ratio,
-            $a_0 / a$. Bounds: $(1, \infty)$
-        specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Bounds: $[1, 1.67]$
+        speed_of_sound_ratio: total speed of sound ratio, $a_0 / a$.
+            Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        IsentropicFlowTable: isentropic flow table result
+        Isentropic flow table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -247,15 +246,13 @@ def lookup_table_by_area_ratio(
     r"""Lookup the isentropic flow table based on area ratio, $A / A^*$
 
     Args:
-        area_ratio (ArraylikeFloat): area ratio, $A / A^*$.
-            Bounds: $(1, \infty)$
-        specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Bounds: $[1, 1.67]$
-        flow_regime (ArraylikeFlowSpeedRegime): Is flowfield
-            subsonic or supersonic.
+        area_ratio: area ratio, $A / A^*$. Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
+        flow_regime: Is flowfield subsonic or supersonic.
 
     Returns:
-        IsentropicFlowTable: isentropic flow table result
+        Isentropic flow table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -281,12 +278,11 @@ def total_temperature_ratio_by_mach(
     r"""Computes the stagnation or total temperature ratio, $T_0 / T$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach: Mach number, $M$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: total temperature ratio, $T_0 / T$
+        Total temperature ratio, $T_0 / T$
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
@@ -301,13 +297,11 @@ def mach_by_temperature(
     r"""Computes the Mach number $M$ from total temperature ratio $T_0 / T$
 
     Args:
-        temperature_ratio (ArraylikeFloat): total temperature ratio,
-            $T_0 / T$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        temperature_ratio: total temperature ratio, $T_0 / T$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        ArraylikeFloat: Mach number, $M$
+        Mach number, $M$
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
@@ -322,12 +316,11 @@ def total_pressure_ratio_by_mach(
     r"""Computes the stagnation or total pressure ratio, $p_0 / p$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach: Mach number, $M$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: total pressure ratio, $p_0 / p$
+        Total pressure ratio, $p_0 / p$
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
@@ -343,12 +336,11 @@ def total_density_ratio_by_mach(
     r"""Computes the stagnation or total density ratio, $\rho_0 / \rho$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach: Mach number, $M$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: total density ratio, $\rho_0 / \rho$
+        Total density ratio, $\rho_0 / \rho$
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
@@ -364,12 +356,11 @@ def total_speed_of_sound_ratio_by_mach(
     r"""Computes the stagnation or total speed of sound ratio, $a_0 / a$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach: Mach number, $M$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: total speed of sound ratio, $a_0 / a$
+        Total speed of sound ratio, $a_0 / a$
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
@@ -396,12 +387,11 @@ def area_ratio_by_mach(
     This is the standard area-Mach number relation
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach: Mach number, $M$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: area ratio, $A / A^*$
+        Area ratio, $A / A^*$
 
     """
     return _area_ratio_by_mach_sqr(m=mach, gam=specific_heat_ratio) ** 0.5
@@ -415,14 +405,12 @@ def mach_by_area_ratio(
     r"""Compute the Mach number for a known area ratio, $A / A^*$
 
     Args:
-        area_ratio (ArraylikeFloat): area ratio, $A / A^*$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats, $\gamma$
-        flow_regime (ArraylikeFlowSpeedRegime): Is flowfield
-            subsonic or supersonic.
+        area_ratio: area ratio, $A / A^*$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
+        flow_regime: Is flowfield subsonic or supersonic.
 
     Returns:
-        ArraylikeFloat: supersonic or subsonic Mach solution
-            for a given area ratio
+        Supersonic or subsonic Mach solution for a given area ratio
 
     """
     aratios = np.atleast_1d(area_ratio)
@@ -443,10 +431,10 @@ def mach_angle(mach: ArraylikeFloat) -> NDArrayFloat:
     r"""Compute the Mach angle, $\mu$ [radians].
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
+        mach: Mach number, $M$
 
     Returns:
-        NDArrayFloat: Mach angle, $\mu$ [radians]
+        Mach angle, $\mu$ [radians]
 
     """
     m = np.atleast_1d(mach)

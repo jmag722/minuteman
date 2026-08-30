@@ -91,17 +91,15 @@ def lookup_table_by_deflection_angle(
     angle $\theta$
 
     Args:
-        deflection_angle (ArraylikeFloat): deflection angle, $\theta$
-            [radians]. Bounds: $(0, \theta_{max}]$
-        mach_upstream (ArraylikeFloat): upstream Mach number $M_1$.
-            Bounds: $(1, \infty)$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$. Bounds: $[1, 1.67]$
-        shock_type (ArraylikeObliqueShockType, optional):
-            shock type. Defaults to ``ObliqueShockType.weak``.
+        deflection_angle: deflection angle, $\theta$ [radians].
+            Bounds: $(0, \theta_{max}]$
+        mach_upstream: upstream Mach number $M_1$. Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
+        shock_type: shock type
 
     Returns:
-        ObliqueShockTable: oblique shock table
+        Oblique shock table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -167,15 +165,14 @@ def lookup_table_by_shock_angle(
     r"""Look up the oblique shock properties from a known shock angle, $\beta$
 
     Args:
-        shock_angle (ArraylikeFloat): shock angle, $\beta$ [radians].
+        shock_angle: shock angle, $\beta$ [radians].
             Bounds: $[\arcsin\left(\frac{1}{M1}\right), 90^\circ]$
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$.
-            Bounds: $(1, \infty)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        ObliqueShockTable: oblique shock table
+        Oblique shock table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -239,15 +236,14 @@ def lookup_table_by_mach_upstream_normal(
     Mach number, $M_{n1}$
 
     Args:
-        mach_upstream_normal (ArraylikeFloat): normal component of the
-            upstream Mach number, $M_{n1}$. Bounds: $(1, M_1)$
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$.
-            Bounds: $(1, \infty)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        mach_upstream_normal: normal component of the upstream Mach number,
+            $M_{n1}$. Bounds: $(1, M_1)$
+        mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        ObliqueShockTable: oblique shock table
+        Oblique shock table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -314,11 +310,11 @@ def mach_upstream_normal_component(
     r"""Compute the normal component of the upstream Mach number, $M_{n1}$
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        shock_angle (ArraylikeFloat): shock angle, $\beta$ [radians]
+        mach_upstream: upstream Mach number, $M_1$
+        shock_angle: shock angle, $\beta$ [radians]
 
     Returns:
-        NDArrayFloat: normal component of the upstream Mach number, $M_{n1}$
+        Normal component of the upstream Mach number, $M_{n1}$
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -335,14 +331,12 @@ def mach_downstream_normal_component(
     $M_{n2}$
 
     Args:
-        mach_upstream_normal (ArraylikeFloat): component of upstream Mach
-            number normal to the shock, $M_{n1}$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_upstream_normal: component of upstream Mach number normal
+            to the shock, $M_{n1}$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: component of downstream Mach number normal to the shock,
-            $M_{n2}$
+        Component of downstream Mach number normal to the shock, $M_{n2}$
 
     """
     mn1 = np.atleast_1d(mach_upstream_normal)
@@ -360,18 +354,16 @@ def mach_downstream_by_postshock(
     r"""Compute the downstream Mach number, $M_2$
 
     Args:
-        mach_downstream_normal (ArraylikeFloat): component of downstream
-            Mach number normal to the shock, $M_{n2}$
-        shock_angle (ArraylikeFloat): shock angle, $\beta$ [radians]
-        deflection_angle (ArraylikeFloat): flow deflection angle, $\theta$
-            [radians]
-
-    Raises:
-        OutOfBoundsError: Deflection angle must be smaller than
-            shock angle
+        mach_downstream_normal: component of downstream Mach number
+            normal to the shock, $M_{n2}$
+        shock_angle: shock angle, $\beta$ [radians]
+        deflection_angle: flow deflection angle, $\theta$ [radians]
 
     Returns:
-        NDArrayFloat: downstream Mach number, $M_2$
+        Downstream Mach number, $M_2$
+
+    Raises:
+        OutOfBoundsError: Deflection angle must be smaller than shock angle
 
     """
     mn2 = np.atleast_1d(mach_downstream_normal)
@@ -391,8 +383,8 @@ def check_shock_angle(
     r"""Ensure shock angle $\beta$ is within bounds or throw an error.
 
     Args:
-        shock_angle (ArraylikeFloat): shock angle $\beta$ [radians]
-        mach (ArraylikeFloat): Mach number $M$
+        shock_angle: shock angle $\beta$ [radians]
+        mach: Mach number $M$
 
     Raises:
         OutOfBoundsError: shock angle is out of bounds for given
@@ -415,11 +407,9 @@ def check_deflection_angle(
     r"""Ensure deflection angle $\theta$ is within bounds or throw an error.
 
     Args:
-        deflection_angle (ArraylikeFloat): deflection angle $\theta$
-            [radians]
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$
+        deflection_angle: deflection angle $\theta$ [radians]
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Raises:
         OutOfBoundsError: deflection angle is invalid
@@ -447,13 +437,12 @@ def deflection_angle_by_shock_mach(
     (Eq. 4.17 in [1](oblique_shock.md#references)).
 
     Args:
-        shock_angle (ArraylikeFloat): shock angle $\beta$ [radians]
-        mach_upstream (ArraylikeFloat): upstream Mach number $M_1$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$
+        shock_angle: shock angle $\beta$ [radians]
+        mach_upstream: upstream Mach number $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: flow deflection angle, $\theta$ [radians]
+        Flow deflection angle, $\theta$ [radians]
 
     """
     beta = np.atleast_1d(shock_angle)
@@ -482,16 +471,13 @@ def shock_angle_by_deflection_mach(
     [1](oblique_shock.md#references))
 
     Args:
-        deflection_angle (ArraylikeFloat): flow deflection angle, $\theta$
-            [radians]
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
-        shock_type (ArraylikeObliqueShockType): Oblique shock
-            type (weak or strong). Defaults to ``ObliqueShockType.weak``.
+        deflection_angle: flow deflection angle, $\theta$ [radians]
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
+        shock_type: Oblique shock type (weak or strong).
 
     Returns:
-        NDArrayFloat: shock angle $\beta$ [radians]
+        Shock angle $\beta$ [radians]
 
     """
     theta = np.atleast_1d(deflection_angle)
@@ -535,13 +521,11 @@ def shock_angle_max(
     [2](oblique_shock.md#references)).
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$.
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
 
     Returns:
-        NDArrayFloat: maximum shock angle $\beta_{max}$ [radians] that is still
-            attached
+        Maximum shock angle $\beta_{max}$ [radians] that is still attached
 
     """
     # Computed by taking derivative of deflection angle wrt shock angle
@@ -570,12 +554,11 @@ def deflection_angle_max(
     for a given upstream Mach number $M_1$.
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: max flow deflection angle, $\theta_{max}$ [radians]
+        Max flow deflection angle, $\theta_{max}$ [radians]
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -597,12 +580,11 @@ def shock_angle_sonic(
     [2](oblique_shock.md#references)).
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: shock angle $\beta$ [radians] yielding sonic flow
+        Shock angle $\beta$ [radians] yielding sonic flow
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -630,12 +612,11 @@ def deflection_angle_sonic(
     downstream Mach number is sonic ($M_2=1$).
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: deflection angle $\theta$ [radians] yielding sonic flow
+        Deflection angle $\theta$ [radians] yielding sonic flow
 
     """
     m1 = np.atleast_1d(mach_upstream)

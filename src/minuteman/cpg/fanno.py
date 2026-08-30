@@ -72,12 +72,12 @@ def lookup_table_by_mach(
     r"""Look up a Fanno flow table result from the Mach number, $M$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$. Bounds: $(0, \infty)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1.0, 1.67]$
+        mach: Mach number, $M$. Bounds: $(0, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1.0, 1.67]$
 
     Returns:
-        FannoFlowTable: Fanno flow output table
+        Fanno flow output table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -132,13 +132,12 @@ def lookup_table_by_pressure(
     $p / p^*$
 
     Args:
-        pressure_ratio (ArraylikeFloat): static pressure ratio, $p / p^*$.
-            Bounds: $(0, \infty)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1.0, 1.67]$
+        pressure_ratio: static pressure ratio, $p / p^*$. Bounds: $(0, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1.0, 1.67]$
 
     Returns:
-        FannoFlowTable: Fanno flow output table
+        Fanno flow output table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -165,13 +164,13 @@ def lookup_table_by_temperature(
     $T / T^*$
 
     Args:
-        temperature_ratio (ArraylikeFloat): static temperature ratio,
-            $T / T^*$. Bounds: $\left(0, \frac{\gamma+1}{2} \right)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1.0, 1.67]$
+        temperature_ratio: static temperature ratio, $T / T^*$.
+            Bounds: $\left(0, \frac{\gamma+1}{2} \right)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1.0, 1.67]$
 
     Returns:
-        FannoFlowTable: Fanno flow output table
+        Fanno flow output table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -200,13 +199,13 @@ def lookup_table_by_density(
     $\rho / \rho^*$
 
     Args:
-        density_ratio (ArraylikeFloat): density ratio, $\rho / \rho^*$.
+        density_ratio: density ratio, $\rho / \rho^*$.
             Bounds: $\left(\sqrt{\frac{\gamma-1}{\gamma+1}}, \infty \right)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1.0, 1.67]$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1.0, 1.67]$
 
     Returns:
-        FannoFlowTable: Fanno flow output table
+        Fanno flow output table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -237,16 +236,13 @@ def _lookup_table_by_ratio(
     relationship with Mach must be solved numerically
 
     Args:
-        ratio (ArraylikeFloat): ratio of interest
-            (total temp., total pressure, etc)
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
-        flow_regime (ArraylikeFlowSpeedRegime): flow regime
-            (supersonic, subsonic)
-        mach_func (Callable): function to compute Mach from the given ratio
+        ratio: ratio of interest (total temp., total pressure, etc)
+        specific_heat_ratio: ratio of specific heats, $\gamma$
+        flow_regime: flow regime (supersonic, subsonic)
+        mach_func: function to compute Mach from the given ratio
 
     Returns:
-        FannoFlowTable: Fanno flow table
+        Fanno flow table
 
     """
     gam = specific_heat_ratio
@@ -276,15 +272,14 @@ def lookup_table_by_total_pressure(
     $p_0 / p_0^*$
 
     Args:
-        total_pressure_ratio (ArraylikeFloat): total pressure ratio,
-            $p_0 / p_0^*$. Bounds: $[1, \infty)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1.0, 1.67]$
-        flow_regime (ArraylikeFlowSpeedRegime, optional):
-            flow speed regime (either supersonic or subsonic).
+        total_pressure_ratio: total pressure ratio, $p_0 / p_0^*$.
+            Bounds: $[1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1.0, 1.67]$
+        flow_regime: flow speed regime (either supersonic or subsonic).
 
     Returns:
-        FannoFlowTable: Fanno flow output table
+        Fanno flow output table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -311,15 +306,13 @@ def lookup_table_by_entropy(
     $(s* - s) / R$
 
     Args:
-        entropy_ratio (ArraylikeFloat): entropy ratio, $(s* - s) / R$.
-            Bounds: $[0, \infty)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1.0, 1.67]$
-        flow_regime (ArraylikeFlowSpeedRegime, optional):
-            flow speed regime (either supersonic or subsonic).
+        entropy_ratio: entropy ratio, $(s* - s) / R$. Bounds: $[0, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1.0, 1.67]$
+        flow_regime: flow speed regime (either supersonic or subsonic).
 
     Returns:
-        FannoFlowTable: Fanno flow output table
+        Fanno flow output table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -345,18 +338,17 @@ def lookup_table_by_fanno_parameter(
     $4 f L^* / D$
 
     Args:
-        fanno_parameter (ArraylikeFloat): Fanno parameter, $4 f L^* / D$.
+        fanno_parameter: Fanno parameter, $4 f L^* / D$.
             Subsonic Bounds: $[0, \infty)$,
             Supersonic Bounds: $\left[0, -\frac{1}{\gamma} +
                 \frac{\gamma+1}{2\gamma}
                 \ln\left(\frac{\gamma+1}{\gamma-1}\right) \right)$
-        specific_heat_ratio (ArraylikeFloat, optional): ratio of specific
-            heats, $\gamma$. Bounds: $[1.0, 1.67]$
-        flow_regime (ArraylikeFlowSpeedRegime, optional):
-            flow speed regime (either supersonic or subsonic).
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1.0, 1.67]$
+        flow_regime: flow speed regime (either supersonic or subsonic).
 
     Returns:
-        FannoFlowTable: Fanno flow output table
+        Fanno flow output table
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -409,16 +401,14 @@ def temperature_ratio_by_mach(
     for Fanno flow.
 
     Args:
-        mach_initial (ArraylikeFloat): Initial Mach number, $M_1$. This is
+        mach_initial: Initial Mach number, $M_1$. This is
             the reference Mach number, $M^*$, when equal to unity.
-        mach_final (ArraylikeFloat): Final Mach number, $M_2$. This is
+        mach_final: Final Mach number, $M_2$. This is
             simply the Mach number, $M$, when ``mach_initial==1.0``
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: static temperature ratio, $T_2 / T_1$
-            ($T / T^*$ if $M_2=1.0$)
+        Static temperature ratio, $T_2 / T_1$ ($T / T^*$ if $M_2=1.0$)
 
     """
     m1 = np.atleast_1d(mach_initial)
@@ -436,16 +426,14 @@ def pressure_ratio_by_mach(
     for Fanno flow.
 
     Args:
-        mach_initial (ArraylikeFloat): Initial Mach number, $M_1$. This is
+        mach_initial: Initial Mach number, $M_1$. This is
             the reference Mach number, $M^*$, when equal to unity.
-        mach_final (ArraylikeFloat): Final Mach number, $M_2$. This is
+        mach_final: Final Mach number, $M_2$. This is
             simply the Mach number, $M$, when ``mach_initial==1.0``
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: static pressure ratio, $p_2 / p_1$
-            ($p / p^*$ if $M_2=1.0$)
+        Static pressure ratio, $p_2 / p_1$ ($p / p^*$ if $M_2=1.0$)
 
     """
     m1 = np.atleast_1d(mach_initial)
@@ -474,16 +462,14 @@ def density_ratio_by_mach(
     This is equivalent to velocity ratio $u_1 / u_2$
 
     Args:
-        mach_initial (ArraylikeFloat): Initial Mach number, $M_1$. This is
+        mach_initial: Initial Mach number, $M_1$. This is
             the reference Mach number, $M^*$, when equal to unity.
-        mach_final (ArraylikeFloat): Final Mach number, $M_2$. This is
+        mach_final: Final Mach number, $M_2$. This is
             simply the Mach number, $M$, when ``mach_initial==1.0``
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: density ratio, $\rho_2 / \rho_1$
-            ($\rho / \rho^*$ if $M_2=1.0$)
+        Density ratio, $\rho_2 / \rho_1$ ($\rho / \rho^*$ if $M_2=1.0$)
 
     """
     m1 = np.atleast_1d(mach_initial)
@@ -509,16 +495,14 @@ def total_pressure_ratio_by_mach(
     r"""Compute total pressure ratio $p_{02} / p_{01}$ for Fanno flow.
 
     Args:
-        mach_initial (ArraylikeFloat): Initial Mach number, $M_1$. This is
+        mach_initial: Initial Mach number, $M_1$. This is
             the reference Mach number, $M^*$, when equal to unity.
-        mach_final (ArraylikeFloat): Final Mach number, $M_2$. This is
+        mach_final: Final Mach number, $M_2$. This is
             simply the Mach number, $M$, when ``mach_initial==1.0``
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: total pressure ratio, $p_{02} / p_{01}$
-            ($p_0 / p_0^*$ if $M_2=1.0$)
+        Total pressure ratio, $p_{02} / p_{01}$ ($p_0 / p_0^*$ if $M_2=1.0$)
 
     """
     m1 = np.atleast_1d(mach_initial)
@@ -563,16 +547,14 @@ def entropy_ratio_by_mach(
     r"""Compute specific entropy ratio $(s_2 - s_1) / R$ for Fanno flow.
 
     Args:
-        mach_initial (ArraylikeFloat): Mach number at station 1, $M_1$
+        mach_initial: Mach number at station 1, $M_1$
             (initial or upstream Mach)
-        mach_final (ArraylikeFloat): Mach number at station 2, $M_2$
-            (final or downstream Mach)
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_final: Mach number at station 2, $M_2$ (final or downstream Mach)
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: specific entropy ratio, $(s_2 - s_1) / R$
-            ($(s - s^*) / R$ if ``mach_initial==1.0``)
+        Specific entropy ratio, $(s_2 - s_1) / R$
+        ($(s - s^*) / R$ if ``mach_initial==1.0``)
 
     """
     m1 = np.atleast_1d(mach_initial)
@@ -606,16 +588,14 @@ def fanno_parameter_by_mach(
     r"""Compute Fanno parameter, $4L f / D$ where $L=x_2 - x_1$
 
     Args:
-        mach_initial (ArraylikeFloat): Initial Mach number, $M_1$. This is
+        mach_initial: Initial Mach number, $M_1$. This is
             simply the Mach number, $M$, when ``mach_final==1.0``
-        mach_final (ArraylikeFloat): Final Mach number, $M_2$. This is
+        mach_final: Final Mach number, $M_2$. This is
             the reference Mach number, $M^*$, when equal to unity.
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: Fanno parameter, $4L f / D$
-            ($4 L^* f / D$ if $M_2=1.0$)
+        Fanno parameter, $4L f / D$ ($4 L^* f / D$ if $M_2=1.0$)
 
     """
     m1 = np.atleast_1d(mach_initial)
@@ -638,14 +618,13 @@ def duct_length(
     r"""Compute duct length $L$ for a given Fanno parameter $4 f L / D$.
 
     Args:
-        fanno_parameter (ArraylikeFloat): Fanno flow parameter, $4 f L / D$
-        diameter (ArraylikeFloat): duct diameter, $D$
-        friction_coeff (ArraylikeFloat, optional): average friction
-            coefficient $f$. Defaults to 0.005.
+        fanno_parameter: Fanno flow parameter, $4 f L / D$
+        diameter: duct diameter, $D$
+        friction_coeff: average friction coefficient $f$. Defaults to 0.005.
             The default holds for $Re > 1e5$ and surface roughness of $0.001 D$
 
     Returns:
-        NDArrayFloat: duct length $L$ or $L^*$
+        Duct length $L$ or $L^*$
 
     """
     fanparam = np.atleast_1d(fanno_parameter)
