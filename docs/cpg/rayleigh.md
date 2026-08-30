@@ -37,7 +37,15 @@
 
 ## Data Structures
 
+::: minuteman.cpg.rayleigh.ArraylikeRayleighTemperatureRegime
+    options:
+      separate_signature: false
+
 ::: minuteman.cpg.rayleigh.RayleighFlowTable
+    options:
+      separate_signature: false
+
+::: minuteman.cpg.rayleigh.RayleighTemperatureRegime
     options:
       separate_signature: false
 

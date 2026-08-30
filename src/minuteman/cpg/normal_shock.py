@@ -20,6 +20,10 @@ import numpy as np
 from scipy.optimize.elementwise import find_root
 
 from minuteman.cpg import isentropic_flow
+from minuteman.utils.bounds_check import (
+    OutOfBoundsError,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
@@ -64,16 +68,23 @@ def lookup_table_by_upstream_mach(
     $M_1$
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
+        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$.
+            Bounds: $\left[ 1.0, \infty \right]$
         specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m1 = np.atleast_1d(mach_upstream)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(m1 < 1.0):
+        raise OutOfBoundsError("Upstream Mach number M1 must >= 1.0")
+    check_specific_heat_ratio(gam)
+
     p02_p01 = total_pressure_ratio_by_mach(
         mach_upstream=m1,
         specific_heat_ratio=gam,
@@ -113,16 +124,23 @@ def lookup_table_by_temperature(
     $T_2 / T_1$
 
     Args:
-        temperature_ratio (ArraylikeFloat): temperature ratio, $T_2 / T_1$
+        temperature_ratio (ArraylikeFloat): temperature ratio, $T_2 / T_1$.
+            Bounds: $[1.0, \infty]$
         specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
+        RootFindingError: find_root failed
     """
     t21 = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(t21 < 1.0):
+        raise OutOfBoundsError("Temperature ratio T2/T1 must be >= 1.0")
+    check_specific_heat_ratio(gam)
 
     m1_bracket = (1.0, 1e10)
 
@@ -152,16 +170,23 @@ def lookup_table_by_pressure(
     $p_2 / p_1$
 
     Args:
-        pressure_ratio (ArraylikeFloat): static pressure ratio, $p_2 / p_1$
+        pressure_ratio (ArraylikeFloat): static pressure ratio, $p_2 / p_1$.
+            Bounds: $[1.0, \infty]$
         specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     p21 = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(p21 < 1.0):
+        raise OutOfBoundsError("Pressure ratio p2/p1 must be >= 1.0")
+    check_specific_heat_ratio(gam)
+
     # invert the pressure-mach relationship
     m1 = ((p21 - 1) * (gam + 1) / (2 * gam) + 1) ** 0.5
     return lookup_table_by_upstream_mach(
@@ -178,16 +203,26 @@ def lookup_table_by_density(
     $\rho_2 / \rho_1$
 
     Args:
-        density_ratio (ArraylikeFloat): density ratio, $\rho_2 / \rho_1$
+        density_ratio (ArraylikeFloat): density ratio, $\rho_2 / \rho_1$.
+            Bounds: $\left[1.0, \frac{\gamma+1}{\gamma-1}\right]$
         specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     r21 = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    rho_minf = (gam + 1.0) / (gam - 1.0)
+    if np.any((r21 < 1.0) | (r21 > rho_minf)):
+        raise OutOfBoundsError(
+            f"Density ratio rho2/rho1 must be within [{1.0}, {rho_minf}]"
+        )
+    check_specific_heat_ratio(gam)
+
     # invert the density-mach relationship
     m1 = (2.0 / ((gam + 1) / r21 - gam + 1)) ** 0.5
     return lookup_table_by_upstream_mach(
@@ -205,16 +240,24 @@ def lookup_table_by_total_pressure(
 
     Args:
         total_pressure_ratio (ArraylikeFloat): total pressure ratio,
-            $p_{02} / p_{01}$
+            $p_{02} / p_{01}$. Bounds: $(0, 1]$
         specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
+        RootFindingError: find_root failed
     """
     p02_p01 = np.atleast_1d(total_pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any((p02_p01 <= 0.0) | (p02_p01 > 1.0)):
+        raise OutOfBoundsError(
+            "Total pressure ratio p02/p01 must be within (0.0, 1.0]"
+        )
+    check_specific_heat_ratio(gam)
 
     m1_bracket = (1.0, 1e10)
 
@@ -245,27 +288,36 @@ def lookup_table_by_pitot_pressure(
 
     Args:
         pitot_pressure_ratio (ArraylikeFloat): Rayleigh Pitot tube
-            pressure ratio, $p_{02} / p_1$
+            pressure ratio, $p_{02} / p_1$.
+            Bounds: $\left[ \left( \frac{\gamma+1}{2}\right)^
+                           \frac{\gamma}{\gamma-1}, \infty\right)$
         specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
+        RootFindingError: find_root failed
     """
     p02_p1 = np.atleast_1d(pitot_pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    p02_p1_min = pitot_pressure_by_mach(
+        mach_upstream=1.0, specific_heat_ratio=gam
+    )
+    if np.any(p02_p1 < p02_p1_min):
+        raise OutOfBoundsError(
+            f"Rayleigh Pitot pressure ratio p02/p1 must be >= {p02_p1_min}"
+        )
+    check_specific_heat_ratio(gam)
 
     m1_bracket = (1.0, 1e10)
 
     # invert the rayleigh pitot pressure-mach relationship
     def pfunc(mguess, _p021, _g):
-        return _p021 - total_pressure_ratio_by_mach(
-            mach_upstream=mguess,
-            specific_heat_ratio=_g,
-        ) * isentropic_flow.total_pressure_ratio_by_mach(
-            mach=mguess,
-            specific_heat_ratio=_g,
+        return _p021 - pitot_pressure_by_mach(
+            mach_upstream=mguess, specific_heat_ratio=_g
         )
 
     res = find_root(pfunc, m1_bracket, args=(p02_p1, gam))
@@ -287,16 +339,25 @@ def lookup_table_by_downstream_mach(
     $M_2$
 
     Args:
-        mach_downstream (ArraylikeFloat): downstream Mach number, $M_2$
+        mach_downstream (ArraylikeFloat): downstream Mach number, $M_2$.
+            Bounds: $\left[\sqrt{\frac{\gamma-1}{2\gamma}}, 1\right]$
         specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Defaults to 1.4.
+            heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m2 = np.atleast_1d(mach_downstream)
     gam = np.atleast_1d(specific_heat_ratio)
+    m2_min = np.sqrt(0.5 * (gam - 1) / gam)
+    if np.any((m2 > 1) | (m2 < m2_min)):
+        raise OutOfBoundsError(
+            f"Downstream Mach number M2 must be between [{m2_min}, 1.0]"
+        )
+    check_specific_heat_ratio(gam)
 
     # invert the mach relationship
     m1 = (
@@ -394,6 +455,32 @@ def total_pressure_ratio_by_mach(
     return ((gam + 1) / (2 * gam * m1**2 - gam + 1)) ** (1.0 / (gam - 1)) * (
         (gam + 1) * m1**2 / ((gam - 1) * m1**2 + 2)
     ) ** (gam / (gam - 1))
+
+
+def pitot_pressure_by_mach(
+    mach_upstream: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat,
+) -> NDArrayFloat:
+    r"""Computes the Rayleigh Pitot tube pressure ratio across a normal shock,
+    $p_{02} / p_1$.
+
+    Args:
+        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
+        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
+            $\gamma$
+
+    Returns:
+        NDArrayFloat: Rayleigh Pitot tube pressure ratio across shock,
+            $p_{02} / p_1$
+
+    """
+    m1 = np.atleast_1d(mach_upstream)
+    gam = np.atleast_1d(specific_heat_ratio)
+    return total_pressure_ratio_by_mach(
+        mach_upstream=m1, specific_heat_ratio=gam
+    ) * isentropic_flow.total_pressure_ratio_by_mach(
+        mach=m1, specific_heat_ratio=gam
+    )
 
 
 def temperature_ratio_by_mach(

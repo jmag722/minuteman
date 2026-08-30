@@ -43,12 +43,6 @@
 
 ## Error Types
 
-::: minuteman.cpg.cone_flow.InvalidConeAngleError
-
-::: minuteman.cpg.cone_flow.InvalidSurfaceMachError
-
-::: minuteman.cpg.cone_flow.InvalidPolarVelocityError
-
 ::: minuteman.cpg.cone_flow.SolveIVPError
 
 ## Theory

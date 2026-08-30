@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
+import pytest
 
 from minuteman.cpg import FlowSpeedRegime, isentropic_flow
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 
 def compare_tables(actual, expected, **kwargs):
@@ -108,3 +110,19 @@ def test_lookup_table_by_pressure():
         specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
+
+
+@pytest.mark.parametrize(
+    ("func", "val"),
+    [
+        (isentropic_flow.lookup_table_by_mach, 0.0),
+        (isentropic_flow.lookup_table_by_pressure, 1.0),
+        (isentropic_flow.lookup_table_by_temperature, 0.85),
+        (isentropic_flow.lookup_table_by_density, -3),
+        (isentropic_flow.lookup_table_by_speed_of_sound, -2),
+        (isentropic_flow.lookup_table_by_area_ratio, 1.0),
+    ],
+)
+def test_out_of_bounds(func, val):
+    with pytest.raises(OutOfBoundsError):
+        func(val, 1.4)

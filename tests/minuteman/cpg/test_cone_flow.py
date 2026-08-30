@@ -3,7 +3,8 @@
 import numpy as np
 import pytest
 
-import minuteman.cpg.cone_flow as cf
+from minuteman.cpg import cone_flow, oblique_shock
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 """
 Unit tests taken from the following sources
@@ -23,7 +24,7 @@ I get better agreement with SAEMiller calculator than VT calculator.
 
 def test_lookup_solution_by_cone_angle():
     # VT
-    soln = cf.lookup_solution_by_cone_angle(
+    soln = cone_flow.lookup_solution_by_cone_angle(
         cone_angle=np.radians(20.0),
         mach_upstream=5.0,
         specific_heat_ratio=1.3,
@@ -47,7 +48,7 @@ def test_lookup_solution_by_cone_angle():
 
 def test_lookup_solution_by_shock_angle():
     # VT
-    soln = cf.lookup_solution_by_shock_angle(
+    soln = cone_flow.lookup_solution_by_shock_angle(
         shock_angle=np.radians(40.0),
         mach_upstream=25.0,
         specific_heat_ratio=1.45,
@@ -71,7 +72,7 @@ def test_lookup_solution_by_shock_angle():
 
 def test_lookup_solution_by_surface_mach():
     # VT
-    soln = cf.lookup_solution_by_surface_mach(
+    soln = cone_flow.lookup_solution_by_surface_mach(
         surface_mach=0.695,
         mach_upstream=15.0,
         specific_heat_ratio=1.2,
@@ -128,14 +129,16 @@ def test_solve_taylor_maccoll_by_shock_angle(
 ):
     rtol_theta = rtol_theta if rtol_theta is not None else 5e-6
     rtol_mach = rtol_mach if rtol_mach is not None else 5e-6
-    theta, vr, vtheta = cf.solve_taylor_maccoll_by_shock_angle(
+    theta, vr, vtheta = cone_flow.solve_taylor_maccoll_by_shock_angle(
         mach_upstream=M1,
         shock_angle=np.radians(shock_angle),
         specific_heat_ratio=gam,
     )
     theta = np.degrees(theta)
-    v = cf.nondimensional_velocity_from_components(vr, vtheta)
-    mach = cf.mach_from_nondimensional_velocity(v, specific_heat_ratio=gam)
+    v = cone_flow.nondimensional_velocity_from_components(vr, vtheta)
+    mach = cone_flow.mach_from_nondimensional_velocity(
+        v, specific_heat_ratio=gam
+    )
     assert theta[-1] == pytest.approx(theta_c, rel=rtol_theta)
     assert mach[-1] == pytest.approx(mach_c, rel=rtol_mach)
 
@@ -172,15 +175,17 @@ def test_solve_taylor_maccoll_by_cone_angle(
     rtol_theta,
     rtol_mach,
 ):
-    theta, vr, vtheta = cf.solve_taylor_maccoll_by_cone_angle(
+    theta, vr, vtheta = cone_flow.solve_taylor_maccoll_by_cone_angle(
         cone_angle=np.radians(cone_angle),
         mach_upstream=M1,
         specific_heat_ratio=gam,
-        shock_type=cf.ObliqueShockType.weak,
+        shock_type=cone_flow.ObliqueShockType.weak,
     )
     theta = np.degrees(theta)
-    v = cf.nondimensional_velocity_from_components(vr, vtheta)
-    mach = cf.mach_from_nondimensional_velocity(v, specific_heat_ratio=gam)
+    v = cone_flow.nondimensional_velocity_from_components(vr, vtheta)
+    mach = cone_flow.mach_from_nondimensional_velocity(
+        v, specific_heat_ratio=gam
+    )
     assert theta[0] == pytest.approx(theta_shock, rel=rtol_theta)
     assert mach[-1] == pytest.approx(mach_c, rel=rtol_mach)
 
@@ -215,13 +220,59 @@ def test_solve_taylor_maccoll_by_surface_mach(
     rtol_shock,
     rtol_cone,
 ):
-    theta, vr, vtheta = cf.solve_taylor_maccoll_by_surface_mach(
+    theta, vr, vtheta = cone_flow.solve_taylor_maccoll_by_surface_mach(
         surface_mach=cone_mach,
         mach_upstream=m1,
         specific_heat_ratio=gam,
     )
     theta = np.degrees(theta)
-    v = cf.nondimensional_velocity_from_components(vr, vtheta)
-    _ = cf.mach_from_nondimensional_velocity(v, specific_heat_ratio=gam)
+    v = cone_flow.nondimensional_velocity_from_components(vr, vtheta)
+    _ = cone_flow.mach_from_nondimensional_velocity(v, specific_heat_ratio=gam)
     assert theta[0] == pytest.approx(theta_shock, rel=rtol_shock)
     assert theta[-1] == pytest.approx(theta_cone, rel=rtol_cone)
+
+
+@pytest.mark.parametrize(
+    ("func", "val", "m1", "st"),
+    [
+        (
+            cone_flow.lookup_solution_by_cone_angle,
+            0.0,
+            5.0,
+            oblique_shock.ObliqueShockType.weak,
+        ),
+        (
+            cone_flow.lookup_solution_by_cone_angle,
+            np.radians(80.0),
+            5.0,
+            oblique_shock.ObliqueShockType.strong,
+        ),
+    ],
+)
+def test_out_of_bounds_cone_angle(func, val, m1, st):
+    with pytest.raises(OutOfBoundsError):
+        func(val, m1, 1.3, st)
+
+
+@pytest.mark.parametrize(
+    ("func", "val", "m1"),
+    [
+        (cone_flow.lookup_solution_by_shock_angle, np.radians(5.0), 5.0),
+        (cone_flow.lookup_solution_by_shock_angle, np.radians(90.1), 1.1),
+    ],
+)
+def test_out_of_bounds_shock_angle(func, val, m1):
+    with pytest.raises(OutOfBoundsError):
+        func(val, m1, 1.3)
+
+
+@pytest.mark.parametrize(
+    ("func", "val", "m1"),
+    [
+        (cone_flow.lookup_solution_by_surface_mach, 2.5, 2.0),
+        (cone_flow.lookup_solution_by_surface_mach, 0.36, 6.0),
+    ],
+)
+def test_out_of_bounds_surface_mach(func, val, m1):
+    with pytest.raises(OutOfBoundsError):
+        func(val, m1, 1.3)

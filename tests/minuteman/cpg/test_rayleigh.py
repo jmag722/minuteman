@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
+import pytest
 
 from minuteman.cpg import FlowSpeedRegime, rayleigh
-from minuteman.cpg.rayleigh import RayleighFlowTable
+from minuteman.cpg.rayleigh import RayleighFlowTable, RayleighTemperatureRegime
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 
 def compare_tables(
@@ -97,17 +99,20 @@ def test_lookup_table_by_temperature():
         temperature_ratio=np.array([0.5, 0.1]),
         specific_heat_ratio=np.array([1.3, 1.35]),
         flow_regime=np.array(
-            [FlowSpeedRegime.supersonic, FlowSpeedRegime.subsonic],
+            [
+                RayleighTemperatureRegime.lowspeed,
+                RayleighTemperatureRegime.highspeed,
+            ],
         ),
     )
     expected = RayleighFlowTable(
-        mach=np.array([2.14314380, 0.13802589]),
+        mach=np.array([0.35892634, 5.36667966]),
         temperature_ratio=np.array([0.5, 0.1]),
-        pressure_ratio=np.array([0.32993902, 2.29107571]),
-        density_ratio=np.array([0.65987805677, 22.9107618951]),
-        total_pressure_ratio=np.array([1.74485794, 1.24585906]),
-        total_temperature_ratio=np.array([0.73433035, 0.08539012]),
-        entropy_ratio=np.array([1.89479037, 9.71042109]),
+        pressure_ratio=np.array([1.97006097, 0.05892428]),
+        density_ratio=np.array([3.94012196648, 0.58924285781]),
+        total_pressure_ratio=np.array([1.16808875, 32.5671696]),
+        total_temperature_ratio=np.array([0.44318444, 0.51406117]),
+        entropy_ratio=np.array([3.68170227, 6.04989769]),
         specific_heat_ratio=np.array([1.3, 1.35]),
     )
     compare_tables(actual, expected, rtol=1e-6)
@@ -115,19 +120,19 @@ def test_lookup_table_by_temperature():
 
 def test_lookup_table_by_density():
     actual = rayleigh.lookup_table_by_density(
-        density_ratio=np.array([3.33333333333]),
+        density_ratio=np.array([3.33333333333, 0.584])
     )
     expected = RayleighFlowTable(
-        mach=np.array([0.38924947]),
-        temperature_ratio=np.array([0.59399999]),
-        pressure_ratio=np.array([1.98]),
-        density_ratio=np.array([3.333333333]),
-        total_pressure_ratio=np.array([1.16120326]),
-        total_temperature_ratio=np.array([0.50999999]),
-        entropy_ratio=np.array([2.50616270]),
+        mach=np.array([0.38924947, 25.0]),
+        temperature_ratio=np.array([0.59399999, 0.004691312]),
+        pressure_ratio=np.array([1.98, 0.00273972]),
+        density_ratio=np.array([3.333333333, 0.584]),
+        total_pressure_ratio=np.array([1.16120326, 32498.9762]),
+        total_temperature_ratio=np.array([0.50999999, 0.49258772]),
+        entropy_ratio=np.array([2.50616270, 12.8672533]),
         specific_heat_ratio=np.array([1.4]),
     )
-    compare_tables(actual, expected)
+    compare_tables(actual, expected, rtol=1e-5)
 
 
 def test_lookup_table_by_total_pressure():
@@ -241,3 +246,65 @@ def test_lookup_table_by_entropy():
         specific_heat_ratio=np.array([1.4, 1.4]),
     )
     compare_tables(actual, expected)
+
+
+@pytest.mark.parametrize(
+    ("func", "val"),
+    [
+        (rayleigh.lookup_table_by_mach, 0.0),
+        (rayleigh.lookup_table_by_pressure, 0.0),
+        (rayleigh.lookup_table_by_pressure, 2.4),
+        (rayleigh.lookup_table_by_density, 0.583),
+        (rayleigh.lookup_table_by_temperature, 0.0),
+        (rayleigh.lookup_table_by_temperature, 1.03),
+        (rayleigh.lookup_table_by_entropy, -1.0),
+    ],
+)
+def test_out_of_bounds(func, val):
+    with pytest.raises(OutOfBoundsError):
+        func(val, 1.4)
+
+
+@pytest.mark.parametrize(
+    ("func", "val", "fr"),
+    [
+        (
+            rayleigh.lookup_table_by_total_pressure,
+            0.999,
+            FlowSpeedRegime.supersonic,
+        ),
+        (
+            rayleigh.lookup_table_by_total_pressure,
+            0.9,
+            FlowSpeedRegime.subsonic,
+        ),
+        (
+            rayleigh.lookup_table_by_total_pressure,
+            1.27,
+            FlowSpeedRegime.subsonic,
+        ),
+        (
+            rayleigh.lookup_table_by_total_temperature,
+            1.01,
+            FlowSpeedRegime.supersonic,
+        ),
+        (
+            rayleigh.lookup_table_by_total_temperature,
+            0.488,
+            FlowSpeedRegime.supersonic,
+        ),
+        (
+            rayleigh.lookup_table_by_total_temperature,
+            0.0,
+            FlowSpeedRegime.subsonic,
+        ),
+        (
+            rayleigh.lookup_table_by_total_temperature,
+            1.1,
+            FlowSpeedRegime.subsonic,
+        ),
+    ],
+)
+def test_out_of_bounds_by_regime(func, val, fr):
+    with pytest.raises(OutOfBoundsError):
+        func(val, 1.4, flow_regime=fr)

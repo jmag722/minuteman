@@ -23,7 +23,7 @@ Floatlike: TypeAlias = float | np.floating
 """Any float type"""
 
 ArraylikeFloat: TypeAlias = (
-    NDArrayFloat | list[float] | tuple[float] | Floatlike
+    NDArrayFloat | list[float] | tuple[float, ...] | Floatlike
 )
 """Scalar or array-like float"""
 

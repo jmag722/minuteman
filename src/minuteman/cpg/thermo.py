@@ -19,6 +19,10 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.constants as scc
 
+from minuteman.utils.bounds_check import (
+    check_positive,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
@@ -258,17 +262,22 @@ def isentropic_process_by_temperature(
     in temperature, $T_2 / T_1$.
 
     Args:
-        temperature_ratio (ArraylikeFloat): temperature ratio, $T_2 / T_1$
+        temperature_ratio (ArraylikeFloat): temperature ratio, $T_2 / T_1$.
+            Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+            $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     t21 = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(t21)
+    check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
         temperature_ratio=t21,
         pressure_ratio=t21 ** (gam / (gam - 1)),
@@ -286,17 +295,22 @@ def isentropic_process_by_pressure(
     in pressure, $p_2 / p_1$.
 
     Args:
-        pressure_ratio (ArraylikeFloat): pressure ratio, $p_2 / p_1$
+        pressure_ratio (ArraylikeFloat): pressure ratio, $p_2 / p_1$.
+            Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+            $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     p21 = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(p21)
+    check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
         temperature_ratio=p21 ** ((gam - 1) / gam),
         pressure_ratio=p21,
@@ -314,17 +328,22 @@ def isentropic_process_by_density(
     in density, $\rho_2 / \rho_1$.
 
     Args:
-        density_ratio (ArraylikeFloat): density ratio, $\rho_2 / \rho_1$
+        density_ratio (ArraylikeFloat): density ratio, $\rho_2 / \rho_1$.
+            Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+            $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     r21 = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(r21)
+    check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
         temperature_ratio=r21 ** (gam - 1),
         pressure_ratio=r21**gam,
@@ -343,17 +362,21 @@ def isentropic_process_by_speed_of_sound(
 
     Args:
         speed_of_sound_ratio (ArraylikeFloat): speed of sound ratio,
-            $a_2 / a_1$
+            $a_2 / a_1$. Bounds: $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+            $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicProcessResult: complete state change of the isentropic
             process
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     a21 = np.atleast_1d(speed_of_sound_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(a21)
+    check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
         temperature_ratio=a21**2,
         pressure_ratio=a21 ** (2 * gam / (gam - 1)),

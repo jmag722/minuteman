@@ -23,6 +23,11 @@ from scipy.optimize.elementwise import find_root
 
 from minuteman.cpg import ArraylikeFlowSpeedRegime, FlowSpeedRegime, thermo
 from minuteman.cpg.base import bracket_mach_from_flow_regime
+from minuteman.utils.bounds_check import (
+    OutOfBoundsError,
+    check_positive,
+    check_specific_heat_ratio,
+)
 from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
@@ -65,16 +70,20 @@ def lookup_table_by_mach(
     r"""Lookup the isentropic flow table based on Mach number, $M$
 
     Args:
-        mach (ArraylikeFloat): Mach number, $M$
+        mach (ArraylikeFloat): Mach number, $M$. Bounds $(0, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
     m = np.atleast_1d(mach)
     gam = np.atleast_1d(specific_heat_ratio)
+    check_positive(m)
+    check_specific_heat_ratio(gam)
     p0_ratio = total_pressure_ratio_by_mach(mach=m, specific_heat_ratio=gam)
     r0_ratio = total_density_ratio_by_mach(mach=m, specific_heat_ratio=gam)
     t0_ratio = total_temperature_ratio_by_mach(mach=m, specific_heat_ratio=gam)
@@ -102,17 +111,24 @@ def lookup_table_by_temperature(
 
     Args:
         temperature_ratio (ArraylikeFloat): total temperature ratio,
-            $T_0 / T$
+            $T_0 / T$. Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
+    tratio = np.atleast_1d(temperature_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(tratio <= 1.0):
+        raise OutOfBoundsError("Temperature ratio T0/T must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     mach = mach_by_temperature(
-        temperature_ratio=temperature_ratio,
+        temperature_ratio=tratio,
         specific_heat_ratio=gam,
     )
     return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
@@ -126,22 +142,30 @@ def lookup_table_by_pressure(
     $p_0 / p$
 
     Args:
-        pressure_ratio (ArraylikeFloat): total pressure ratio, $p_0 / p$
+        pressure_ratio (ArraylikeFloat): total pressure ratio, $p_0 / p$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
+    pratio = np.atleast_1d(pressure_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(pratio <= 1.0):
+        raise OutOfBoundsError("Pressure ratio p0/p must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     t0_ratio = thermo.isentropic_process_by_pressure(
-        pressure_ratio=pressure_ratio,
+        pressure_ratio=pratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
         temperature_ratio=t0_ratio,
-        specific_heat_ratio=specific_heat_ratio,
+        specific_heat_ratio=gam,
     )
 
 
@@ -153,23 +177,30 @@ def lookup_table_by_density(
     $\rho_0 / \rho$
 
     Args:
-        density_ratio (ArraylikeFloat): total density ratio,
-            $\rho_0 / \rho$
+        density_ratio (ArraylikeFloat): total density ratio, $\rho_0 / \rho$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
+    rratio = np.atleast_1d(density_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(rratio <= 1.0):
+        raise OutOfBoundsError("Density ratio rho0/rho must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     t0_ratio = thermo.isentropic_process_by_density(
-        density_ratio=density_ratio,
+        density_ratio=rratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
         temperature_ratio=t0_ratio,
-        specific_heat_ratio=specific_heat_ratio,
+        specific_heat_ratio=gam,
     )
 
 
@@ -182,22 +213,29 @@ def lookup_table_by_speed_of_sound(
 
     Args:
         speed_of_sound_ratio (ArraylikeFloat): total speed of sound ratio,
-            $a_0 / a$
+            $a_0 / a$. Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
+    aratio = np.atleast_1d(speed_of_sound_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(aratio <= 1.0):
+        raise OutOfBoundsError("Speed of sound ratio a0/a must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     t0_ratio = thermo.isentropic_process_by_speed_of_sound(
-        speed_of_sound_ratio=speed_of_sound_ratio,
+        speed_of_sound_ratio=aratio,
         specific_heat_ratio=gam,
     ).temperature_ratio
     return lookup_table_by_temperature(
         temperature_ratio=t0_ratio,
-        specific_heat_ratio=specific_heat_ratio,
+        specific_heat_ratio=gam,
     )
 
 
@@ -209,19 +247,27 @@ def lookup_table_by_area_ratio(
     r"""Lookup the isentropic flow table based on area ratio, $A / A^*$
 
     Args:
-        area_ratio (ArraylikeFloat): area ratio, $A / A^*$
+        area_ratio (ArraylikeFloat): area ratio, $A / A^*$.
+            Bounds: $(1, \infty)$
         specific_heat_ratio (ArraylikeFloat): ratio of
-            specific heats, $\gamma$. Defaults to 1.4.
+            specific heats, $\gamma$. Bounds: $[1, 1.67]$
         flow_regime (ArraylikeFlowSpeedRegime): Is flowfield
-            subsonic or supersonic. Default is ``FlowSpeedRegime.supersonic``
+            subsonic or supersonic.
 
     Returns:
         IsentropicFlowTable: isentropic flow table result
 
+    Raises:
+        OutOfBoundsError: invalid inputs
     """
+    aratio = np.atleast_1d(area_ratio)
     gam = np.atleast_1d(specific_heat_ratio)
+    if np.any(aratio <= 1.0):
+        raise OutOfBoundsError("Area ratio A/A* must be > 1.0")
+    check_specific_heat_ratio(gam)
+
     mach = mach_by_area_ratio(
-        area_ratio=area_ratio,
+        area_ratio=aratio,
         specific_heat_ratio=gam,
         flow_regime=flow_regime,
     )

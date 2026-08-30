@@ -35,6 +35,7 @@ nav = [
      "cpg/thermo.md",
   ]},
   {"Utilities" = [
+     "utils/bounds_check.md",
      "utils/types.md",
   ]},
 ]
