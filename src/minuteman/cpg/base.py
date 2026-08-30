@@ -42,11 +42,11 @@ def mach_number(
     r"""Compute Mach number, $M$
 
     Args:
-        velocity (ArraylikeFloat): velocity, $v$
-        speed_of_sound (ArraylikeFloat): speed of sound, $a$
+        velocity: velocity, $v$
+        speed_of_sound: speed of sound, $a$
 
     Returns:
-        NDArrayFloat: Mach number, $M$
+        Mach number, $M$
 
     """
     return np.atleast_1d(velocity) / np.atleast_1d(speed_of_sound)
@@ -61,13 +61,12 @@ def speed_of_sound_by_temperature(
     temperature $T$
 
     Args:
-        gas_constant (ArraylikeFloat): specific gas constant, $R$
-        temperature (ArraylikeFloat): temperature $T$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        gas_constant: specific gas constant, $R$
+        temperature: temperature $T$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: speed of sound, $a$
+        Speed of sound, $a$
 
     """
     gam = np.atleast_1d(specific_heat_ratio)
@@ -84,13 +83,12 @@ def speed_of_sound_by_pressure(
     r"""Compute the speed of sound $a$ from the pressure $p$ and density $\rho$
 
     Args:
-        pressure (ArraylikeFloat): pressure, $p$
-        density (ArraylikeFloat): density, $\rho$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        pressure: pressure, $p$
+        density: density, $\rho$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: speed of sound, $a$
+        Speed of sound, $a$
 
     """
     gam = np.atleast_1d(specific_heat_ratio)

@@ -100,11 +100,11 @@ def nondimensional_velocity_from_mach(
     velocity if the flow were expanded to 0 K.
 
     Args:
-        mach (Any): Mach number $M$
-        specific_heat_ratio (Any): ratio of specific heats, $\gamma$
+        mach: Mach number $M$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        Any: nondimensional velocity $V'$
+        Nondimensional velocity $V'$
 
     """
     return (2.0 / ((specific_heat_ratio - 1.0) * mach**2) + 1.0) ** -0.5
@@ -118,11 +118,11 @@ def nondimensional_velocity_from_components(
     the Taylor Maccoll equations from its radial and polar components.
 
     Args:
-        velocity_radial (Any): nondimensional radial velocity $V'_r$
-        velocity_polar (Any): nondimensional polar velocity $V'_{\theta}$
+        velocity_radial: nondimensional radial velocity $V'_r$
+        velocity_polar: nondimensional polar velocity $V'_{\theta}$
 
     Returns:
-        Any: nondimensional velocity $V'$
+        Nondimensional velocity $V'$
 
     """
     return np.linalg.norm((velocity_radial, velocity_polar), axis=0)
@@ -135,11 +135,11 @@ def mach_from_nondimensional_velocity(
     r"""Compute Mach number $M$ from nondimensional velocity $V'$
 
     Args:
-        velocity (Any): nondimensional velocity, $V'$
-        specific_heat_ratio (Any): ratio of specific heats, $\gamma$
+        velocity: nondimensional velocity, $V'$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        Any: Mach number $M$
+        Mach number $M$
 
     """
     return (0.5 * (specific_heat_ratio - 1) * (velocity**-2 - 1.0)) ** -0.5
@@ -156,12 +156,12 @@ def nondimensional_velocity_polar(
     coordinate system is positive pointing away from the body.
 
     Args:
-        velocity (Any): nondimensional velocity, $V'$
-        shock_angle (Any): shock angle $\theta_s$ [radians]
-        deflection_angle (Any): flow deflection angle, $\theta$ [radians]
+        velocity: nondimensional velocity, $V'$
+        shock_angle: shock angle $\theta_s$ [radians]
+        deflection_angle: flow deflection angle, $\theta$ [radians]
 
     Returns:
-        Any: polar component of nondimensional velocity, $V'_{\theta}$
+        Polar component of nondimensional velocity, $V'_{\theta}$
 
     """
     return -np.sin(shock_angle - deflection_angle) * velocity
@@ -177,12 +177,12 @@ def nondimensional_velocity_radial(
     The quantity is positive in the downstream direction
 
     Args:
-        velocity (Any): nondimensional velocity, $V'$
-        shock_angle (Any): shock angle $\theta_s$ [radians]
-        deflection_angle (Any): flow deflection angle, $\theta$ [radians]
+        velocity: nondimensional velocity, $V'$
+        shock_angle: shock angle $\theta_s$ [radians]
+        deflection_angle: flow deflection angle, $\theta$ [radians]
 
     Returns:
-        Any: radial component of nondimensional velocity, $V'_r$
+        Radial component of nondimensional velocity, $V'_r$
 
     """
     return np.cos(shock_angle - deflection_angle) * velocity
@@ -196,14 +196,12 @@ def deflection_angle_by_velocity_components(
     r"""Compute the flow deflection angle $\psi$ at all polar angles $\theta$
 
     Args:
-        polar_angle(NDArrayFloat): polar angle $\theta$ [radians]
-        velocity_radial (NDArrayFloat): nondimensional radial velocity, $V'_r$
-        velocity_polar (NDArrayFloat): nondimensional polar velocity,
-            $V'_{\theta}$
+        polar_angle: polar angle $\theta$ [radians]
+        velocity_radial: nondimensional radial velocity, $V'_r$
+        velocity_polar: nondimensional polar velocity, $V'_{\theta}$
 
     Returns:
-        NDArrayFloat: flow deflection angle $\psi$ at all polar angles
-            post-shock
+        Flow deflection angle $\psi$ at all polar angles post-shock
 
     """
     return polar_angle + np.atan(velocity_polar / velocity_radial)
@@ -231,14 +229,13 @@ def _taylor_maccoll_odes(
     $\frac{dy_2}{d\theta} = \frac{d^2V'_r}{d\theta^2}$
 
     Args:
-        polar_angle (float): polar angle at which to evaluate
-            ODE, $\theta$ [radians]
-        nondim_velocity_components (tuple[float, float]): radial and polar
-            velocity components, $V'_r$ and $V'_{\theta}$
-        specific_heat_ratio (float): ratio of specific heats, $\gamma$
+        polar_angle: polar angle at which to evaluate ODE, $\theta$ [radians]
+        nondim_velocity_components: radial and polar velocity components,
+            $V'_r$ and $V'_{\theta}$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        tuple[float, float]: ($\frac{dy_1}{d\theta}$, $\frac{dy_2}{d\theta}$)
+        ($\frac{dy_1}{d\theta}$, $\frac{dy_2}{d\theta}$)
 
     """
     y1, y2 = nondim_velocity_components
@@ -267,8 +264,8 @@ def cone_shock_angle_maxes(
         specific_heat_ratio: Ratio of specific heats, $\gamma$
 
     Returns:
-        tuple[float, float]: (max cone angle $\theta_{c,max}$,
-            shock angle for the max cone angle $\theta_{s,max}$)
+        (max cone angle $\theta_{c,max}$, shock angle for the max cone angle,
+            $\theta_{s,max}$)
 
     Raises:
         DeveloperError: Solver did not converge
@@ -312,17 +309,15 @@ def lookup_solution_by_cone_angle(
     r"""Solve a cone flow problem with a known surface Mach number, $M_c$
 
     Args:
-        cone_angle (Floatlike): cone angle, $\theta_c$ [radians].
+        cone_angle: cone angle, $\theta_c$ [radians].
             Bounds: $(0, \theta_{c,max}]$
-        mach_upstream (Floatlike): upstream Mach number, $M_1$.
-            Bounds: $(1, \infty)$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$.
+        mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
             Bounds: $[1, 1.67]$
-        shock_type(ObliqueShockType): shock type - you almost always want
-            weak
+        shock_type: shock type - you almost always want weak
 
     Returns:
-        ConeFlowSolution: cone flow solution
+        Cone flow solution
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -396,14 +391,14 @@ def solve_taylor_maccoll_by_cone_angle(
     r"""Solve the Taylor-Maccoll equations for a given cone angle, $\theta_c$
 
     Args:
-        cone_angle (Floatlike): cone angle, $\theta_c$ [radians]
-        mach_upstream (Floatlike): Upstream Mach number, $M_1$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$
-        shock_type(ObliqueShockType): shock type, strong or weak
+        cone_angle: cone angle, $\theta_c$ [radians]
+        mach_upstream: Upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
+        shock_type: shock type, strong or weak
 
     Returns:
-        tuple[3*float]: polar angle $\theta$, nondimensional radial velocity
-            $V'_r$, and polar velocity $V'_{\theta}$
+        Polar angle $\theta$, nondimensional radial velocity $V'_r$,
+            and polar velocity $V'_{\theta}$
 
     """
     theta_c = float(cone_angle)
@@ -456,16 +451,15 @@ def lookup_solution_by_surface_mach(
     r"""Solve a cone flow problem with a known surface Mach number, $M_c$
 
     Args:
-        surface_mach (Floatlike): Mach number at the surface of the cone,
-            $M_c$. Bounds: $[M_2, M_1]$, where $M_2$ is the Mach
-            number downstream of a normal shock.
-        mach_upstream (Floatlike): upstream Mach number, $M_1$.
-            Bounds: $(1, \infty)$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$.
+        surface_mach: Mach number at the surface of the cone, $M_c$.
+            Bounds: $[M_2, M_1]$, where $M_2$ is the Mach number
+            downstream of a normal shock.
+        mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
             Bounds: $[1, 1.67]$
 
     Returns:
-        ConeFlowSolution: cone flow solution
+        Cone flow solution
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -546,13 +540,12 @@ def solve_taylor_maccoll_by_surface_mach(
     Mach number at the surface of the cone, $M_c$.
 
     Args:
-        surface_mach (Floatlike): Mach number at the surface of the cone, $M_c$
-        mach_upstream (Floatlike): upstream Mach number, $M_1$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$
+        surface_mach: Mach number at the surface of the cone, $M_c$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        tuple[NDArrayFloat,NDArrayFloat,NDArrayFloat]: polar angle $\theta$,
-            nondimensional radial velocity $V'_r$,
+        Polar angle $\theta$, nondimensional radial velocity $V'_r$,
             and polar velocity $V'_{\theta}$
 
     Raises:
@@ -606,15 +599,14 @@ def lookup_solution_by_shock_angle(
     r"""Solve a cone flow problem with a known shock angle, $\theta_s$
 
     Args:
-        shock_angle (Floatlike): shock angle, $\theta_s$ [radians].
+        shock_angle: shock angle, $\theta_s$ [radians].
             Bounds: $[\arcsin\left(\frac{1}{M1}\right), 90^\circ]$
-        mach_upstream (Floatlike): upstream Mach number, $M_1$.
-            Bounds: $(1, \infty)$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$.
+        mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
             Bounds: $[1, 1.67]$
 
     Returns:
-        ConeFlowSolution: cone flow solution
+        Cone flow solution
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -723,13 +715,13 @@ def solve_taylor_maccoll_by_shock_angle(
     shock angle, $\theta_s$.
 
     Args:
-        shock_angle (Floatlike): shock angle, $\theta_s$ [radians]
-        mach_upstream (Floatlike): upstream Mach number, $M_1$
-        specific_heat_ratio (Floatlike): ratio of specific heats, $\gamma$
+        shock_angle: shock angle, $\theta_s$ [radians]
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        tuple[3*float]: polar angle $\theta$, nondimensional radial velocity
-            $V'_r$, and polar velocity $V'_{\theta}$
+        Polar angle $\theta$, nondimensional radial velocity $V'_r$,
+            and polar velocity $V'_{\theta}$
 
     Raises:
         ValueError: polar velocity is positive (should be negative by

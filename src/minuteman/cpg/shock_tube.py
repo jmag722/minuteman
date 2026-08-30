@@ -87,32 +87,31 @@ def solve_sod(
     the contact surface centered in the tube at x=0.
 
     Args:
-        time (Floatlike): time, $t$. Bounds: $(0, \infty)$
-        pressure_l (Floatlike): pressure on left hand side (LHS), $p_L$.
+        time: time, $t$. Bounds: $(0, \infty)$
+        pressure_l: pressure on left hand side (LHS), $p_L$.
             Bounds: $(0, \infty)$
-        pressure_r (Floatlike): pressure on right hand side (RHS), $p_R$.
+        pressure_r: pressure on right hand side (RHS), $p_R$.
             Bounds: $(0, \infty)$
-        density_l (Floatlike): density on LHS, $\rho_L$.
+        density_l: density on LHS, $\rho_L$. Bounds: $(0, \infty)$
+        density_r: density on RHS, $\rho_R$. Bounds: $(0, \infty)$
+        specific_heat_ratio_l: ratio of specific heats on LHS, $\gamma_L$.
+            Bounds: $[1.0, 1.67]$
+        specific_heat_ratio_r: ratio of specific heats on RHS, $\gamma_R$.
+            Bounds: $[1.0, 1.67]$
+        gas_constant_l: specific gas constant on LHS, $R_L$.
             Bounds: $(0, \infty)$
-        density_r (Floatlike): density on RHS, $\rho_R$.
+        gas_constant_r: specific gas constant on RHS, $R_R$.
             Bounds: $(0, \infty)$
-        specific_heat_ratio_l (Floatlike, optional): ratio of specific heats on
-            LHS, $\gamma_L$. Bounds: $[1.0, 1.67]$
-        specific_heat_ratio_r (Floatlike, optional): ratio of specific heats on
-            RHS, $\gamma_R$. Bounds: $[1.0, 1.67]$
-        gas_constant_l (Floatlike, optional): specific gas constant on LHS,
-            $R_L$. Bounds: $(0, \infty)$
-        gas_constant_r (Floatlike, optional): specific gas constant on RHS,
-            $R_R$. Bounds: $(0, \infty)$
-        tube_length (Floatlike, optional): Length of shock tube.
-            Defaults to 20.0, the Sod problem #1 length. Bounds: $(0, \infty)$
-        position (NDArrayFloat | None, optional): explicit positions along
-            the shock tube to evaluate. This is helpful when comparing to a
-            CFD grid directly. Defaults to ``None`` where values are chosen
-            based upon critical points.
+        tube_length: Length of shock tube. Defaults to 20.0,
+            the Sod problem #1 length.
+            Bounds: $(0, \infty)$
+        position: explicit positions along the shock tube to evaluate.
+            This is helpful when comparing to a CFD grid directly.
+            Defaults to ``None`` where values are chosen based upon
+            critical points.
 
     Returns:
-        ShockTubeSolution: Sod shock tube solution
+        Sod shock tube solution
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -334,14 +333,14 @@ def expansion_fan_velocity(
     (Eq. 7.89 in [1](shock_tube.md#references)).
 
     Args:
-        speed_of_sound_driver (Floatlike): speed of sound of driver gas, $a_4$
-        position (NDArrayFloat): position within expansion fan, $x$
-        time (Floatlike): time $t$
-        specfic_heat_ratio_driver (Floatlike): ratio of specific heats of
-            driver gas, $\gamma_4$
+        speed_of_sound_driver: speed of sound of driver gas, $a_4$
+        position: position within expansion fan, $x$
+        time: time $t$
+        specfic_heat_ratio_driver: ratio of specific heats of driver gas,
+            $\gamma_4$
 
     Returns:
-        NDArrayFloat: velocity within the expansion fan, $u$
+        Velocity within the expansion fan, $u$
 
     """
     a4 = speed_of_sound_driver
@@ -359,13 +358,13 @@ def expansion_fan_speed_of_sound(
     r"""Compute speed of sound within expansion fan $a$[^1]
 
     Args:
-        speed_of_sound_driver (Floatlike): speed of sound of driver gas, $a_4$
-        velocity (NDArrayFloat): velocity within the expansion fan
-        specific_heat_ratio_driver (Floatlike): ratio of specific heats of
-            driver gas, $\gamma_4$
+        speed_of_sound_driver: speed of sound of driver gas, $a_4$
+        velocity: velocity within the expansion fan
+        specific_heat_ratio_driver: ratio of specific heats of driver gas,
+            $\gamma_4$
 
     Returns:
-        NDArrayFloat: speed of sound within expansion fan, $a$
+        Speed of sound within expansion fan, $a$
 
     """
     a4 = speed_of_sound_driver
@@ -382,13 +381,12 @@ def moving_shock_density_ratio(
     moving normal shock (Eq. 7.11 in [1](shock_tube.md#references)).
 
     Args:
-        pressure_ratio (Floatlike): static pressure ratio across
-            shock, $p_2 / p_1$
-        specific_heat_ratio_driven (Floatlike): ratio of specific heats
-            for the driven gas, $\gamma_1$
+        pressure_ratio: static pressure ratio across shock, $p_2 / p_1$
+        specific_heat_ratio_driven: ratio of specific heats for the driven gas,
+            $\gamma_1$
 
     Returns:
-        Floatlike: density ratio, $\rho_2 / \rho_1$
+        Density ratio, $\rho_2 / \rho_1$
 
     """
     p21 = pressure_ratio
@@ -406,13 +404,12 @@ def moving_shock_temperature_ratio(
     moving normal shock (Eq. 7.10 in [1](shock_tube.md#references)).
 
     Args:
-        pressure_ratio (Floatlike): static pressure ratio across
-            shock, $p_2 / p_1$
-        specific_heat_ratio_driven (Floatlike): ratio of specific heats
-            for the driven gas, $\gamma_1$
+        pressure_ratio: static pressure ratio across shock, $p_2 / p_1$
+        specific_heat_ratio_driven: ratio of specific heats for the driven gas,
+            $\gamma_1$
 
     Returns:
-        Floatlike: static temperature ratio, $T_2 / T_1$
+        Static temperature ratio, $T_2 / T_1$
 
     """
     p21 = pressure_ratio
@@ -433,15 +430,13 @@ def moving_shock_speed(
     (Eq. 7.14 in [1](shock_tube.md#references)).
 
     Args:
-        pressure_ratio (Floatlike): static pressure ratio across
-            shock, $p_2 / p_1$
-        speed_of_sound_driven (Floatlike): speed of sound of driven
-            gas, $a_1$
-        specific_heat_ratio_driven (Floatlike): ratio of specific heats
-            for the driven gas, $\gamma_1$
+        pressure_ratio: static pressure ratio across shock, $p_2 / p_1$
+        speed_of_sound_driven: speed of sound of driven gas, $a_1$
+        specific_heat_ratio_driven: ratio of specific heats for the driven gas,
+            $\gamma_1$
 
     Returns:
-        Floatlike: wave velocity of the moving shock wave, $w$
+        Wave velocity of the moving shock wave, $w$
 
     """
     p21 = pressure_ratio
@@ -463,14 +458,12 @@ def contact_surface_speed(
     Mach number approaches 1.89.
 
     Args:
-        pressure_ratio (Floatlike): static pressure ratio across
-            shock, $p_2 / p_1$
-        speed_of_sound_driven (Floatlike): speed of sound of driven
-            gas, $a_1$
-        specific_heat_ratio_driven (Floatlike): ratio of specific heats
-            for the driven gas, $\gamma_1$
+        pressure_ratio: static pressure ratio across shock, $p_2 / p_1$
+        speed_of_sound_driven: speed of sound of driven gas, $a_1$
+        specific_heat_ratio_driven: ratio of specific heats for the driven gas,
+            $\gamma_1$
     Returns:
-        Floatlike: contact surface or piston speed, $u_p$
+        Contact surface or piston speed, $u_p$
 
     """
     p21 = pressure_ratio
@@ -494,17 +487,17 @@ def moving_shock_pressure_ratio(
     tube, $p_2 / p_1$ (Eq. 7.94 in [1](shock_tube.md#references)).
 
     Args:
-        pressure_ratio (Floatlike): pressure ratio between the
-            driver and driven gas, $p_4 / p_1$
-        speed_of_sound_ratio (Floatlike): speed of sound ratio between the
-            driver and driven gas, $a_4 / a_1$
-        specific_heat_ratio_driver (Floatlike): ratio of specific heats
-            for the driver gas, $\gamma_4$
-        specific_heat_ratio_driven (Floatlike): ratio of specific heats
-            for the driven gas, $\gamma_1$
+        pressure_ratio: pressure ratio between the driver and driven gas,
+            $p_4 / p_1$
+        speed_of_sound_ratio: speed of sound ratio between the driver and
+            driven gas, $a_4 / a_1$
+        specific_heat_ratio_driver: ratio of specific heats for the driver gas,
+            $\gamma_4$
+        specific_heat_ratio_driven: ratio of specific heats for the driven gas,
+            $\gamma_1$
 
     Returns:
-        Floatlike: pressure ratio $p_2 / p_1$ across the moving normal shock
+        Pressure ratio $p_2 / p_1$ across the moving normal shock
 
     """
     p41 = pressure_ratio

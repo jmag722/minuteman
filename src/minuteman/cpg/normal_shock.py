@@ -68,13 +68,13 @@ def lookup_table_by_upstream_mach(
     $M_1$
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$.
+        mach_upstream: upstream Mach number, $M_1$.
             Bounds: $\left[ 1.0, \infty \right]$
-        specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        specific_heat_ratio: Ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        NormalShockTable: normal shock table result
+        Normal shock table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -124,13 +124,13 @@ def lookup_table_by_temperature(
     $T_2 / T_1$
 
     Args:
-        temperature_ratio (ArraylikeFloat): temperature ratio, $T_2 / T_1$.
+        temperature_ratio: temperature ratio, $T_2 / T_1$.
             Bounds: $[1.0, \infty]$
-        specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        specific_heat_ratio: Ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        NormalShockTable: normal shock table result
+        Normal shock table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -170,13 +170,13 @@ def lookup_table_by_pressure(
     $p_2 / p_1$
 
     Args:
-        pressure_ratio (ArraylikeFloat): static pressure ratio, $p_2 / p_1$.
+        pressure_ratio: static pressure ratio, $p_2 / p_1$.
             Bounds: $[1.0, \infty]$
-        specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        specific_heat_ratio: Ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        NormalShockTable: normal shock table result
+        Normal shock table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -203,13 +203,13 @@ def lookup_table_by_density(
     $\rho_2 / \rho_1$
 
     Args:
-        density_ratio (ArraylikeFloat): density ratio, $\rho_2 / \rho_1$.
+        density_ratio: density ratio, $\rho_2 / \rho_1$.
             Bounds: $\left[1.0, \frac{\gamma+1}{\gamma-1}\right]$
-        specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        specific_heat_ratio: Ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        NormalShockTable: normal shock table result
+        Normal shock table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -239,10 +239,10 @@ def lookup_table_by_total_pressure(
     $p_{02} / p_{01}$
 
     Args:
-        total_pressure_ratio (ArraylikeFloat): total pressure ratio,
-            $p_{02} / p_{01}$. Bounds: $(0, 1]$
-        specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        total_pressure_ratio: total pressure ratio, $p_{02} / p_{01}$.
+            Bounds: $(0, 1]$
+        specific_heat_ratio: Ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
@@ -287,15 +287,15 @@ def lookup_table_by_pitot_pressure(
     pressure ratio, $p_{02} / p_1$
 
     Args:
-        pitot_pressure_ratio (ArraylikeFloat): Rayleigh Pitot tube
-            pressure ratio, $p_{02} / p_1$.
+        pitot_pressure_ratio: Rayleigh Pitot tube pressure ratio,
+            $p_{02} / p_1$.
             Bounds: $\left[ \left( \frac{\gamma+1}{2}\right)^
                            \frac{\gamma}{\gamma-1}, \infty\right)$
-        specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        specific_heat_ratio: Ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        NormalShockTable: normal shock table result
+        Normal shock table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -339,13 +339,13 @@ def lookup_table_by_downstream_mach(
     $M_2$
 
     Args:
-        mach_downstream (ArraylikeFloat): downstream Mach number, $M_2$.
+        mach_downstream: downstream Mach number, $M_2$.
             Bounds: $\left[\sqrt{\frac{\gamma-1}{2\gamma}}, 1\right]$
-        specific_heat_ratio (ArraylikeFloat, optional): Ratio of specific
-            heats, $\gamma$. Bounds: $[1, 1.67]$
+        specific_heat_ratio: Ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
 
     Returns:
-        NormalShockTable: normal shock table result
+        Normal shock table result
 
     Raises:
         OutOfBoundsError: invalid inputs
@@ -376,12 +376,11 @@ def mach_downstream_by_mach(
     r"""Computes the Mach number downstream of a normal shock, $M_2$.
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: downstream Mach number, $M_2$
+        Downstream Mach number, $M_2$
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -401,12 +400,11 @@ def density_ratio_by_mach(
     ratio $u_1 / u_2$
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: density ratio, $\rho_2 / \rho_1$
+        Density ratio, $\rho_2 / \rho_1$
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -421,12 +419,11 @@ def pressure_ratio_by_mach(
     r"""Computes the static pressure ratio across a normal shock, $p_2 / p_1$.
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: static pressure ratio, $p_2 / p_1$
+        Static pressure ratio, $p_2 / p_1$
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -442,12 +439,11 @@ def total_pressure_ratio_by_mach(
     $p_{02} / p_{01}$.
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: total pressure ratio across shock, $p_{02} / p_{01}$
+        Total pressure ratio across shock, $p_{02} / p_{01}$
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -465,13 +461,11 @@ def pitot_pressure_by_mach(
     $p_{02} / p_1$.
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: Rayleigh Pitot tube pressure ratio across shock,
-            $p_{02} / p_1$
+        Rayleigh Pitot tube pressure ratio across shock, $p_{02} / p_1$
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -493,12 +487,11 @@ def temperature_ratio_by_mach(
     $h_2 / h_1$.
 
     Args:
-        mach_upstream (ArraylikeFloat): upstream Mach number, $M_1$
-        specific_heat_ratio (ArraylikeFloat): ratio of specific heats,
-            $\gamma$
+        mach_upstream: upstream Mach number, $M_1$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
 
     Returns:
-        NDArrayFloat: temperature ratio across shock, $T_2 / T_1$
+        Temperature ratio across shock, $T_2 / T_1$
 
     """
     m1 = np.atleast_1d(mach_upstream)
@@ -518,12 +511,11 @@ def entropy_change(
     $s_2 - s_1$
 
     Args:
-        total_pressure_ratio (ArraylikeFloat): total pressure ratio,
-            $p_{02} / p_{01}$
-        gas_constant (ArraylikeFloat): specific gas constant, $R$
+        total_pressure_ratio: total pressure ratio, $p_{02} / p_{01}$
+        gas_constant: specific gas constant, $R$
 
     Returns:
-        NDArrayFloat: change in specific entropy, $s_2 - s_1$
+        Change in specific entropy, $s_2 - s_1$
 
     """
     p02_p01 = np.atleast_1d(total_pressure_ratio)
@@ -544,16 +536,13 @@ def internal_energy_change(
     This relation is valid for perfect, chemically reacting, and real gases.
 
     Args:
-        pressure_upstream (ArraylikeFloat): upstream static pressure, $p_1$
-        pressure_downstream (ArraylikeFloat): downstream static pressure,
-            $p_2$
-        density_upstream (ArraylikeFloat): upstream static density,
-            $\rho_1$
-        density_downstream (ArraylikeFloat): downstream static density,
-            $\rho_2$
+        pressure_upstream: upstream static pressure, $p_1$
+        pressure_downstream: downstream static pressure, $p_2$
+        density_upstream: upstream static density, $\rho_1$
+        density_downstream: downstream static density, $\rho_2$
 
     Returns:
-        NDArrayFloat: change in specific internal energy, $e$
+        Change in specific internal energy, $e$
 
     """
     p1 = np.atleast_1d(pressure_upstream)
