@@ -97,40 +97,22 @@ def speed_of_sound_by_pressure(
     return (gam * p / rho) ** 0.5
 
 
-class InvalidFlowRegimeError(Exception):
-    """FlowSpeedRegime is invalid"""
-
-
 def bracket_mach_from_flow_regime(
-    flow_regime: ArraylikeFlowSpeedRegime,
+    flow_regime: npt.NDArray[np.object_],
 ) -> tuple[NDArrayFloat, NDArrayFloat]:
     subsonic_mach_min = 1e-50
     subsonic_mach_max = 1.0 - subsonic_mach_min
     supersonic_mach_min = 1.0
     supersonic_mach_max = 1e10
-    if flow_regime is FlowSpeedRegime.supersonic:
-        return (
-            np.atleast_1d(supersonic_mach_min),
-            np.atleast_1d(supersonic_mach_max),
-        )
-    if flow_regime is FlowSpeedRegime.subsonic:
-        return (
-            np.atleast_1d(subsonic_mach_min),
-            np.atleast_1d(subsonic_mach_max),
-        )
-    if isinstance(flow_regime, np.ndarray | list):
-        return (
-            np.where(
-                flow_regime == FlowSpeedRegime.supersonic,
-                supersonic_mach_min,
-                subsonic_mach_min,
-            ),
-            np.where(
-                flow_regime == FlowSpeedRegime.supersonic,
-                supersonic_mach_max,
-                subsonic_mach_max,
-            ),
-        )
-    raise InvalidFlowRegimeError(
-        "Use ArraylikeFlowSpeedRegime to set flow_regime",
+    return (
+        np.where(
+            flow_regime == FlowSpeedRegime.supersonic,
+            supersonic_mach_min,
+            subsonic_mach_min,
+        ),
+        np.where(
+            flow_regime == FlowSpeedRegime.supersonic,
+            supersonic_mach_max,
+            subsonic_mach_max,
+        ),
     )

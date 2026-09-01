@@ -25,9 +25,9 @@ from minuteman.utils.bounds_check import (
 )
 from minuteman.utils.types import (
     ArraylikeFloat,
-    InvalidArrayShapeError,
     NDArrayFloat,
     RootFindingError,
+    broadcast_inputs,
 )
 
 
@@ -83,8 +83,7 @@ def lookup_table_by_mach(
         OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
-    m2 = np.atleast_1d(mach)
-    gam = np.atleast_1d(specific_heat_ratio)
+    m2, gam = broadcast_inputs(mach, specific_heat_ratio)
     check_positive(m2)
     check_specific_heat_ratio(gam)
 
@@ -143,8 +142,7 @@ def lookup_table_by_pressure(
         OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
-    pratio = np.atleast_1d(pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    pratio, gam = broadcast_inputs(pressure_ratio, specific_heat_ratio)
 
     check_positive(pratio)
     check_specific_heat_ratio(gam)
@@ -176,8 +174,7 @@ def lookup_table_by_temperature(
         OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
-    tratio = np.atleast_1d(temperature_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    tratio, gam = broadcast_inputs(temperature_ratio, specific_heat_ratio)
     check_specific_heat_ratio(gam)
 
     tratio_max = 0.5 * (gam + 1)
@@ -211,8 +208,7 @@ def lookup_table_by_density(
         OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
-    rratio = np.atleast_1d(density_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    rratio, gam = broadcast_inputs(density_ratio, specific_heat_ratio)
 
     check_specific_heat_ratio(gam)
     rratio_min = ((gam - 1) / (gam + 1)) ** 0.5
@@ -229,7 +225,7 @@ def lookup_table_by_density(
 def _lookup_table_by_ratio(
     ratio: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
-    flow_regime: ArraylikeFlowSpeedRegime,
+    flow_regime: np.typing.NDArray[np.object_],
     mach_func: Callable,
 ) -> FannoFlowTable:
     r"""Lookup the Fanno flow table by a generic input ratio where the
@@ -284,15 +280,16 @@ def lookup_table_by_total_pressure(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    p0_ratio = np.atleast_1d(total_pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    p0_ratio, gam, fr = broadcast_inputs(
+        total_pressure_ratio, specific_heat_ratio, flow_regime
+    )
     check_specific_heat_ratio(gam)
     if np.any(p0_ratio < 1.0):
         raise OutOfBoundsError("Total pressure ratio p0/p0* must be >= 1")
     return _lookup_table_by_ratio(
         ratio=p0_ratio,
         specific_heat_ratio=gam,
-        flow_regime=flow_regime,
+        flow_regime=fr,
         mach_func=total_pressure_ratio_by_mach,
     )
 
@@ -317,14 +314,15 @@ def lookup_table_by_entropy(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    s_ratio = np.atleast_1d(entropy_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    sratio, gam, fr = broadcast_inputs(
+        entropy_ratio, specific_heat_ratio, flow_regime
+    )
     check_specific_heat_ratio(gam)
-    check_nonnegative(s_ratio)
+    check_nonnegative(sratio)
     return _lookup_table_by_ratio(
-        ratio=s_ratio,
+        ratio=sratio,
         specific_heat_ratio=gam,
-        flow_regime=flow_regime,
+        flow_regime=fr,
         mach_func=_rev_entropy_ratio_by_mach,
     )
 
@@ -354,18 +352,9 @@ def lookup_table_by_fanno_parameter(
         OutOfBoundsError: invalid inputs
         InvalidArrayShapeError: input array shapes are incompatible
     """
-    fparam = np.atleast_1d(fanno_parameter)
-    gam = np.atleast_1d(specific_heat_ratio)
-    if isinstance(flow_regime, FlowSpeedRegime):
-        fr = np.full(fparam.shape, flow_regime)
-    else:
-        fr = np.atleast_1d(np.asarray(flow_regime))
-
-    if fparam.shape != fr.shape:
-        raise InvalidArrayShapeError(
-            "fanno_parameter and flow_regime shapes must match,"
-            "or flow_regime must be a scalar"
-        )
+    fparam, gam, fr = broadcast_inputs(
+        fanno_parameter, specific_heat_ratio, flow_regime
+    )
 
     check_specific_heat_ratio(gam)
     fparam_max_sup = -1.0 / gam + (gam + 1.0) / (2 * gam) * np.log(
@@ -387,7 +376,7 @@ def lookup_table_by_fanno_parameter(
     return _lookup_table_by_ratio(
         ratio=fparam,
         specific_heat_ratio=gam,
-        flow_regime=flow_regime,
+        flow_regime=fr,
         mach_func=_rev_fanno_parameter_by_mach,
     )
 

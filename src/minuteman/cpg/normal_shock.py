@@ -28,6 +28,7 @@ from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
     RootFindingError,
+    broadcast_inputs,
 )
 
 
@@ -79,8 +80,7 @@ def lookup_table_by_upstream_mach(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    m1, gam = broadcast_inputs(mach_upstream, specific_heat_ratio)
     if np.any(m1 < 1.0):
         raise OutOfBoundsError("Upstream Mach number M1 must >= 1.0")
     check_specific_heat_ratio(gam)
@@ -136,8 +136,7 @@ def lookup_table_by_temperature(
         OutOfBoundsError: invalid inputs
         RootFindingError: find_root failed
     """
-    t21 = np.atleast_1d(temperature_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    t21, gam = broadcast_inputs(temperature_ratio, specific_heat_ratio)
     if np.any(t21 < 1.0):
         raise OutOfBoundsError("Temperature ratio T2/T1 must be >= 1.0")
     check_specific_heat_ratio(gam)
@@ -181,8 +180,7 @@ def lookup_table_by_pressure(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    p21 = np.atleast_1d(pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    p21, gam = broadcast_inputs(pressure_ratio, specific_heat_ratio)
     if np.any(p21 < 1.0):
         raise OutOfBoundsError("Pressure ratio p2/p1 must be >= 1.0")
     check_specific_heat_ratio(gam)
@@ -214,14 +212,13 @@ def lookup_table_by_density(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    r21 = np.atleast_1d(density_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    r21, gam = broadcast_inputs(density_ratio, specific_heat_ratio)
+    check_specific_heat_ratio(gam)
     rho_minf = (gam + 1.0) / (gam - 1.0)
     if np.any((r21 < 1.0) | (r21 > rho_minf)):
         raise OutOfBoundsError(
             f"Density ratio rho2/rho1 must be within [{1.0}, {rho_minf}]"
         )
-    check_specific_heat_ratio(gam)
 
     # invert the density-mach relationship
     m1 = (2.0 / ((gam + 1) / r21 - gam + 1)) ** 0.5
@@ -251,8 +248,7 @@ def lookup_table_by_total_pressure(
         OutOfBoundsError: invalid inputs
         RootFindingError: find_root failed
     """
-    p02_p01 = np.atleast_1d(total_pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    p02_p01, gam = broadcast_inputs(total_pressure_ratio, specific_heat_ratio)
     if np.any((p02_p01 <= 0.0) | (p02_p01 > 1.0)):
         raise OutOfBoundsError(
             "Total pressure ratio p02/p01 must be within (0.0, 1.0]"
@@ -262,8 +258,8 @@ def lookup_table_by_total_pressure(
     m1_bracket = (1.0, 1e10)
 
     # invert the total pressure-mach relationship
-    def pfunc(mguess, _p021, _g):
-        return _p021 - total_pressure_ratio_by_mach(
+    def pfunc(mguess, _p02_p01, _g):
+        return _p02_p01 - total_pressure_ratio_by_mach(
             mach_upstream=mguess,
             specific_heat_ratio=_g,
         )
@@ -301,8 +297,8 @@ def lookup_table_by_pitot_pressure(
         OutOfBoundsError: invalid inputs
         RootFindingError: find_root failed
     """
-    p02_p1 = np.atleast_1d(pitot_pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    p02_p1, gam = broadcast_inputs(pitot_pressure_ratio, specific_heat_ratio)
+    check_specific_heat_ratio(gam)
     p02_p1_min = pitot_pressure_by_mach(
         mach_upstream=1.0, specific_heat_ratio=gam
     )
@@ -310,13 +306,12 @@ def lookup_table_by_pitot_pressure(
         raise OutOfBoundsError(
             f"Rayleigh Pitot pressure ratio p02/p1 must be >= {p02_p1_min}"
         )
-    check_specific_heat_ratio(gam)
 
     m1_bracket = (1.0, 1e10)
 
     # invert the rayleigh pitot pressure-mach relationship
-    def pfunc(mguess, _p021, _g):
-        return _p021 - pitot_pressure_by_mach(
+    def pfunc(mguess, _p02_p01, _g):
+        return _p02_p01 - pitot_pressure_by_mach(
             mach_upstream=mguess, specific_heat_ratio=_g
         )
 
@@ -350,14 +345,13 @@ def lookup_table_by_downstream_mach(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    m2 = np.atleast_1d(mach_downstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    m2, gam = broadcast_inputs(mach_downstream, specific_heat_ratio)
+    check_specific_heat_ratio(gam)
     m2_min = np.sqrt(0.5 * (gam - 1) / gam)
     if np.any((m2 > 1) | (m2 < m2_min)):
         raise OutOfBoundsError(
             f"Downstream Mach number M2 must be between [{m2_min}, 1.0]"
         )
-    check_specific_heat_ratio(gam)
 
     # invert the mach relationship
     m1 = (

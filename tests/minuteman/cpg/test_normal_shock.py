@@ -66,7 +66,7 @@ def test_lookup_table_by_upstream_mach():
         density_ratio=np.array([3.857, 1.0]),
         total_pressure_ratio=np.array([0.3283, 1.0]),
         pitot_pressure_ratio=np.array([12.06, 1.8929]),
-        specific_heat_ratio=np.array([1.4]),
+        specific_heat_ratio=np.array([1.4, 1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
 

@@ -67,11 +67,7 @@ def test_lookup_table_by_mach():
         total_pressure_ratio=np.array([1.50309597, 1.00019443]),
         total_temperature_ratio=np.array([0.79338842, 0.99971472]),
         entropy_ratio=np.array([1.21757520, 0.001193033]),
-        specific_heat_ratio=np.array(
-            [
-                1.4,
-            ],
-        ),
+        specific_heat_ratio=np.array([1.4, 1.4]),
     )
     compare_tables(actual, expected, rtol=1e-5)
 
@@ -130,7 +126,7 @@ def test_lookup_table_by_density():
         total_pressure_ratio=np.array([1.16120326, 32498.9762]),
         total_temperature_ratio=np.array([0.50999999, 0.49258772]),
         entropy_ratio=np.array([2.50616270, 12.8672533]),
-        specific_heat_ratio=np.array([1.4]),
+        specific_heat_ratio=np.array([1.4, 1.4]),
     )
     compare_tables(actual, expected, rtol=1e-5)
 

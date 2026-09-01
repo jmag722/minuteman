@@ -26,6 +26,7 @@ from minuteman.utils.bounds_check import (
 from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
+    broadcast_inputs,
 )
 
 avogadro = scc.Avogadro
@@ -268,8 +269,7 @@ def isentropic_process_by_temperature(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    t21 = np.atleast_1d(temperature_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    t21, gam = broadcast_inputs(temperature_ratio, specific_heat_ratio)
     check_positive(t21)
     check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
@@ -300,8 +300,7 @@ def isentropic_process_by_pressure(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    p21 = np.atleast_1d(pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    p21, gam = broadcast_inputs(pressure_ratio, specific_heat_ratio)
     check_positive(p21)
     check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
@@ -332,8 +331,7 @@ def isentropic_process_by_density(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    r21 = np.atleast_1d(density_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    r21, gam = broadcast_inputs(density_ratio, specific_heat_ratio)
     check_positive(r21)
     check_specific_heat_ratio(gam)
     return IsentropicProcessResult(
@@ -364,8 +362,7 @@ def isentropic_process_by_speed_of_sound(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    a21 = np.atleast_1d(speed_of_sound_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    a21, gam = broadcast_inputs(speed_of_sound_ratio, specific_heat_ratio)
     check_positive(a21)
     check_specific_heat_ratio(gam)
     return IsentropicProcessResult(

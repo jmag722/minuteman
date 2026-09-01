@@ -25,6 +25,7 @@ from minuteman.utils.bounds_check import (
 from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
+    broadcast_inputs,
 )
 
 
@@ -104,9 +105,9 @@ def lookup_table_by_deflection_angle(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    theta = np.atleast_1d(deflection_angle)
-    m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    theta, m1, gam, st = broadcast_inputs(
+        deflection_angle, mach_upstream, specific_heat_ratio, shock_type
+    )
 
     check_specific_heat_ratio(gam)
     check_mach_supersonic(m1)
@@ -118,7 +119,7 @@ def lookup_table_by_deflection_angle(
         deflection_angle=theta,
         mach_upstream=m1,
         specific_heat_ratio=gam,
-        shock_type=shock_type,
+        shock_type=st,
     )
     mn1 = mach_upstream_normal_component(mach_upstream=m1, shock_angle=beta)
     mn2 = mach_downstream_normal_component(
@@ -177,9 +178,9 @@ def lookup_table_by_shock_angle(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    beta = np.atleast_1d(shock_angle)
-    m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    beta, m1, gam = broadcast_inputs(
+        shock_angle, mach_upstream, specific_heat_ratio
+    )
 
     check_specific_heat_ratio(gam)
     check_mach_supersonic(m1)
@@ -248,9 +249,9 @@ def lookup_table_by_mach_upstream_normal(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    mn1 = np.atleast_1d(mach_upstream_normal)
-    m1 = np.atleast_1d(mach_upstream)
-    gam = np.atleast_1d(specific_heat_ratio)
+    mn1, m1, gam = broadcast_inputs(
+        mach_upstream_normal, mach_upstream, specific_heat_ratio
+    )
 
     check_specific_heat_ratio(gam)
     check_mach_supersonic(m1)
@@ -501,10 +502,10 @@ def shock_angle_by_deflection_mach(
         * (1 + (gam - 1) / 2 * m1**2 + (gam + 1) / 4 * m1**4)
         * (np.tan(theta)) ** 2
     ) / lam**3
-    if np.abs(xi) > 1.0:
-        epsilon = 1e-9
-        if np.abs(xi) - 1.0 < epsilon:
-            xi = np.sign(xi) * 1.0
+
+    # for max deflection angle cases, round back to 1.0
+    epsilon = 1e-9
+    xi = np.where(np.abs(xi - 1.0) < epsilon, np.sign(xi) * 1.0, xi)
 
     return np.atan(
         (m1**2 - 1 + 2 * lam * np.cos((4 * np.pi * delta + np.acos(xi)) / 3))
