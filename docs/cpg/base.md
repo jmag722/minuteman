@@ -23,6 +23,3 @@
     options:
       separate_signature: false
 
-## Errors
-
-::: minuteman.cpg.base.InvalidFlowRegimeError

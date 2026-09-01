@@ -32,6 +32,7 @@ from minuteman.utils.types import (
     ArraylikeFloat,
     NDArrayFloat,
     RootFindingError,
+    broadcast_inputs,
 )
 
 
@@ -80,8 +81,7 @@ def lookup_table_by_mach(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    m = np.atleast_1d(mach)
-    gam = np.atleast_1d(specific_heat_ratio)
+    m, gam = broadcast_inputs(mach, specific_heat_ratio)
     check_positive(m)
     check_specific_heat_ratio(gam)
     p0_ratio = total_pressure_ratio_by_mach(mach=m, specific_heat_ratio=gam)
@@ -121,8 +121,7 @@ def lookup_table_by_temperature(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    tratio = np.atleast_1d(temperature_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    tratio, gam = broadcast_inputs(temperature_ratio, specific_heat_ratio)
     if np.any(tratio <= 1.0):
         raise OutOfBoundsError("Temperature ratio T0/T must be > 1.0")
     check_specific_heat_ratio(gam)
@@ -152,8 +151,7 @@ def lookup_table_by_pressure(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    pratio = np.atleast_1d(pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    pratio, gam = broadcast_inputs(pressure_ratio, specific_heat_ratio)
     if np.any(pratio <= 1.0):
         raise OutOfBoundsError("Pressure ratio p0/p must be > 1.0")
     check_specific_heat_ratio(gam)
@@ -187,8 +185,7 @@ def lookup_table_by_density(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    rratio = np.atleast_1d(density_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    rratio, gam = broadcast_inputs(density_ratio, specific_heat_ratio)
     if np.any(rratio <= 1.0):
         raise OutOfBoundsError("Density ratio rho0/rho must be > 1.0")
     check_specific_heat_ratio(gam)
@@ -222,8 +219,7 @@ def lookup_table_by_speed_of_sound(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    aratio = np.atleast_1d(speed_of_sound_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    aratio, gam = broadcast_inputs(speed_of_sound_ratio, specific_heat_ratio)
     if np.any(aratio <= 1.0):
         raise OutOfBoundsError("Speed of sound ratio a0/a must be > 1.0")
     check_specific_heat_ratio(gam)
@@ -257,8 +253,9 @@ def lookup_table_by_area_ratio(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    aratio = np.atleast_1d(area_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    aratio, gam, fr = broadcast_inputs(
+        area_ratio, specific_heat_ratio, flow_regime
+    )
     if np.any(aratio <= 1.0):
         raise OutOfBoundsError("Area ratio A/A* must be > 1.0")
     check_specific_heat_ratio(gam)
@@ -266,7 +263,7 @@ def lookup_table_by_area_ratio(
     mach = mach_by_area_ratio(
         area_ratio=aratio,
         specific_heat_ratio=gam,
-        flow_regime=flow_regime,
+        flow_regime=fr,
     )
     return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
 
@@ -413,15 +410,16 @@ def mach_by_area_ratio(
         Supersonic or subsonic Mach solution for a given area ratio
 
     """
-    aratios = np.atleast_1d(area_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    aratio, gam, fr = broadcast_inputs(
+        area_ratio, specific_heat_ratio, flow_regime
+    )
 
-    mach_brackets = bracket_mach_from_flow_regime(flow_regime)
+    mach_brackets = bracket_mach_from_flow_regime(fr)
 
     def compute_mach(_m, _aratio, _gam):
         return _aratio**2 - _area_ratio_by_mach_sqr(m=_m, gam=_gam)
 
-    res = find_root(compute_mach, mach_brackets, args=(aratios, gam))
+    res = find_root(compute_mach, mach_brackets, args=(aratio, gam))
     if not np.all(res.success):
         raise RootFindingError(f"find_root did not succeed: {res.status}")
     return res.x

@@ -8,7 +8,7 @@ r"""```python
 Basic minuteman types
 """
 
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -30,6 +30,21 @@ ArraylikeFloat: TypeAlias = (
 
 class InvalidArrayShapeError(Exception):
     """Array shapes do not match"""
+
+
+def broadcast_inputs(*args: Any) -> tuple[Any, ...]:
+    """Broadcast inputs to be same shape, but not 0D scalar arrays
+
+    Args:
+        *args: Arraylike input arguments
+
+    Returns:
+        Tuple of contiguous copies of arraylike inputs, at least 1D
+
+    """
+    return tuple(
+        np.atleast_1d(np.array(a)) for a in np.broadcast_arrays(*args)
+    )
 
 
 class DeveloperError(Exception):

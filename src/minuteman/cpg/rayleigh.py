@@ -21,7 +21,6 @@ from scipy.optimize.elementwise import find_root
 from minuteman.cpg import (
     ArraylikeFlowSpeedRegime,
     FlowSpeedRegime,
-    InvalidFlowRegimeError,
     isentropic_flow,
 )
 from minuteman.cpg.base import bracket_mach_from_flow_regime
@@ -33,9 +32,9 @@ from minuteman.utils.bounds_check import (
 )
 from minuteman.utils.types import (
     ArraylikeFloat,
-    InvalidArrayShapeError,
     NDArrayFloat,
     RootFindingError,
+    broadcast_inputs,
 )
 
 
@@ -91,8 +90,7 @@ def lookup_table_by_mach(
         OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
-    m2 = np.atleast_1d(mach)
-    gam = np.atleast_1d(specific_heat_ratio)
+    m2, gam = broadcast_inputs(mach, specific_heat_ratio)
     check_positive(m2)
     check_specific_heat_ratio(gam)
 
@@ -152,24 +150,23 @@ def lookup_table_by_pressure(
         OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
-    p_ratio = np.atleast_1d(pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    pratio, gam = broadcast_inputs(pressure_ratio, specific_heat_ratio)
+    check_specific_heat_ratio(gam)
     pratio_max = 1.0 + gam
-    if np.any((p_ratio <= 0.0) | (p_ratio >= pratio_max)):
+    if np.any((pratio <= 0.0) | (pratio >= pratio_max)):
         raise OutOfBoundsError(
             f"Pressure ratio p/p* must be within (0.0, {pratio_max})"
         )
-    check_specific_heat_ratio(gam)
 
     # invert relationship between $p_2 / p_1$ and $M_1$, $M_2$
-    m2 = (((1 + gam * m1**2) / p_ratio - 1) / gam) ** 0.5
+    m2 = (((1 + gam * m1**2) / pratio - 1) / gam) ** 0.5
     return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
 
 
 def _lookup_table_by_ratio(
     ratio: NDArrayFloat,
     specific_heat_ratio: NDArrayFloat,
-    flow_regime: ArraylikeFlowSpeedRegime,
+    flow_regime: npt.NDArray[np.object_],
     mach_func: Callable,
 ) -> RayleighFlowTable:
     r"""Lookup the Rayleigh flow table by a generic input ratio where the
@@ -222,7 +219,7 @@ ArraylikeRayleighTemperatureRegime: TypeAlias = (
 
 
 def _bracket_mach_from_rayleigh_temperature_regime(
-    flow_regime: ArraylikeRayleighTemperatureRegime,
+    flow_regime: npt.NDArray[np.object_],
     mach_at_tmax: NDArrayFloat,
 ) -> tuple[NDArrayFloat, NDArrayFloat]:
     # these are mach number bounds
@@ -230,31 +227,17 @@ def _bracket_mach_from_rayleigh_temperature_regime(
     left_tmax_max = mach_at_tmax
     right_tmax_min = mach_at_tmax
     right_tmax_max = 1e10
-    if flow_regime is RayleighTemperatureRegime.highspeed:
-        return (
-            np.atleast_1d(right_tmax_min),
-            np.atleast_1d(right_tmax_max),
-        )
-    if flow_regime is RayleighTemperatureRegime.lowspeed:
-        return (
-            np.atleast_1d(left_tmax_min),
-            np.atleast_1d(left_tmax_max),
-        )
-    if isinstance(flow_regime, np.ndarray | list):
-        return (
-            np.where(
-                flow_regime == RayleighTemperatureRegime.lowspeed,
-                left_tmax_min,
-                right_tmax_min,
-            ),
-            np.where(
-                flow_regime == RayleighTemperatureRegime.highspeed,
-                right_tmax_max,
-                left_tmax_max,
-            ),
-        )
-    raise InvalidFlowRegimeError(
-        "Use ArraylikeRayleighTemperatureRegime to set flow_regime",
+    return (
+        np.where(
+            flow_regime == RayleighTemperatureRegime.lowspeed,
+            left_tmax_min,
+            right_tmax_min,
+        ),
+        np.where(
+            flow_regime == RayleighTemperatureRegime.highspeed,
+            right_tmax_max,
+            left_tmax_max,
+        ),
     )
 
 
@@ -282,8 +265,10 @@ def lookup_table_by_temperature(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    tratio = np.atleast_1d(temperature_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    tratio, gam, fr = broadcast_inputs(
+        temperature_ratio, specific_heat_ratio, flow_regime
+    )
+    check_specific_heat_ratio(gam)
     tratio_max = temperature_ratio_by_mach(
         mach_initial=1.0, mach_final=1.0 / gam**0.5, specific_heat_ratio=gam
     )
@@ -291,11 +276,10 @@ def lookup_table_by_temperature(
         raise OutOfBoundsError(
             f"Temperature ratio T/T* must be within (0.0, {tratio_max}]"
         )
-    check_specific_heat_ratio(gam)
 
     mach_func = temperature_ratio_by_mach
     mach_brackets = _bracket_mach_from_rayleigh_temperature_regime(
-        flow_regime, tratio_max
+        fr, tratio_max
     )
 
     def get_mach_by_ratio(_m, _r, _g):
@@ -332,15 +316,14 @@ def lookup_table_by_density(
         OutOfBoundsError: invalid inputs
     """
     m1 = 1.0
-    r_ratio = np.atleast_1d(density_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    rratio, gam = broadcast_inputs(density_ratio, specific_heat_ratio)
+    check_specific_heat_ratio(gam)
     r_ratio_max = gam / (1.0 + gam)
-    if np.any(r_ratio <= r_ratio_max):
+    if np.any(rratio <= r_ratio_max):
         raise OutOfBoundsError(
             f"Density ratio rho/rho* must be > {r_ratio_max}"
         )
-    check_specific_heat_ratio(gam)
-    m2 = ((r_ratio * (1 + gam * m1**2)) / m1**2 - gam) ** -0.5
+    m2 = ((rratio * (1 + gam * m1**2)) / m1**2 - gam) ** -0.5
     return lookup_table_by_mach(mach=m2, specific_heat_ratio=gam)
 
 
@@ -367,18 +350,9 @@ def lookup_table_by_total_pressure(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    p0ratio = np.atleast_1d(total_pressure_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
-    if isinstance(flow_regime, FlowSpeedRegime):
-        fr = np.full(p0ratio.shape, flow_regime)
-    else:
-        fr = np.atleast_1d(np.asarray(flow_regime))
-    if p0ratio.shape != fr.shape:
-        raise InvalidArrayShapeError(
-            "total_pressure_ratio and flow_regime shapes must match,"
-            "or flow_regime must be a scalar"
-        )
-
+    p0ratio, gam, fr = broadcast_inputs(
+        total_pressure_ratio, specific_heat_ratio, flow_regime
+    )
     check_specific_heat_ratio(gam)
 
     # p0/p0* limit when M=0
@@ -399,7 +373,7 @@ def lookup_table_by_total_pressure(
     return _lookup_table_by_ratio(
         ratio=p0ratio,
         specific_heat_ratio=gam,
-        flow_regime=flow_regime,
+        flow_regime=fr,
         mach_func=total_pressure_ratio_by_mach,
     )
 
@@ -427,22 +401,12 @@ def lookup_table_by_total_temperature(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    t0ratio = np.atleast_1d(total_temperature_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
-    if isinstance(flow_regime, FlowSpeedRegime):
-        fr = np.full(t0ratio.shape, flow_regime)
-    else:
-        fr = np.atleast_1d(np.asarray(flow_regime))
-    if t0ratio.shape != fr.shape:
-        raise InvalidArrayShapeError(
-            "total_temperature_ratio and flow_regime shapes must match,"
-            "or flow_regime must be a scalar"
-        )
-
+    t0ratio, gam, fr = broadcast_inputs(
+        total_temperature_ratio, specific_heat_ratio, flow_regime
+    )
     check_specific_heat_ratio(gam)
 
     t0_min_sup = (gam + 1) * (gam - 1) / gam**2
-
     if np.any(
         (t0ratio[fr == FlowSpeedRegime.supersonic] > 1.0)
         | (t0ratio[fr == FlowSpeedRegime.supersonic] < t0_min_sup)
@@ -463,7 +427,7 @@ def lookup_table_by_total_temperature(
     return _lookup_table_by_ratio(
         ratio=t0ratio,
         specific_heat_ratio=gam,
-        flow_regime=flow_regime,
+        flow_regime=fr,
         mach_func=total_temperature_ratio_by_mach,
     )
 
@@ -489,15 +453,16 @@ def lookup_table_by_entropy(
     Raises:
         OutOfBoundsError: invalid inputs
     """
-    sratio = np.atleast_1d(entropy_ratio)
-    gam = np.atleast_1d(specific_heat_ratio)
+    sratio, gam, fr = broadcast_inputs(
+        entropy_ratio, specific_heat_ratio, flow_regime
+    )
     check_specific_heat_ratio(gam)
     check_nonnegative(sratio)
 
     return _lookup_table_by_ratio(
         ratio=sratio,
         specific_heat_ratio=gam,
-        flow_regime=flow_regime,
+        flow_regime=fr,
         mach_func=_rev_entropy_ratio_by_mach,
     )
 
