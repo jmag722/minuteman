@@ -324,7 +324,7 @@ def test_max_shock_deflection_angle(m1, gam):
     )
     expected = oblique_shock.shock_angle_by_deflection_mach(
         mach_upstream=m1,
-        deflection_angle=theta_max - 1e-16,
+        deflection_angle=theta_max - 1e-12,
         specific_heat_ratio=gam,
     )
     assert actual == pytest.approx(expected)
