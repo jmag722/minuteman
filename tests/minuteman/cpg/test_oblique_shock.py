@@ -79,17 +79,17 @@ def test_lookup_table_by_deflection_angle():
         shock_type=np.array([ObliqueShockType.weak, ObliqueShockType.strong]),
     )
     expected = ObliqueShockTable(
-        mach_upstream=np.array([5.0]),
+        mach_upstream=np.array([5.0, 5.0]),
         mach_downstream=np.array([3.30604887, 0.42056788]),
         mach_upstream_normal=np.array([2.40552416, 4.98615922]),
         mach_downstream_normal=np.array([0.50335993, 0.38341514]),
-        deflection_angle=np.radians([20.0]),
+        deflection_angle=np.radians([20.0, 20.0]),
         shock_angle=np.radians([28.7575852, 85.7358435]),
         temperature_ratio=np.array([1.79958742, 4.62723212]),
         pressure_ratio=np.array([6.41087864, 27.9741903]),
         density_ratio=np.array([3.56241578, 6.04555587]),
         total_pressure_ratio=np.array([0.50253707, 0.03661833]),
-        specific_heat_ratio=np.array([1.3]),
+        specific_heat_ratio=np.array([1.3, 1.3]),
     )
     compare_tables(actual, expected, rtol=1e-6)
 

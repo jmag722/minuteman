@@ -502,10 +502,6 @@ def shock_angle_by_deflection_mach(
         * (1 + (gam - 1) / 2 * m1**2 + (gam + 1) / 4 * m1**4)
         * (np.tan(theta)) ** 2
     ) / lam**3
-    if np.abs(xi) > 1.0:
-        epsilon = 1e-9
-        if np.abs(xi) - 1.0 < epsilon:
-            xi = np.sign(xi) * 1.0
 
     return np.atan(
         (m1**2 - 1 + 2 * lam * np.cos((4 * np.pi * delta + np.acos(xi)) / 3))
