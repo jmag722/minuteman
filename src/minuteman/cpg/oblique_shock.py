@@ -503,6 +503,10 @@ def shock_angle_by_deflection_mach(
         * (np.tan(theta)) ** 2
     ) / lam**3
 
+    # for max deflection angle cases, round back to 1.0
+    epsilon = 1e-9
+    xi = np.where(np.abs(xi - 1.0) < epsilon, np.sign(xi) * 1.0, xi)
+
     return np.atan(
         (m1**2 - 1 + 2 * lam * np.cos((4 * np.pi * delta + np.acos(xi)) / 3))
         / (3 * np.tan(theta) * (1 + (gam - 1) / 2 * m1**2)),
