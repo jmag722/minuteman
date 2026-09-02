@@ -12,6 +12,8 @@ site_name = "Minuteman"
 site_description = "A toolkit for rapid solutions to common engineering problems."
 site_author = "Jared Magnusson"
 site_url = "https://jmag722.github.io/minuteman"
+repo_url = "https://github.com/jmag722/minuteman"
+repo_name = "jmag722/minuteman"
 # so you don't see raw Index html pages when you click around
 use_directory_urls = false
 extra_css = ["stylesheets/extra.css"]
@@ -203,8 +205,8 @@ features = [# https://zensical.org/docs/setup/
 # - https://zensical.org/docs/setup/logo-and-icons
 # - https://github.com/zensical/ui/tree/master/dist/.icons
 # ----------------------------------------------------------------------------
-#[project.theme.icon]
-#logo = "lucide/smile"
+[project.theme.icon]
+repo = "fontawesome/brands/github"
 
 # ----------------------------------------------------------------------------
 # In the "font" subsection you can configure the fonts used. By default, fonts
