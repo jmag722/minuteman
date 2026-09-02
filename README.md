@@ -1,6 +1,6 @@
 # MinuteMAN
 
-*Mechanical & Aerospace eNgineering in a Minute!*
+*Mechanical & Aerospace eNgineering at a Minute's notice!*
 
 <!-- --8<-- [start:badges] -->
 
@@ -16,7 +16,7 @@
 
 MinuteMAN is a toolkit for rapid solutions to engineering problems.
 
-##### Current features include:
+#### Current features include:
 
 - thermodynamics
 
@@ -29,20 +29,6 @@ MinuteMAN is a toolkit for rapid solutions to engineering problems.
 - cone flow solver (Taylor-Maccoll equations)
 
 <!-- --8<-- [end:intro] -->
-
-<!-- --8<-- [start:motivation] -->
-
-## Motivation
-
-There are GUI-based and web browser alternatives to solving aerospace or compressible flow problems - resources such as ([AerospaceWeb](https://aerospaceweb.org/design/scripts/) or [VTT's Compressible Aerodynamics Calculator](https://devenport.aoe.vt.edu/aoe3114/calc.html)) are great for a quick calculation. MATLAB supplies its own toolbox for many of these calculations. This repository is for those who:
-
-- want a Python-based, FOSS tool that can be integrated directly into their own custom workflow
-
-- want to perform large trade studies, varying different parameters with multiple values (not feasible in a GUI or browser)
-
-- are not comfortable entering their CUI or otherwise sensitive data in a web browser
-
-<!-- --8<-- [end:motivation] -->
 
 ## Installation
 
@@ -59,6 +45,27 @@ uv pip install .
 ## Documentation
 
 Documentation available at [https://jmag722.github.io/minuteman/](https://jmag722.github.io/minuteman/)
+
+<!-- --8<-- [start:motivation] -->
+
+## Motivation
+
+Often at work I find myself implementing some facet of an aerospace calculator in a dirty Python script or even as part of a more rigorous project. Or I'm making laborious effort to set up a CFD case when I don't have a quantitative estimate of the result before embarking. In each case, I've wished for reliable, open-source implementations that can be used to provide a "back of the envelope" estimate or validate more detailed analyses.
+
+There is no shortage of GUI-based and web browser alternatives for solving aerospace or compressible flow problems - resources such as ([AerospaceWeb](https://aerospaceweb.org/design/scripts/) or [VTT's Compressible Aerodynamics Calculator](https://devenport.aoe.vt.edu/aoe3114/calc.html)) are great for a quick calculation. MATLAB supplies its own toolbox for many of these calculations. This repository is for those who:
+
+- want a Python-based, FOSS tool *that can be integrated directly into their own custom workflow*
+
+- need to verify a complicated CFD model in the absence of experimental data
+
+- wish to minimize the iterative headache that is setting up a CFD analysis for one or \*many more test cases
+
+- want to *perform large trade studies, varying different parameters with multiple values* (not feasible in a GUI or browser)
+
+- are not comfortable entering their *CUI or otherwise sensitive data* in a web browser
+
+<!-- --8<-- [end:motivation] -->
+
 <!-- --8<-- [start:roadmap] -->
 
 ## Roadmap

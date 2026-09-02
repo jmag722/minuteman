@@ -1,9 +1,8 @@
 # MinuteMAN
+*Mechanical & Aerospace eNgineering at a Minute's notice!*
 --8<-- "README.md:badges"
-*Mechanical & Aerospace eNgineering in a Minute!*
 
 --8<-- "README.md:intro"
---8<-- "README.md:motivation"
 
 ## Installation
 
@@ -25,5 +24,7 @@ Simply pip-installing the package in place (using traditional pip or uv) will wo
     source .venv/bin/activate
     uv pip install .
     ```
+
+--8<-- "README.md:motivation"
 
 --8<-- "README.md:roadmap"
