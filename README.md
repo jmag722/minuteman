@@ -1,8 +1,36 @@
-# Minuteman
-[![CI](https://github.com/jmag722/minuteman/actions/workflows/ci.yml/badge.svg)](https://github.com/jmag722/minuteman/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+# MinuteMAN
 
-Minuteman is a toolkit for rapid solutions to common engineering problems. I'm currently prioritizing thermo-, gas and fluid dynamics, but will grow to include heat transfer, chemistry, plasma, and others (solid mechanics?).
+*Mechanical & Aerospace eNgineering in a Minute!*
+
+<!-- --8<-- [start:badges] -->
+
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fjmag722%2Fminuteman%2Frefs%2Fheads%2Fmaster%2Fpyproject.toml&style=plastic&logo=python&logoColor=yellow&label=Python)(https://github.com/jmag722/minuteman/blob/master/pyproject.toml)
+
+![CI](https://github.com/jmag722/minuteman/actions/workflows/ci.yml/badge.svg)(https://github.com/jmag722/minuteman/actions/workflows/ci.yml)
+
+![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)(https://github.com/astral-sh/ruff)
+
+![Checked with pyrefly](https://img.shields.io/endpoint?url=https://pyrefly.org/badge.json)(https://github.com/facebook/pyrefly)
+
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)(https://opensource.org/licenses/Apache-2.0)
+
+<!-- --8<-- [end:badges] -->
+
+<!-- --8<-- [start:intro] -->
+
+MinuteMAN is a toolkit for rapid solutions to engineering problems.
+
+Capabilities include:
+
+- thermodynamics
+- compressible flow lookup tables (isentropic flow, normal shocks, Rayleigh flow, Fanno flow)
+- oblique shock solver
+- Sod shock tube solver
+- cone flow solver (Taylor-Maccoll equations)
+
+<!-- --8<-- [end:intro] -->
+
+<!-- --8<-- [start:motivation] -->
 
 ## Motivation
 
@@ -14,17 +42,28 @@ There are GUI-based and web browser alternatives ([AerospaceWeb](https://aerospa
 
 - are not comfortable entering their data in a web browser (CUI or otherwise sensitive)
 
+<!-- --8<-- [end:motivation] -->
+
 ## Installation
 
 Simply pip-installing the package in place (using traditional pip or uv) will work.
 
-```bash
-git clone git@github.com:jmag722/minuteman.git
-cd minuteman
-uv venv
-source .venv/bin/activate
-uv pip install .
-```
+=== "pip"
+    ```bash
+    git clone git@github.com:jmag722/minuteman.git
+    cd minuteman
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install .
+    ```
+=== "uv"
+    ```bash
+    git clone git@github.com:jmag722/minuteman.git
+    cd minuteman
+    uv venv
+    source .venv/bin/activate
+    uv pip install .
+    ```
 
 ## Documentation
 
