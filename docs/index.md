@@ -25,3 +25,5 @@ Simply pip-installing the package in place (using traditional pip or uv) will wo
     source .venv/bin/activate
     uv pip install .
     ```
+
+--8<-- "README.md:roadmap"
