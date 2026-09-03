@@ -122,6 +122,23 @@ def test_lookup_table_by_pressure():
     compare_tables(actual, expected, rtol=1e-3)
 
 
+def test_lookup_table_by_mach_angle():
+    actual = isentropic_flow.lookup_table_by_mach_angle(
+        np.radians([45.0, 90.0]), 1.6
+    )
+    expected = isentropic_flow.IsentropicFlowTable(
+        mach=np.array([1.41421356, 1.0]),
+        temperature=np.array([1 / 0.625, 1 / 0.76923076]),
+        pressure=np.array([1 / 0.2855486, 1 / 0.49676508]),
+        density=np.array([1 / 0.45687777, 1 / 0.64579460]),
+        speed_of_sound=np.array([1 / 0.625**0.5, 1 / 0.76923076**0.5]),
+        area_ratio=np.array([1.10883697, 1.0]),
+        mach_angle=np.array([np.pi / 4, np.pi / 2]),
+        specific_heat_ratio=np.array([1.6, 1.6]),
+    )
+    compare_tables(actual, expected, rtol=1e-4)
+
+
 @pytest.mark.parametrize(
     ("func", "val"),
     [
