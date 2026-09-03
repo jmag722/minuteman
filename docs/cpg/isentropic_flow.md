@@ -13,6 +13,8 @@
 
 ::: minuteman.cpg.isentropic_flow.lookup_table_by_mach
 
+::: minuteman.cpg.isentropic_flow.lookup_table_by_mach_angle
+
 ::: minuteman.cpg.isentropic_flow.lookup_table_by_pressure
 
 ::: minuteman.cpg.isentropic_flow.lookup_table_by_speed_of_sound

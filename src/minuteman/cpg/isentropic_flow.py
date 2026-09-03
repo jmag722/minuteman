@@ -60,6 +60,10 @@ class IsentropicFlowTable:
     area_ratio: NDArrayFloat
     r"""area ratio, $A / A^*$"""
 
+    mach_angle: NDArrayFloat
+    r"""Mach angle, $\mu$ [radians]. Values of NaN indicate there is no
+        Mach angle for this regime (subsonic flow)."""
+
     specific_heat_ratio: NDArrayFloat
     r"""ratio of specific heats, $\gamma$"""
 
@@ -91,6 +95,11 @@ def lookup_table_by_mach(
         mach=m, specific_heat_ratio=gam
     )
     area_ratio = area_ratio_by_mach(mach=m, specific_heat_ratio=gam)
+
+    supersonic_mach = m >= 1.0
+    mu = np.full_like(m, np.nan)
+    mu[supersonic_mach] = mach_angle(m[supersonic_mach])
+
     return IsentropicFlowTable(
         mach=m,
         temperature=t0_ratio,
@@ -98,6 +107,7 @@ def lookup_table_by_mach(
         density=r0_ratio,
         speed_of_sound=a0_ratio,
         area_ratio=area_ratio,
+        mach_angle=mu,
         specific_heat_ratio=gam,
     )
 
@@ -265,6 +275,32 @@ def lookup_table_by_area_ratio(
         specific_heat_ratio=gam,
         flow_regime=fr,
     )
+    return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
+
+
+def lookup_table_by_mach_angle(
+    mach_angle: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat = 1.4,
+) -> IsentropicFlowTable:
+    r"""Lookup the isentropic flow table based on Mach angle, $\mu$
+
+    Args:
+        mach_angle: Mach angle, $\mu$ [radians]. Bounds: $(0, 90^\circ]$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
+
+    Returns:
+        Isentropic flow table result
+
+    Raises:
+        OutOfBoundsError: invalid inputs
+    """
+    mu, gam = broadcast_inputs(mach_angle, specific_heat_ratio)
+    if np.any((mu <= 0) | (mu > 0.5 * np.pi)):
+        raise OutOfBoundsError("Mach angle mu must be within (0, 90] deg")
+    check_specific_heat_ratio(gam)
+
+    mach = 1.0 / np.sin(mu)
     return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
 
 
