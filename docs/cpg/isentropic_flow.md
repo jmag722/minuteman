@@ -15,6 +15,8 @@
 
 ::: minuteman.cpg.isentropic_flow.lookup_table_by_mach_angle
 
+::: minuteman.cpg.isentropic_flow.lookup_table_by_prandtl_meyer
+
 ::: minuteman.cpg.isentropic_flow.lookup_table_by_pressure
 
 ::: minuteman.cpg.isentropic_flow.lookup_table_by_speed_of_sound
@@ -30,6 +32,8 @@
 ::: minuteman.cpg.isentropic_flow.mach_by_area_ratio
 
 ::: minuteman.cpg.isentropic_flow.mach_by_temperature
+
+::: minuteman.cpg.isentropic_flow.prandtl_meyer_func
 
 ::: minuteman.cpg.isentropic_flow.total_density_ratio_by_mach
 

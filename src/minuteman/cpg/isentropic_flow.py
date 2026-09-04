@@ -64,6 +64,10 @@ class IsentropicFlowTable:
     r"""Mach angle, $\mu$ [radians]. Values of NaN indicate there is no
         Mach angle for this regime (subsonic flow)."""
 
+    prandtl_meyer_func: NDArrayFloat
+    r"""Prandtl-Meyer function, $\nu$ [radians]. Values of NaN indictate there
+        is no valid value for this regime (subsonic flow)."""
+
     specific_heat_ratio: NDArrayFloat
     r"""ratio of specific heats, $\gamma$"""
 
@@ -100,6 +104,11 @@ def lookup_table_by_mach(
     mu = np.full_like(m, np.nan)
     mu[supersonic_mach] = mach_angle(m[supersonic_mach])
 
+    pmf = np.full_like(m, np.nan)
+    pmf[supersonic_mach] = prandtl_meyer_func(
+        mach=m[supersonic_mach], specific_heat_ratio=gam[supersonic_mach]
+    )
+
     return IsentropicFlowTable(
         mach=m,
         temperature=t0_ratio,
@@ -108,6 +117,7 @@ def lookup_table_by_mach(
         speed_of_sound=a0_ratio,
         area_ratio=area_ratio,
         mach_angle=mu,
+        prandtl_meyer_func=pmf,
         specific_heat_ratio=gam,
     )
 
@@ -304,6 +314,52 @@ def lookup_table_by_mach_angle(
     return lookup_table_by_mach(mach=mach, specific_heat_ratio=gam)
 
 
+def lookup_table_by_prandtl_meyer(
+    prandtl_meyer: ArraylikeFloat,
+    specific_heat_ratio: ArraylikeFloat = 1.4,
+) -> IsentropicFlowTable:
+    r"""Lookup the isentropic flow table based on the Prandtl-Meyer function,
+        $\nu$.
+
+    Args:
+        prandtl_meyer: Prandtl-Meyer function, $\nu$ [radians].
+            Bounds: $\left[0,
+            \frac{\pi}{2}
+            \left(\sqrt{\frac{\gamma+1}{\gamma-1}}-1\right)\right)$
+        specific_heat_ratio: ratio of specific heats, $\gamma$.
+            Bounds: $[1, 1.67]$
+
+    Returns:
+        Isentropic flow table result
+
+    Raises:
+        OutOfBoundsError: invalid inputs
+    """
+    pm, gam = broadcast_inputs(prandtl_meyer, specific_heat_ratio)
+    check_specific_heat_ratio(gam)
+    pm_max = 0.5 * np.pi * (np.sqrt((gam + 1) / (gam - 1)) - 1)
+    if np.any((pm < 0) | (pm >= pm_max)):
+        pm_deg = np.degrees(pm_max)
+        raise OutOfBoundsError(
+            f"Prandtl-Meyer function nu must be within [0, {pm_deg}) deg"
+        )
+    # invert the PM-mach relationship
+
+    def pmfunc(mguess, _pm, _g):
+        return _pm - prandtl_meyer_func(
+            mach=mguess,
+            specific_heat_ratio=_g,
+        )
+
+    m_bracket = (1.0, 1e10)
+    res = find_root(pmfunc, m_bracket, args=(pm, gam))
+    if not np.all(res.success):
+        raise RootFindingError(f"find_root did not succeed: {res.status}")
+
+    m = res.x
+    return lookup_table_by_mach(mach=m, specific_heat_ratio=gam)
+
+
 def total_temperature_ratio_by_mach(
     mach: ArraylikeFloat,
     specific_heat_ratio: ArraylikeFloat,
@@ -473,3 +529,23 @@ def mach_angle(mach: ArraylikeFloat) -> NDArrayFloat:
     """
     m = np.atleast_1d(mach)
     return np.asin(1.0 / np.atleast_1d(m))
+
+
+def prandtl_meyer_func(
+    mach: ArraylikeFloat, specific_heat_ratio: ArraylikeFloat
+) -> NDArrayFloat:
+    r"""Compute the Prandtl-Meyer function, $\nu$
+
+    Args:
+        mach: Mach number, $M$
+        specific_heat_ratio: ratio of specific heats, $\gamma$
+
+    Returns:
+        Prandtl-Meyer function, $\nu$ [radians]
+
+    """
+    m = np.atleast_1d(mach)
+    gam = np.atleast_1d(specific_heat_ratio)
+    return np.sqrt((gam + 1) / (gam - 1)) * np.atan(
+        np.sqrt((gam - 1) / (gam + 1) * (m**2 - 1))
+    ) - np.atan(np.sqrt(m**2 - 1))
