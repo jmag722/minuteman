@@ -49,6 +49,7 @@ def test_lookup_table_by_mach():
         speed_of_sound=np.array([1.342]),
         area_ratio=np.array([1.687]),
         mach_angle=np.array([(np.radians(30.0))]),
+        prandtl_meyer_func=np.array([np.radians(26.3797608)]),
         specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
@@ -64,6 +65,7 @@ def test_lookup_table_by_temperature():
         speed_of_sound=np.array([1.00399203184]),
         area_ratio=np.array([2.964]),
         mach_angle=np.array([np.nan]),
+        prandtl_meyer_func=np.array([np.nan]),
         specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
@@ -83,6 +85,7 @@ def test_lookup_table_by_area_supersonic():
         speed_of_sound=np.array([1.17041147196]),
         area_ratio=np.array([1.094]),
         mach_angle=np.array([np.radians(47.3287632)]),
+        prandtl_meyer_func=np.array([np.radians(7.84556109)]),
         specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-4)
@@ -102,6 +105,7 @@ def test_lookup_table_by_area_subsonic():
         speed_of_sound=np.array([1.00301356785]),
         area_ratio=np.array([3.1]),
         mach_angle=np.array([np.nan]),
+        prandtl_meyer_func=np.array([np.nan]),
         specific_heat_ratio=np.array([1.3]),
     )
     compare_tables(actual, expected, rtol=1e-3)
@@ -117,6 +121,7 @@ def test_lookup_table_by_pressure():
         speed_of_sound=np.array([1.69115345253]),
         area_ratio=np.array([4.441]),
         mach_angle=np.array([np.radians(19.1390855)]),
+        prandtl_meyer_func=np.array([np.radians(50.7138282)]),
         specific_heat_ratio=np.array([1.4]),
     )
     compare_tables(actual, expected, rtol=1e-3)
@@ -134,6 +139,25 @@ def test_lookup_table_by_mach_angle():
         speed_of_sound=np.array([1 / 0.625**0.5, 1 / 0.76923076**0.5]),
         area_ratio=np.array([1.10883697, 1.0]),
         mach_angle=np.array([np.pi / 4, np.pi / 2]),
+        prandtl_meyer_func=np.array([np.radians([9.39742141, 0.0])]),
+        specific_heat_ratio=np.array([1.6, 1.6]),
+    )
+    compare_tables(actual, expected, rtol=1e-4)
+
+
+def test_lookup_table_by_prandtl_meyer_func():
+    actual = isentropic_flow.lookup_table_by_prandtl_meyer(
+        np.radians([1.0, 95.0]), 1.6
+    )
+    expected = isentropic_flow.IsentropicFlowTable(
+        mach=np.array([1.08686172, 81.2569624]),
+        temperature=np.array([1 / 0.73834493, 1 / 0.00050458]),
+        pressure=np.array([1 / 0.44533975, 1 / 1.61374e-9]),
+        density=np.array([1 / 0.60315949, 1 / 3.19813e-6]),
+        speed_of_sound=np.array([1 / 0.73834493**0.5, 1 / 0.00050458**0.5]),
+        area_ratio=np.array([1.00551053, 97027.6824]),
+        mach_angle=np.radians([66.9378157, 0.70513620]),
+        prandtl_meyer_func=np.radians([1.0, 95.0]),
         specific_heat_ratio=np.array([1.6, 1.6]),
     )
     compare_tables(actual, expected, rtol=1e-4)
@@ -150,6 +174,8 @@ def test_lookup_table_by_mach_angle():
         (isentropic_flow.lookup_table_by_area_ratio, 1.0),
         (isentropic_flow.lookup_table_by_mach_angle, 0.0),
         (isentropic_flow.lookup_table_by_mach_angle, np.pi),
+        (isentropic_flow.lookup_table_by_prandtl_meyer, -1),
+        (isentropic_flow.lookup_table_by_prandtl_meyer, 135.0),
     ],
 )
 def test_out_of_bounds(func, val):
