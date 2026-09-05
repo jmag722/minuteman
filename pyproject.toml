@@ -25,6 +25,9 @@ dependencies = [
   "scipy",
 ]
 
+[project.scripts]
+isen = "minuteman.cpg.cli_isentropic:main"
+
 [dependency-groups]
 dev = [
   "mkdocstrings",
@@ -80,6 +83,9 @@ ignore = [
     "N806", # non-lowercase-variable-in-function
     "S101", # flags use of assert
     "PLR", # magic values, too many args
+]
+"src/**/cli*.py" = [
+    "T201",
 ]
 [tool.ruff.lint.flake8-copyright]
 author = "Jared Magnusson"
