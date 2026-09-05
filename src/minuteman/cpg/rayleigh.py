@@ -81,7 +81,7 @@ def lookup_table_by_mach(
     Args:
         mach: Mach number, $M$. Bounds: $(0, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds $[1, 1.67]$
+            Bounds $(1, 1.67]$
 
     Returns:
         Rayleigh flow output table
@@ -141,7 +141,7 @@ def lookup_table_by_pressure(
         pressure_ratio: static pressure ratio, $p / p^*$.
             Bounds: $(0, \gamma+1)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds $[1, 1.67]$
+            Bounds $(1, 1.67]$
 
     Returns:
         Rayleigh flow output table
@@ -256,7 +256,7 @@ def lookup_table_by_temperature(
             Bounds: $\left(0, \frac{1}{4} \left(\gamma +
             \frac{1}{\gamma}\right) + \frac{1}{2} \right]$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds $[1, 1.67]$
+            Bounds $(1, 1.67]$
         flow_regime: Rayleigh flow speed regime based upon $T_{max}$.
 
     Returns:
@@ -307,7 +307,7 @@ def lookup_table_by_density(
         density_ratio: static density ratio, $\rho / \rho^*$.
             Bounds: $\left(\frac{\gamma}{1+\gamma}, \infty \right)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds $[1, 1.67]$
+            Bounds $(1, 1.67]$
 
     Returns:
         Rayleigh flow output table
@@ -341,7 +341,7 @@ def lookup_table_by_total_pressure(
                 \left(\frac{2}{\gamma+1}\right)^\frac{\gamma}{\gamma-1}\right)$
             , Supersonic Bounds: $[1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds $[1, 1.67]$
+            Bounds $(1, 1.67]$
         flow_regime: flow speed regime (either supersonic or subsonic).
 
     Returns:
@@ -392,7 +392,7 @@ def lookup_table_by_total_temperature(
             Supersonic Bounds: $\left[\frac{(\gamma+1)(\gamma-1)}{\gamma^2},
                                       1\right]$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds $[1, 1.67]$
+            Bounds $(1, 1.67]$
         flow_regime: flow speed regime (either supersonic or subsonic).
 
     Returns:
@@ -444,7 +444,7 @@ def lookup_table_by_entropy(
         entropy_ratio: specific entropy ratio, $(s^* - s) / R$.
             Bounds: $[0, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds $[1, 1.67]$
+            Bounds $(1, 1.67]$
         flow_regime: flow speed regime (either supersonic or subsonic).
 
     Returns:

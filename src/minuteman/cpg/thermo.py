@@ -261,7 +261,7 @@ def isentropic_process_by_temperature(
         temperature_ratio: temperature ratio, $T_2 / T_1$.
             Bounds: $(0, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Complete state change of the isentropic process
@@ -292,7 +292,7 @@ def isentropic_process_by_pressure(
         pressure_ratio: pressure ratio, $p_2 / p_1$.
             Bounds: $(0, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Complete state change of the isentropic process
@@ -323,7 +323,7 @@ def isentropic_process_by_density(
         density_ratio: density ratio, $\rho_2 / \rho_1$.
             Bounds: $(0, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Complete state change of the isentropic process
@@ -354,7 +354,7 @@ def isentropic_process_by_speed_of_sound(
         speed_of_sound_ratio: speed of sound ratio, $a_2 / a_1$.
             Bounds: $(0, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Complete state change of the isentropic process

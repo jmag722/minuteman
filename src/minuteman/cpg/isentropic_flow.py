@@ -81,7 +81,7 @@ def lookup_table_by_mach(
     Args:
         mach: Mach number, $M$. Bounds $(0, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Isentropic flow table result
@@ -133,7 +133,7 @@ def lookup_table_by_temperature(
         temperature_ratio: total temperature ratio, $T_0 / T$.
             Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Isentropic flow table result
@@ -163,7 +163,7 @@ def lookup_table_by_pressure(
     Args:
         pressure_ratio: total pressure ratio, $p_0 / p$. Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Isentropic flow table result
@@ -197,7 +197,7 @@ def lookup_table_by_density(
         density_ratio: total density ratio, $\rho_0 / \rho$.
             Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Isentropic flow table result
@@ -231,7 +231,7 @@ def lookup_table_by_speed_of_sound(
         speed_of_sound_ratio: total speed of sound ratio, $a_0 / a$.
             Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Isentropic flow table result
@@ -264,7 +264,7 @@ def lookup_table_by_area_ratio(
     Args:
         area_ratio: area ratio, $A / A^*$. Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
         flow_regime: Is flowfield subsonic or supersonic.
 
     Returns:
@@ -297,7 +297,7 @@ def lookup_table_by_mach_angle(
     Args:
         mach_angle: Mach angle, $\mu$ [radians]. Bounds: $(0, 90^\circ]$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Isentropic flow table result
@@ -327,7 +327,7 @@ def lookup_table_by_prandtl_meyer(
             \frac{\pi}{2}
             \left(\sqrt{\frac{\gamma+1}{\gamma-1}}-1\right)\right)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Isentropic flow table result

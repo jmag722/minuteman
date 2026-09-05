@@ -313,7 +313,7 @@ def lookup_solution_by_cone_angle(
             Bounds: $(0, \theta_{c,max}]$
         mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
         shock_type: shock type - you almost always want weak
 
     Returns:
@@ -456,7 +456,7 @@ def lookup_solution_by_surface_mach(
             downstream of a normal shock.
         mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Cone flow solution
@@ -603,7 +603,7 @@ def lookup_solution_by_shock_angle(
             Bounds: $[\arcsin\left(\frac{1}{M1}\right), 90^\circ]$
         mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Cone flow solution

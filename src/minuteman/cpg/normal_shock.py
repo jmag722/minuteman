@@ -72,7 +72,7 @@ def lookup_table_by_upstream_mach(
         mach_upstream: upstream Mach number, $M_1$.
             Bounds: $\left[ 1.0, \infty \right]$
         specific_heat_ratio: Ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Normal shock table result
@@ -127,7 +127,7 @@ def lookup_table_by_temperature(
         temperature_ratio: temperature ratio, $T_2 / T_1$.
             Bounds: $[1.0, \infty]$
         specific_heat_ratio: Ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Normal shock table result
@@ -172,7 +172,7 @@ def lookup_table_by_pressure(
         pressure_ratio: static pressure ratio, $p_2 / p_1$.
             Bounds: $[1.0, \infty]$
         specific_heat_ratio: Ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Normal shock table result
@@ -204,7 +204,7 @@ def lookup_table_by_density(
         density_ratio: density ratio, $\rho_2 / \rho_1$.
             Bounds: $\left[1.0, \frac{\gamma+1}{\gamma-1}\right]$
         specific_heat_ratio: Ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Normal shock table result
@@ -239,7 +239,7 @@ def lookup_table_by_total_pressure(
         total_pressure_ratio: total pressure ratio, $p_{02} / p_{01}$.
             Bounds: $(0, 1]$
         specific_heat_ratio: Ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         NormalShockTable: normal shock table result
@@ -288,7 +288,7 @@ def lookup_table_by_pitot_pressure(
             Bounds: $\left[ \left( \frac{\gamma+1}{2}\right)^
                            \frac{\gamma}{\gamma-1}, \infty\right)$
         specific_heat_ratio: Ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Normal shock table result
@@ -337,7 +337,7 @@ def lookup_table_by_downstream_mach(
         mach_downstream: downstream Mach number, $M_2$.
             Bounds: $\left[\sqrt{\frac{\gamma-1}{2\gamma}}, 1\right]$
         specific_heat_ratio: Ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Normal shock table result
