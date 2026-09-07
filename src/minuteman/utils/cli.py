@@ -8,19 +8,27 @@ import numpy as np
 
 from minuteman.cpg.base import FlowSpeedRegime
 
-name_width = 23
-sym_width = 8
-value_width = 18
-decimals_width = 9
+default_name_width = 23
+default_sym_width = 8
+default_value_width = 18
+default_decimal_width = 9
 line_split = "-" * 79
-
-name_fmt = f"<{name_width}"
-sym_fmt = f">{sym_width}"
-num_fmt = f">{value_width}.{decimals_width}g"
 
 
 def print_line_split() -> None:
     print(line_split)
+
+
+def _get_name_fmt(name_width: int) -> str:
+    return f"<{name_width}"
+
+
+def _get_sym_fmt(sym_width: int) -> str:
+    return f">{sym_width}"
+
+
+def _get_num_fmt(value_width: int, decimal_width: int) -> str:
+    return f">{value_width}.{decimal_width}g"
 
 
 def print_table_line(
@@ -28,8 +36,17 @@ def print_table_line(
     symbol: str,
     value: float,
     unit: str = "",
+    name_width: int = default_name_width,
+    sym_width: int = default_sym_width,
+    value_width: int = default_value_width,
+    decimal_width: int = default_decimal_width,
 ) -> None:
     unit_str = f"[{unit}]" if unit else unit
+    name_fmt = _get_name_fmt(name_width)
+    sym_fmt = _get_sym_fmt(sym_width)
+    num_fmt = _get_num_fmt(
+        value_width=value_width, decimal_width=decimal_width
+    )
     print(
         f"{name:{name_fmt}}{symbol:{sym_fmt}}{value:{num_fmt}}{unit_str}",
     )
@@ -39,8 +56,17 @@ def print_table_angle_line(
     name: str,
     symbol: str,
     val_rad: float,
+    name_width: int = default_name_width,
+    sym_width: int = default_sym_width,
+    value_width: int = default_value_width,
+    decimal_width: int = default_decimal_width,
 ) -> None:
     val_deg = np.degrees(val_rad)
+    name_fmt = _get_name_fmt(name_width)
+    sym_fmt = _get_sym_fmt(sym_width)
+    num_fmt = _get_num_fmt(
+        value_width=value_width, decimal_width=decimal_width
+    )
     print(
         f"{name:{name_fmt}}{symbol:{sym_fmt}}"
         f"{val_deg:{num_fmt}}[deg]{val_rad:{num_fmt}}[rad]",

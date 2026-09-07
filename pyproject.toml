@@ -27,6 +27,7 @@ dependencies = [
 
 [project.scripts]
 isen = "minuteman.cpg.cli_isentropic:main"
+nshock = "minuteman.cpg.cli_normal_shock:main"
 
 [dependency-groups]
 dev = [

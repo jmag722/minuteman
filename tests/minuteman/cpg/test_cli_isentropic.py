@@ -12,6 +12,7 @@ from minuteman.cpg import cli_isentropic
         ["mach", "5.0", "-g", "1.5"],
         ["t", "5.0"],
         ["rho", "3.0"],
+        ["p", "1.5"],
         ["area", "2.0", "--flow-regime", "supersonic"],
         ["A", "2.0", "-fr", "subsonic"],
         ["mach-angle", "45.0"],
