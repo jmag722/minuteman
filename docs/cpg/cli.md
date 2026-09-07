@@ -9,10 +9,10 @@
 
 ## fanno
 
-<!-- ::: minuteman.cpg.cli_fanno -->
-<!--     options: -->
-<!--       show_root_heading: false -->
-<!--       members: no -->
+::: minuteman.cpg.cli_fanno
+    options:
+      show_root_heading: false
+      members: no
 
 ## isen
 

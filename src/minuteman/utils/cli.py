@@ -95,6 +95,7 @@ def flow_regime_parser() -> ArgumentParser:
         type=lambda x: FlowSpeedRegime[x.lower()],
         choices=FlowSpeedRegime,
         default=FlowSpeedRegime.supersonic,
+        metavar="<subsonic, supersonic>",
         help="Flow regime is subsonic or supersonic",
     )
     return fr
