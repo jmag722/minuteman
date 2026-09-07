@@ -1,6 +1,47 @@
 # Copyright (c) 2022-2026 Jared Magnusson
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+```bash
+isen --help
+
+usage: isen [-h] {subcommand}
+
+Isentropic flow table lookup for a calorically perfect gas
+
+options:
+  -h, --help            show this help message and exit
+
+subcommands:
+  choose one of the following
+    mach (m, M)              Mach Number
+    temperature (T, t)       Temperature ratio T0/T
+    pressure (p, P)          Pressure ratio p0/p
+    density (r, rho)         Density ratio rho0/rho
+    area (A)                 Area ratio A/A*
+    mach-angle (mu)          Mach angle mu
+    prandtl-meyer (nu, pm)   Prandtl-Meyer function nu
+```
+
+Running help on any of these subcommands will give further details of their
+required inputs.
+
+For instance, running `isen mach --help` will yield:
+
+```bash
+usage: isen mach [-h] [--specific-heat-ratio x.x] x.x
+
+Compute isentropic flow outputs by Mach
+
+positional arguments:
+  x.x                   Mach number
+
+options:
+  -h, --help            show this help message and exit
+  --specific-heat-ratio x.x, --gamma x.x, -g x.x Specific heat ratio
+```
+"""
+
 import argparse
 
 import numpy as np
