@@ -30,12 +30,16 @@ jobs:
         pip install . --group dev
     - name: Run pytest and code coverage
       run: |
-        python -m pytest --cov=. --cov-report=html
+        python -m pytest --cov=minuteman --cov-branch --cov-report=term --cov-report=xml
+    - name: Upload results to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
     - name: Upload HTML report if check failed
       uses: actions/upload-artifact@v7
       with:
-        name: html-report
-        path: htmlcov
+        name: pytest-coverage-report
+        path: coverage.xml
     - name: Lint with ruff
       run: |
         ruff check . --statistics

@@ -6,6 +6,7 @@
 
 [![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fjmag722%2Fminuteman%2Frefs%2Fheads%2Fmaster%2Fpyproject.toml&style=flat&logo=python&logoColor=yellow&label=Python)](https://github.com/jmag722/minuteman/blob/master/pyproject.toml)
 [![CI](https://github.com/jmag722/minuteman/actions/workflows/ci.yml/badge.svg)](https://github.com/jmag722/minuteman/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/github/jmag722/minuteman/graph/badge.svg?token=0IW4BPRRC9)](https://codecov.io/github/jmag722/minuteman)
 [![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with pyrefly](https://img.shields.io/endpoint?url=https://pyrefly.org/badge.json)](https://github.com/facebook/pyrefly)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
