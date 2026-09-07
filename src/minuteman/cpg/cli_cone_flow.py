@@ -3,9 +3,9 @@
 
 """
 ```bash
-usage: oshock [-h] x.x {subcommand}
+usage: cshock [-h] x.x {subcommand}
 
-Oblique shock table lookup for a calorically perfect gas
+Conical shock table lookup for a calorically perfect gas
 
 positional arguments:
   x.x                   Upstream Mach number
@@ -15,30 +15,32 @@ options:
 
 subcommands:
   choose one of the following
-    mach-upstream-normal (mn1, Mn1) Normal component of \
-upstream Mach number Mn1
-    shock-angle (beta)              Shock angle beta
-    deflection-angle (theta)        Deflection angle theta
+    surface-mach (mc, Mc)         Surface Mach number Mc
+    shock-angle (beta, theta_s)   Shock angle theta_s
+    cone-angle (theta_c)          Cone angle theta_c
 ```
 
 Running help on any of these subcommands will give further details of their
 required inputs.
 
-For instance, running `oshock 5 beta --help` will yield:
+For instance, running `cshock 5 cone-angle --help` will yield:
 
 ```bash
-usage: oshock x.x shock-angle [-h] [--specific-heat-ratio x.x] [--radians] x.x
+usage: cshock x.x cone-angle [-h] [--specific-heat-ratio x.x] [--radians] \
+[--shock-type <weak, strong>] x.x
 
-Compute oblique shock outputs by shock angle
+Compute conical shock outputs by cone angle
 
 positional arguments:
-  x.x                   Shock angle beta
+  x.x                   Cone angle theta_c
 
 options:
   -h, --help            show this help message and exit
   --specific-heat-ratio x.x, --gamma x.x, -g x.x
                         Specific heat ratio
   --radians, -rad       Angle is specified in radians (default is degrees)
+  --shock-type <weak, strong>, -st <weak, strong>
+                        Oblique shock is weak or strong
 ```
 """
 
@@ -46,7 +48,7 @@ import argparse
 
 import numpy as np
 
-from minuteman.cpg import oblique_shock
+from minuteman.cpg import cone_flow
 from minuteman.utils.cli import (
     print_line_split,
     print_table_angle_line,
@@ -58,87 +60,82 @@ from minuteman.utils.cli import (
 
 
 def main(args: list[str] | None = None) -> None:
-    oshock_parser = argparse.ArgumentParser(
-        prog="oshock",
-        description="Oblique shock table lookup for a calorically perfect gas",
+    cshock_parser = argparse.ArgumentParser(
+        prog="cshock",
+        description="Conical shock table lookup for a calorically perfect gas",
     )
-    oshock_parser.add_argument(
+    cshock_parser.add_argument(
         "mach_upstream", type=float, metavar="x.x", help="Upstream Mach number"
     )
 
-    subparsers = oshock_parser.add_subparsers(
+    subparsers = cshock_parser.add_subparsers(
         description="choose one of the following", required=True
     )
 
-    mn1_parser = subparsers.add_parser(
-        "mach-upstream-normal",
-        description="Compute oblique shock outputs by the normal component "
-        "of the upstream Mach number",
-        aliases=["mn1", "Mn1"],
+    mc_parser = subparsers.add_parser(
+        "surface-mach",
+        description="Compute conical shock outputs by the surface Mach number",
+        aliases=["mc", "Mc"],
         parents=[specific_heat_ratio_parser()],
-        help="Normal component of upstream Mach number Mn1",
+        help="Surface Mach number Mc",
     )
-    mn1_parser.add_argument(
-        "mach_upstream_normal",
+    mc_parser.add_argument(
+        "surface_mach",
         type=float,
         metavar="x.x",
-        help="Normal component of upstream Mach number Mn1",
+        help="Surface Mach number Mc",
     )
-    mn1_parser.set_defaults(
-        func=oblique_shock.lookup_table_by_mach_upstream_normal
-    )
+    mc_parser.set_defaults(func=cone_flow.lookup_solution_by_surface_mach)
 
     beta_parser = subparsers.add_parser(
         "shock-angle",
-        description="Compute oblique shock outputs by shock angle",
-        aliases=["beta"],
+        description="Compute conical shock outputs by shock angle",
+        aliases=["beta", "theta_s"],
         parents=[specific_heat_ratio_parser(), radians_parser()],
-        help="Shock angle beta",
+        help="Shock angle theta_s",
     )
     beta_parser.add_argument(
         "shock_angle",
         type=float,
         metavar="x.x",
-        help="Shock angle beta",
+        help="Shock angle theta_s",
     )
-    beta_parser.set_defaults(func=oblique_shock.lookup_table_by_shock_angle)
+    beta_parser.set_defaults(func=cone_flow.lookup_solution_by_shock_angle)
 
     theta_parser = subparsers.add_parser(
-        "deflection-angle",
-        description="Compute oblique shock outputs by deflection angle",
-        aliases=["theta"],
+        "cone-angle",
+        description="Compute conical shock outputs by cone angle",
+        aliases=["theta_c"],
         parents=[
             specific_heat_ratio_parser(),
             radians_parser(),
             shock_type_parser(),
         ],
-        help="Deflection angle theta",
+        help="Cone angle theta_c",
     )
     theta_parser.add_argument(
-        "deflection_angle",
+        "cone_angle",
         type=float,
         metavar="x.x",
-        help="Deflection angle theta",
+        help="Cone angle theta_c",
     )
-    theta_parser.set_defaults(
-        func=oblique_shock.lookup_table_by_deflection_angle
-    )
+    theta_parser.set_defaults(func=cone_flow.lookup_solution_by_cone_angle)
 
-    parsed_args = oshock_parser.parse_args(args)
+    parsed_args = cshock_parser.parse_args(args)
 
     kwargs = vars(parsed_args).copy()
     if not kwargs.get("radians", False):
         if "shock_angle" in kwargs:
             kwargs["shock_angle"] = np.radians(kwargs["shock_angle"])
-        elif "deflection_angle" in kwargs:
-            kwargs["deflection_angle"] = np.radians(kwargs["deflection_angle"])
+        elif "cone_angle" in kwargs:
+            kwargs["cone_angle"] = np.radians(kwargs["cone_angle"])
     kwargs.pop("func")
     kwargs.pop("radians", None)
 
     res = parsed_args.func(**kwargs)
 
     print_line_split()
-    print("MinuteMAN: Oblique Shock Lookup Table")
+    print("MinuteMAN: Conical Shock Lookup Table")
     print_line_split()
 
     name_width = 23
@@ -146,77 +143,98 @@ def main(args: list[str] | None = None) -> None:
     print_table_line(
         name="Upstream Mach",
         symbol="M1",
-        value=res.mach_upstream.item(),
+        value=res.mach_upstream,
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_line(
         name="Downstream Mach",
         symbol="M2",
-        value=res.mach_downstream.item(),
+        value=res.mach[0],
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_line(
-        name="Norm. Upstream Mach",
-        symbol="Mn1",
-        value=res.mach_upstream_normal.item(),
-        name_width=name_width,
-        sym_width=sym_width,
-    )
-    print_table_line(
-        name="Norm. Downstream Mach",
-        symbol="Mn2",
-        value=res.mach_downstream_normal.item(),
+        name="Surface Mach",
+        symbol="Mc",
+        value=res.mach[-1],
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_angle_line(
         name="Shock angle",
-        symbol="beta",
-        val_rad=res.shock_angle.item(),
+        symbol="theta_s",
+        val_rad=res.shock_angle,
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_angle_line(
-        name="Deflection angle",
-        symbol="theta",
-        val_rad=res.deflection_angle.item(),
+        name="Cone angle",
+        symbol="theta_c",
+        val_rad=res.cone_angle,
+        name_width=name_width,
+        sym_width=sym_width,
+    )
+    print_table_angle_line(
+        name="Shock turn angle",
+        symbol="psi",
+        val_rad=res.flow_angle[0],
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_line(
         name="Temperature Ratio",
         symbol="T2/T1",
-        value=res.temperature_ratio.item(),
+        value=res.temperature_ratio[0],
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_line(
         name="Pressure Ratio",
         symbol="p2/p1",
-        value=res.pressure_ratio.item(),
+        value=res.pressure_ratio[0],
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_line(
         name="Density Ratio",
         symbol="rho2/rho1",
-        value=res.density_ratio.item(),
+        value=res.density_ratio[0],
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_line(
         name="Total Pressure Ratio",
         symbol="p02/p01",
-        value=res.total_pressure_ratio.item(),
+        value=res.total_pressure_ratio,
+        name_width=name_width,
+        sym_width=sym_width,
+    )
+    print_table_line(
+        name="Surf. Temperature Ratio",
+        symbol="Tc/T1",
+        value=res.temperature_ratio[-1],
+        name_width=name_width,
+        sym_width=sym_width,
+    )
+    print_table_line(
+        name="Surf. Pressure Ratio",
+        symbol="pc/p1",
+        value=res.pressure_ratio[-1],
+        name_width=name_width,
+        sym_width=sym_width,
+    )
+    print_table_line(
+        name="Surf. Density Ratio",
+        symbol="rhoc/rho1",
+        value=res.density_ratio[-1],
         name_width=name_width,
         sym_width=sym_width,
     )
     print_table_line(
         name="Specific Heat Ratio",
         symbol="gamma",
-        value=res.specific_heat_ratio.item(),
+        value=res.specific_heat_ratio,
         name_width=name_width,
         sym_width=sym_width,
     )

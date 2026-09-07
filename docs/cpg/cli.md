@@ -1,11 +1,11 @@
 # Command-Line Tools
 
-## cone
+## cshock
 
-<!-- ::: minuteman.cpg.cli_cone_flow -->
-<!--     options: -->
-<!--       show_root_heading: false -->
-<!--       members: no -->
+::: minuteman.cpg.cli_cone_flow
+    options:
+      show_root_heading: false
+      members: no
 
 ## fanno
 

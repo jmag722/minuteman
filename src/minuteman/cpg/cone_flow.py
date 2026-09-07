@@ -306,7 +306,7 @@ def lookup_solution_by_cone_angle(
     specific_heat_ratio: Floatlike = 1.4,
     shock_type: ObliqueShockType = ObliqueShockType.weak,
 ) -> ConeFlowSolution:
-    r"""Solve a cone flow problem with a known surface Mach number, $M_c$
+    r"""Solve a cone flow problem with a known cone angle, $\theta_c$
 
     Args:
         cone_angle: cone angle, $\theta_c$ [radians].
