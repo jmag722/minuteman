@@ -30,10 +30,10 @@
 
 ## oshock
 
-<!-- ::: minuteman.cpg.cli_oblique_shock -->
-<!--     options: -->
-<!--       show_root_heading: false -->
-<!--       members: no -->
+::: minuteman.cpg.cli_oblique_shock
+    options:
+      show_root_heading: false
+      members: no
 
 ## rayleigh
 

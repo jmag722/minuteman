@@ -29,6 +29,7 @@ dependencies = [
 fanno = "minuteman.cpg.cli_fanno:main"
 isen = "minuteman.cpg.cli_isentropic:main"
 nshock = "minuteman.cpg.cli_normal_shock:main"
+oshock = "minuteman.cpg.cli_oblique_shock:main"
 rayleigh= "minuteman.cpg.cli_rayleigh:main"
 
 [dependency-groups]

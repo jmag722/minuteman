@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 import numpy as np
 
 from minuteman.cpg.base import FlowSpeedRegime
+from minuteman.cpg.oblique_shock import ObliqueShockType
 
 default_name_width = 23
 default_sym_width = 8
@@ -110,3 +111,17 @@ def radians_parser() -> ArgumentParser:
         help="Angle is specified in radians (default is degrees)",
     )
     return rad
+
+
+def shock_type_parser() -> ArgumentParser:
+    st = argparse.ArgumentParser(add_help=False)
+    st.add_argument(
+        "--shock-type",
+        "-st",
+        type=lambda x: ObliqueShockType[x.lower()],
+        choices=ObliqueShockType,
+        default=ObliqueShockType.weak,
+        metavar="<weak, strong>",
+        help="Oblique shock is weak or strong",
+    )
+    return st
