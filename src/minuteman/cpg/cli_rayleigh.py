@@ -3,50 +3,53 @@
 
 """
 ```bash
-usage: fanno [-h] {subcommand}
+usage: rayleigh [-h] {subcommand}
 
-Fanno flow table lookup for a calorically perfect gas
+Rayleigh flow table lookup for a calorically perfect gas
 
 options:
   -h, --help            show this help message and exit
 
 subcommands:
   choose one of the following
-    mach (m, M)            Mach Number
-    temperature (T, t)     Temperature ratio T/T*
-    pressure (p, P)        Pressure ratio p/p*
-    density (r, rho)       Density ratio rho/rho*
-    total-pressure (p0)    Total pressure ratio p0/p0*
-    fanno-parameter (fp)   Fanno parameter 4fL*/D
-    entropy (s)            Entropy ratio (s*-s)/R
+    mach (m, M)                Mach Number
+    temperature (T, t)         Temperature ratio T/T*
+    pressure (p, P)            Pressure ratio p/p*
+    density (r, rho)           Density ratio rho/rho*
+    total-pressure (p0)        Total pressure ratio p0/p0*
+    total-temperature (T0, t0) Total temperature ratio T0/T0*
+    entropy (s)                Entropy ratio (s*-s)/R
 ```
 
 Running help on any of these subcommands will give further details of their
 required inputs.
 
-For instance, running `fanno entropy --help` will yield:
+For instance, running `rayleigh temperature --help` will yield:
 
 ```bash
-usage: fanno entropy [-h] [--specific-heat-ratio x.x] \
-[--flow-regime <subsonic, supersonic>] x.x
+usage: rayleigh temperature [-h] [--specific-heat-ratio x.x] \
+[--flow-regime <lowspeed, highspeed>] x.x
 
-Compute Fanno flow outputs by entropy ratio
+Compute Rayleigh flow outputs by temperature ratio
 
 positional arguments:
-  x.x                   Entropy ratio (s*-s)/R
+  x.x                   Temperature ratio T/T*
 
 options:
   -h, --help            show this help message and exit
   --specific-heat-ratio x.x, --gamma x.x, -g x.x
                         Specific heat ratio
-  --flow-regime <subsonic, supersonic>, -fr <subsonic, supersonic>
-                        Flow regime is subsonic or supersonic
+  --flow-regime <lowspeed, highspeed>, -fr <lowspeed, highspeed>
+                        Rayleigh flow regime is left or right of Tmax
+                        on Rayleigh curve
 ```
 """
 
 import argparse
+from argparse import ArgumentParser
 
-from minuteman.cpg import fanno
+from minuteman.cpg import rayleigh
+from minuteman.cpg.rayleigh import RayleighTemperatureRegime
 from minuteman.utils.cli import (
     flow_regime_parser,
     print_line_split,
@@ -55,18 +58,32 @@ from minuteman.utils.cli import (
 )
 
 
-def main(args: list[str] | None = None) -> None:
-    fanno_parser = argparse.ArgumentParser(
-        prog="fanno",
-        description="Fanno flow table lookup for a calorically perfect gas",
+def ray_flow_regime_parser() -> ArgumentParser:
+    fr = argparse.ArgumentParser(add_help=False)
+    fr.add_argument(
+        "--flow-regime",
+        "-fr",
+        type=lambda x: rayleigh.RayleighTemperatureRegime[x.lower()],
+        choices=RayleighTemperatureRegime,
+        default=RayleighTemperatureRegime.highspeed,
+        metavar="<lowspeed, highspeed>",
+        help="Rayleigh flow regime is left or right of Tmax on Rayleigh curve",
     )
-    subparsers = fanno_parser.add_subparsers(
+    return fr
+
+
+def main(args: list[str] | None = None) -> None:
+    ray_parser = argparse.ArgumentParser(
+        prog="rayleigh",
+        description="Rayleigh flow table lookup for a calorically perfect gas",
+    )
+    subparsers = ray_parser.add_subparsers(
         description="choose one of the following", required=True
     )
 
     mach_parser = subparsers.add_parser(
         "mach",
-        description="Compute Fanno flow outputs by Mach",
+        description="Compute Rayleigh flow outputs by Mach",
         aliases=["m", "M"],
         parents=[specific_heat_ratio_parser()],
         help="Mach Number",
@@ -74,13 +91,13 @@ def main(args: list[str] | None = None) -> None:
     mach_parser.add_argument(
         "mach", type=float, metavar="x.x", help="Mach number"
     )
-    mach_parser.set_defaults(func=fanno.lookup_table_by_mach)
+    mach_parser.set_defaults(func=rayleigh.lookup_table_by_mach)
 
     t_parser = subparsers.add_parser(
         "temperature",
-        description="Compute Fanno flow outputs by temperature ratio",
+        description="Compute Rayleigh flow outputs by temperature ratio",
         aliases=["T", "t"],
-        parents=[specific_heat_ratio_parser()],
+        parents=[specific_heat_ratio_parser(), ray_flow_regime_parser()],
         help="Temperature ratio T/T*",
     )
     t_parser.add_argument(
@@ -89,11 +106,11 @@ def main(args: list[str] | None = None) -> None:
         metavar="x.x",
         help="Temperature ratio T/T*",
     )
-    t_parser.set_defaults(func=fanno.lookup_table_by_temperature)
+    t_parser.set_defaults(func=rayleigh.lookup_table_by_temperature)
 
     p_parser = subparsers.add_parser(
         "pressure",
-        description="Compute Fanno flow outputs by pressure ratio",
+        description="Compute Rayleigh flow outputs by pressure ratio",
         aliases=["p", "P"],
         parents=[specific_heat_ratio_parser()],
         help="Pressure ratio p/p*",
@@ -101,11 +118,11 @@ def main(args: list[str] | None = None) -> None:
     p_parser.add_argument(
         "pressure_ratio", type=float, metavar="x.x", help="Pressure ratio p/p*"
     )
-    p_parser.set_defaults(func=fanno.lookup_table_by_pressure)
+    p_parser.set_defaults(func=rayleigh.lookup_table_by_pressure)
 
     r_parser = subparsers.add_parser(
         "density",
-        description="Compute Fanno flow outputs by density ratio",
+        description="Compute Rayleigh flow outputs by density ratio",
         aliases=["r", "rho"],
         parents=[specific_heat_ratio_parser()],
         help="Density ratio rho/rho*",
@@ -116,11 +133,11 @@ def main(args: list[str] | None = None) -> None:
         metavar="x.x",
         help="Density ratio rho/rho*",
     )
-    r_parser.set_defaults(func=fanno.lookup_table_by_density)
+    r_parser.set_defaults(func=rayleigh.lookup_table_by_density)
 
     p0_parser = subparsers.add_parser(
         "total-pressure",
-        description="Compute Fanno flow outputs by total pressure ratio",
+        description="Compute Rayleigh flow outputs by total pressure ratio",
         aliases=["p0"],
         parents=[specific_heat_ratio_parser(), flow_regime_parser()],
         help="Total pressure ratio p0/p0*",
@@ -131,26 +148,26 @@ def main(args: list[str] | None = None) -> None:
         metavar="x.x",
         help="Total pressure ratio p0/p0*",
     )
-    p0_parser.set_defaults(func=fanno.lookup_table_by_total_pressure)
+    p0_parser.set_defaults(func=rayleigh.lookup_table_by_total_pressure)
 
-    fp_parser = subparsers.add_parser(
-        "fanno-parameter",
-        description="Compute Fanno flow outputs by Fanno parameter",
-        aliases=["fp"],
+    t0_parser = subparsers.add_parser(
+        "total-temperature",
+        description="Compute Rayleigh flow outputs by total temperature ratio",
+        aliases=["T0", "t0"],
         parents=[specific_heat_ratio_parser(), flow_regime_parser()],
-        help="Fanno parameter 4fL*/D",
+        help="Total temperature ratio T0/T0*",
     )
-    fp_parser.add_argument(
-        "fanno_parameter",
+    t0_parser.add_argument(
+        "total_temperature_ratio",
         type=float,
         metavar="x.x",
-        help="Fanno parameter 4fL*/D",
+        help="Total temperature ratio T0/T0*",
     )
-    fp_parser.set_defaults(func=fanno.lookup_table_by_fanno_parameter)
+    t0_parser.set_defaults(func=rayleigh.lookup_table_by_total_temperature)
 
     s_parser = subparsers.add_parser(
         "entropy",
-        description="Compute Fanno flow outputs by entropy ratio",
+        description="Compute Rayleigh flow outputs by entropy ratio",
         aliases=["s"],
         parents=[specific_heat_ratio_parser(), flow_regime_parser()],
         help="Entropy ratio (s*-s)/R",
@@ -161,9 +178,9 @@ def main(args: list[str] | None = None) -> None:
         metavar="x.x",
         help="Entropy ratio, (s*-s)/R",
     )
-    s_parser.set_defaults(func=fanno.lookup_table_by_entropy)
+    s_parser.set_defaults(func=rayleigh.lookup_table_by_entropy)
 
-    parsed_args = fanno_parser.parse_args(args)
+    parsed_args = ray_parser.parse_args(args)
 
     kwargs = vars(parsed_args).copy()
     kwargs.pop("func")
@@ -171,7 +188,7 @@ def main(args: list[str] | None = None) -> None:
     res = parsed_args.func(**kwargs)
 
     print_line_split()
-    print("MinuteMAN: Fanno Flow Lookup Table")
+    print("MinuteMAN: Rayleigh Flow Lookup Table")
     print_line_split()
     print_table_line(name="Mach Number", symbol="M", value=res.mach.item())
     print_table_line(
@@ -191,9 +208,9 @@ def main(args: list[str] | None = None) -> None:
         value=res.total_pressure_ratio.item(),
     )
     print_table_line(
-        name="Fanno Parameter",
-        symbol="4fL*/D",
-        value=res.fanno_parameter.item(),
+        name="Total Temperature Ratio",
+        symbol="T0/T0*",
+        value=res.total_temperature_ratio.item(),
     )
     print_table_line(
         name="Entropy Ratio",

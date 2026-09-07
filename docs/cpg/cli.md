@@ -37,7 +37,7 @@
 
 ## rayleigh
 
-<!-- ::: minuteman.cpg.rayleigh -->
-<!--     options: -->
-<!--       show_root_heading: false -->
-<!--       members: no -->
+::: minuteman.cpg.cli_rayleigh
+    options:
+      show_root_heading: false
+      members: no
