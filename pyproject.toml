@@ -25,6 +25,14 @@ dependencies = [
   "scipy",
 ]
 
+[project.scripts]
+cshock = "minuteman.cpg.cli_cone_flow:main"
+fanno = "minuteman.cpg.cli_fanno:main"
+isen = "minuteman.cpg.cli_isentropic:main"
+nshock = "minuteman.cpg.cli_normal_shock:main"
+oshock = "minuteman.cpg.cli_oblique_shock:main"
+rayleigh= "minuteman.cpg.cli_rayleigh:main"
+
 [dependency-groups]
 dev = [
   "mkdocstrings",
@@ -80,6 +88,9 @@ ignore = [
     "N806", # non-lowercase-variable-in-function
     "S101", # flags use of assert
     "PLR", # magic values, too many args
+]
+"src/**/cli*.py" = [
+    "T201",
 ]
 [tool.ruff.lint.flake8-copyright]
 author = "Jared Magnusson"

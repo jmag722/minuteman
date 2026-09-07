@@ -32,9 +32,9 @@ def check_specific_heat_ratio(specific_heat_ratio: ArraylikeFloat) -> None:
     # user frustration I'll let them round up
     gam_max = 1.67
     gam = np.atleast_1d(specific_heat_ratio)
-    if np.any(gam < gam_min) or np.any(gam > gam_max):
+    if np.any(gam <= gam_min) or np.any(gam > gam_max):
         raise OutOfBoundsError(
-            f"Specific heat ratio must be within [{gam_min}, {gam_max}]"
+            f"Specific heat ratio must be within ({gam_min}, {gam_max}]"
         )
 
 

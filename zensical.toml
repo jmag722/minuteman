@@ -26,6 +26,7 @@ Copyright &copy; 2026 The authors
 nav = [
   {"Home" = "index.md"},
   {"Calorically Perfect Gas" = [
+     "cpg/cli.md",
      "cpg/base.md",
      "cpg/cone_flow.md",
      "cpg/fanno.md",

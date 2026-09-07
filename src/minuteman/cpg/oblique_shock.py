@@ -96,7 +96,7 @@ def lookup_table_by_deflection_angle(
             Bounds: $(0, \theta_{max}]$
         mach_upstream: upstream Mach number $M_1$. Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
         shock_type: shock type
 
     Returns:
@@ -170,7 +170,7 @@ def lookup_table_by_shock_angle(
             Bounds: $[\arcsin\left(\frac{1}{M1}\right), 90^\circ]$
         mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Oblique shock table
@@ -241,7 +241,7 @@ def lookup_table_by_mach_upstream_normal(
             $M_{n1}$. Bounds: $(1, M_1)$
         mach_upstream: upstream Mach number, $M_1$. Bounds: $(1, \infty)$
         specific_heat_ratio: ratio of specific heats, $\gamma$.
-            Bounds: $[1, 1.67]$
+            Bounds: $(1, 1.67]$
 
     Returns:
         Oblique shock table
