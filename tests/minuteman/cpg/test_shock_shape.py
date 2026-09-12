@@ -206,6 +206,8 @@ def test_estimate_coords_sphere_cone(mach, nose_radius, x, y, shock_angle):
         ([0.0], 2, 0, 0.3),
         # 90 deg cone
         ([0.0], 2, 0, np.pi / 2),
+        # negative angle
+        ([0.0], 2, 0, -np.pi / 6),
     ],
 )
 def test_out_of_bounds_surface_mach(y, mach, r, theta):
