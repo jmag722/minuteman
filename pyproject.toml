@@ -6,7 +6,7 @@ authors = [
 ]
 description = "Python library for solving engineering problems."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10, <3.15"
 license = {file = "LICENSE"}
 keywords = [
   "aerospace",
@@ -20,9 +20,10 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Operating System :: OS Independent",
 ]
+# min supported version here depends also on min supported Python version
 dependencies = [
-  "numpy >= 2",
-  "scipy",
+  "numpy >= 2, <3",
+  "scipy>=1.15, <2",
 ]
 
 [project.scripts]
