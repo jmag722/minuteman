@@ -41,3 +41,10 @@
     options:
       show_root_heading: false
       members: no
+
+## shock-standoff
+
+::: minuteman.cpg.cli_shock_shape
+    options:
+      show_root_heading: false
+      members: no
