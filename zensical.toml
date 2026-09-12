@@ -35,6 +35,7 @@ nav = [
      "cpg/oblique_shock.md",
      "cpg/rayleigh.md",
      "cpg/shock_tube.md",
+     "cpg/shock_shape.md",
      "cpg/thermo.md",
   ]},
   {"Utilities" = [
