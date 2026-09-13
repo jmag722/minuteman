@@ -15,21 +15,53 @@
 
 <!-- --8<-- [start:intro] -->
 
-MinuteMAN is a toolkit for rapid solutions to engineering problems.
-
-#### Current features include:
-
-- thermodynamics
-
-- compressible flow lookup tables (isentropic flow, normal shocks, Rayleigh flow, Fanno flow)
-
-- oblique shock solver
-
-- Sod shock tube solver
-
-- cone flow solver (Taylor-Maccoll equations)
+MinuteMAN is a toolkit for rapid solutions to engineering problems. At the moment it is largely a gas-dynamics and compressible flow toolkit, but I think it has room to expand to include other fields.
 
 <!-- --8<-- [end:intro] -->
+
+<!-- --8<-- [start:roadmap] -->
+
+## Current Features & Roadmap
+
+Current and upcoming features include (in no particular order):
+
+- [x] Sod shock tube solver
+
+- [x] Shock shape predictions for blunt bodies
+    - [x] calorically perfect gas (CPG)
+    - [ ] equilibrium gas (Eq.)
+
+- [ ] Normal shocks
+    - [x] CPG
+    - [ ] Eq.
+
+- [ ] Oblique shocks
+    - [x] CPG
+    - [ ] Eq.
+
+- [ ] Conical shocks (Taylor-Maccoll equations)
+    - [x] CPG
+    - [ ] Eq.
+
+- [x] Rayleigh flow
+
+- [x] Fanno flow
+
+- [ ] Isentropic flow
+    - [x]  CPG
+    - [ ] Eq.
+
+- [ ] 1D nozzle calculations
+
+- [ ] Mixed Rayleigh-Fanno flow with varying area
+
+- [ ] 2D Nozzle design via method-of-characteristics
+
+- [ ] Gas turbine engines
+
+- [x] basic gas thermodynamics
+
+<!-- --8<-- [end:roadmap] -->
 
 ## Installation
 
@@ -38,9 +70,7 @@ This package is installable using pip or uv.
 ```bash
 git clone git@github.com:jmag722/minuteman.git
 cd minuteman
-uv venv
-source .venv/bin/activate
-uv pip install .
+uv sync
 ```
 
 ## Documentation
@@ -51,7 +81,7 @@ Documentation available at [https://jmag722.github.io/minuteman/](https://jmag72
 
 ## Motivation
 
-Often at work I find myself implementing some facet of an aerospace calculator in a dirty Python script or even as part of a more rigorous project. Or I'm making laborious effort to set up a CFD case when I don't have a quantitative estimate of the result before embarking. In each case, I've wished for reliable, open-source implementations that can be used to provide a "back of the envelope" estimate or validate more detailed analyses.
+Often at work I find myself implementing some bit of aerospace calculator in a dirty Python script or even as part of a more rigorous project. Or I'm taking careful effort to set up a CFD case when I don't have a quantitative estimate of the result *a priori*. In each case, I've wished for reliable, open-source implementations that can be used to provide a "back of the envelope" estimate or validate more detailed analyses.
 
 There is no shortage of GUI-based and web browser alternatives for solving aerospace or compressible flow problems - resources such as ([AerospaceWeb](https://aerospaceweb.org/design/scripts/) or [VTT's Compressible Aerodynamics Calculator](https://devenport.aoe.vt.edu/aoe3114/calc.html)) are great for a quick calculation. MATLAB supplies its own toolbox for many of these calculations. This repository is for those who:
 
@@ -59,31 +89,14 @@ There is no shortage of GUI-based and web browser alternatives for solving aeros
 
 - need to verify a complicated CFD model in the absence of experimental data
 
-- wish to minimize the iterative headache that is setting up a CFD analysis for one or \*many more test cases
+- desire help preparing and even automating a CFD mesh to account for the estimated solution (shocks, cell sizes, etc)
 
 - want to *perform large trade studies, varying different parameters with multiple values* (not feasible in a GUI or browser)
 
-- are not comfortable entering their *CUI or otherwise sensitive data* in a web browser
+- are not comfortable entering their *CUI or otherwise sensitive data* in an LLM or web browser
 
 <!-- --8<-- [end:motivation] -->
 
-<!-- --8<-- [start:roadmap] -->
-
-## Roadmap
-
-- equilibrium solvers (shocks, isentropic flow, cone flow)
-
-- shock standoff predictions
-
-- 1D nozzle calculations
-
-- mixed Rayleigh-Fanno flow for a varying area duct
-
-- nozzle design with  method-of-characteristics
-
-- engines
-
-<!-- --8<-- [end:roadmap] -->
 
 ## License
 
