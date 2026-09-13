@@ -17,12 +17,12 @@ jobs:
     steps:
       - uses: actions/configure-pages@v6
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: astral-sh/setup-uv@v10.1.0
         with:
-          python-version: 3.14
+          python-version-file: "pyproject.toml"
       # install ruff so signature formatting done correctly
-      - run: pip install zensical mkdocstrings mkdocstrings-python ruff
-      - run: zensical build --clean
+      - run: uv add zensical mkdocstrings mkdocstrings-python ruff
+      - run: uv run zensical build --clean
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
