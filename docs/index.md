@@ -4,6 +4,8 @@
 
 --8<-- "README.md:intro"
 
+--8<-- "README.md:roadmap"
+
 ## Installation
 
 Simply pip-installing the package in place (using traditional pip or uv) will work.
@@ -20,11 +22,8 @@ Simply pip-installing the package in place (using traditional pip or uv) will wo
     ```bash
     git clone git@github.com:jmag722/minuteman.git
     cd minuteman
-    uv venv
-    source .venv/bin/activate
-    uv pip install .
+    uv sync
     ```
 
 --8<-- "README.md:motivation"
 
---8<-- "README.md:roadmap"
