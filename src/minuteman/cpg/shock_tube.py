@@ -178,7 +178,7 @@ def solve_sod(
         pressure_ratio=p21,
         specific_heat_ratio_driven=gam1,
     )
-    # u2=u3=V=u_piston
+    # u2 equals u3 equals V equals u_piston
     u2 = contact_surface_speed(
         pressure_ratio=p21,
         speed_of_sound_driven=a1,
