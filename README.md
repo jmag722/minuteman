@@ -15,7 +15,7 @@
 
 <!-- --8<-- [start:intro] -->
 
-MinuteMAN is a toolkit for rapid solutions to engineering problems. At the moment it is largely a gas-dynamics and compressible flow toolkit, but I think it has room to expand to include other fields.
+MinuteMAN is a toolkit for rapid solutions to mechanical and aerospace engineering problems. It prioritizes algebraic and ordinary differential equation methods for use in everyday engineering decision-making.
 
 <!-- --8<-- [end:intro] -->
 
@@ -25,41 +25,29 @@ MinuteMAN is a toolkit for rapid solutions to engineering problems. At the momen
 
 Current and upcoming features include (in no particular order):
 
-- [x] Sod shock tube solver
-
-- [x] Shock shape predictions for blunt bodies
-    - [x] calorically perfect gas (CPG)
-    - [ ] equilibrium gas (Eq.)
-
-- [ ] Normal shocks
-    - [x] CPG
-    - [ ] Eq.
-
-- [ ] Oblique shocks
-    - [x] CPG
-    - [ ] Eq.
-
-- [ ] Conical shocks (Taylor-Maccoll equations)
-    - [x] CPG
-    - [ ] Eq.
-
-- [x] Rayleigh flow
-
-- [x] Fanno flow
-
+- [x] Thermodynamics
 - [ ] Isentropic flow
     - [x]  CPG
     - [ ] Eq.
-
 - [ ] 1D nozzle calculations
-
+- [ ] Normal shocks
+    - [x] CPG
+    - [ ] Eq.
+- [ ] Oblique shocks
+    - [x] CPG
+    - [ ] Eq.
+- [ ] Conical shocks (Taylor-Maccoll equations)
+    - [x] CPG
+    - [ ] Eq.
+- [x] Rayleigh flow
+- [x] Fanno flow
 - [ ] Mixed Rayleigh-Fanno flow with varying area
-
+- [x] Sod shock tube solver
+- [x] Shock shape predictions for blunt bodies
+    - [x] calorically perfect gas (CPG)
+    - [ ] equilibrium gas (Eq.)
 - [ ] 2D Nozzle design via method-of-characteristics
-
 - [ ] Gas turbine engines
-
-- [x] basic gas thermodynamics
 
 <!-- --8<-- [end:roadmap] -->
 
@@ -81,13 +69,24 @@ Documentation available at [https://jmag722.github.io/minuteman/](https://jmag72
 
 ## Motivation
 
-Often at work I find myself implementing some bit of aerospace calculator in a dirty Python script or even as part of a more rigorous project. Or I'm taking careful effort to set up a CFD case when I don't have a quantitative estimate of the result *a priori*. In each case, I've wished for reliable, open-source implementations that can be used to provide a "back of the envelope" estimate or validate more detailed analyses.
+I've always been amazed by the mathematical prowess of early aerospace engineers. One only needs to skim a few NASA papers from the 1950s-70s to see often laborious derivations leading the reader from intractable PDEs to a closed-form solution. When compute power was limited, they developed an astute intuition for when and how to make critical simplifying assumptions.
 
-There is no shortage of GUI-based and web browser alternatives for solving aerospace or compressible flow problems - resources such as ([AerospaceWeb](https://aerospaceweb.org/design/scripts/) or [VTT's Compressible Aerodynamics Calculator](https://devenport.aoe.vt.edu/aoe3114/calc.html)) are great for a quick calculation. MATLAB supplies its own toolbox for many of these calculations. This repository is for those who:
+Such classical methods may appear of limited use in modern aerodynamics, where the go-to approach is to simply overrefine the mesh, aggressively turn on all the physics, and crank it through STAR-CCM or ANSYS. Modern numerical methods have come far and solved very complicated problems.
 
-- want a Python-based, FOSS tool *that can be integrated directly into their own custom workflow*
+But I think these "old-school" methods can still be highly valuable, as they can:
 
-- need to verify a complicated CFD model in the absence of experimental data
+- serve as a quick "back-of-the-envelope" estimate for the real solution
+- bound the trade space
+- give insight to help reduce the number of iterations needed to create a good CFD mesh (where's the shock, cell height, etc)
+- be used for verification of CFD when there is an absence of experimental data
+
+Often at work, I've found myself wishing for such a reliable, open-source implementation of these methods. There is no shortage of GUI-based and web browser alternatives for solving aerospace or compressible flow problems - resources such as ([AerospaceWeb](https://aerospaceweb.org/design/scripts/) or [VTT's Compressible Aerodynamics Calculator](https://devenport.aoe.vt.edu/aoe3114/calc.html)) are great for a quick calculation. MATLAB supplies its own toolbox for many of these calculations.
+
+**This repository is for those who**:
+
+- want a Python-based, FOSS tool *that can be integrated directly into their custom workflow* (and is non-GPL licensed)
+
+- need to verify a CFD model in the absence of experimental data
 
 - desire help preparing and even automating a CFD mesh to account for the estimated solution (shocks, cell sizes, etc)
 
