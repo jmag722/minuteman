@@ -48,7 +48,7 @@ def main(args: list[str] | None = None) -> None:
     sshape_parser = argparse.ArgumentParser(
         prog="shock-standoff",
         description="Shock standoff distance calculator for a "
-                    "calorically perfect gas",
+        "calorically perfect gas",
     )
 
     subparsers = sshape_parser.add_subparsers(

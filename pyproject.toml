@@ -39,6 +39,7 @@ shock-standoff = "minuteman.cpg.cli_shock_shape:main"
 dev = [
   "mkdocstrings",
   "mkdocstrings-python",
+  "pre-commit",
   "pyrefly",
   "pytest",
   "pytest-cov",
