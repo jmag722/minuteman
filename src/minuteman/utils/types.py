@@ -10,6 +10,7 @@ Basic minuteman types
 
 from typing import Any, TypeAlias
 
+import cantera as ct
 import numpy as np
 import numpy.typing as npt
 
@@ -26,6 +27,8 @@ ArraylikeFloat: TypeAlias = (
     NDArrayFloat | list[float] | tuple[float, ...] | Floatlike
 )
 """Scalar or array-like float"""
+
+EqSolutionArraylike: TypeAlias = ct.Solution | ct.SolutionArray
 
 
 class InvalidArrayShapeError(Exception):
@@ -45,6 +48,23 @@ def broadcast_inputs(*args: Any) -> tuple[Any, ...]:
     return tuple(
         np.atleast_1d(np.array(a)) for a in np.broadcast_arrays(*args)
     )
+
+
+def eq_soln_toarray(st: EqSolutionArraylike) -> ct.SolutionArray:
+    """Convert gas state Solution to a SolutionArray
+
+    Args:
+        st: Gas state object, Solution or SolutionArray
+
+    Returns:
+        SolutionArray
+
+    """
+    if isinstance(st, ct.Solution):
+        gas2 = ct.Solution(st.source)
+        gas2.state = st.state
+        return ct.SolutionArray(gas2, shape=1)
+    return st
 
 
 class DeveloperError(Exception):

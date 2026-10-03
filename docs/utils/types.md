@@ -9,6 +9,8 @@
 
 ::: minuteman.utils.types.ArraylikeFloat
 
+::: minuteman.utils.types.EqSolutionArraylike
+
 ::: minuteman.utils.types.Floatlike
 
 ::: minuteman.utils.types.NDArrayBool
