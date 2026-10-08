@@ -18,8 +18,10 @@ from dataclasses import dataclass
 
 import cantera as ct
 import numpy as np
+import scipy.constants as sc
 from scipy.optimize.elementwise import find_root
 
+from minuteman.eq.thermo import isentropic_exponent, speed_of_sound
 from minuteman.utils.bounds_check import (
     OutOfBoundsError,
 )
@@ -33,63 +35,114 @@ from minuteman.utils.types import (
 
 
 @dataclass
+class EqFlowStates:
+    """Equilibrium flow state."""
+
+    states: ct.SolutionArray
+    """Thermodynamic states"""
+
+    velocity: NDArrayFloat
+    """Flow velocity $u$ [m/s]"""
+
+    speed_of_sound_eq: NDArrayFloat
+    """Equilibrium speed of sound $a_{eq}$ [m/s]"""
+
+    @property
+    def speed_of_sound_fr(self) -> NDArrayFloat:
+        r"""Frozen speed of sound $a_{f}$ [m/s]"""
+        return self.states.sound_speed
+
+    isentropic_exponent: NDArrayFloat
+    r"""Isentropic exponent $\gamma_s$"""
+
+    @property
+    def pressure(self) -> NDArrayFloat:
+        r"""Pressure, $p$ [Pa]"""
+        return self.states.P
+
+    @property
+    def temperature(self) -> NDArrayFloat:
+        r"""Temperature, $T$ [K]"""
+        return self.states.T
+
+    @property
+    def density(self) -> NDArrayFloat:
+        r"""Density, $\rho$ [kg/$m^{-3}$]"""
+        return self.states.density_mass
+
+    @property
+    def mach(self) -> NDArrayFloat:
+        r"""Mach number, $M$ (using equilibrium speed of sound)"""
+        return self.velocity / self.speed_of_sound_eq
+
+    def mass_fraction(self, name: str) -> NDArrayFloat:
+        """Mass fraction $Y_i$ for species $i$.
+
+        Args:
+            name: Species name.
+
+        Returns:
+            Mass fraction $Y_i$.
+
+        """
+        idx = self.states.species_index(name)
+        return self.states.Y[..., idx]
+
+    def mole_fraction(self, name: str) -> NDArrayFloat:
+        """Mole fraction $X_i$ for species $i$.
+
+        Args:
+            name: Species name.
+
+        Returns:
+            Mole fraction $X_i$.
+
+        """
+        idx = self.states.species_index(name)
+        return self.states.X[..., idx]
+
+    def number_density(self, name: str) -> NDArrayFloat:
+        r"""Return number density $n_i$ for species $i$.
+
+        Args:
+            name: Species name
+
+        Returns:
+            Number density $n_i$ [particles/$m^{-3}$]
+
+        """
+        idx = self.states.species_index(name)
+        return self.states.concentrations[..., idx] * sc.kilo * sc.Avogadro
+
+
+@dataclass
 class EqNormalShockSolution:
     """Normal shock solution for a stationary shock in chemical equilibrium."""
 
-    states_upstream: ct.SolutionArray
-    states_downstream: ct.SolutionArray
-
-    velocity_upstream: NDArrayFloat
-    r"""Upstream velocity, $u_1$"""
-
-    velocity_downstream: NDArrayFloat
-    r"""Downstream velocity, $u_2$"""
-
-    @property
-    def mach_upstream(self) -> NDArrayFloat:
-        r"""Upstream mach number, $M_1$"""
-        return self.velocity_upstream / self.states_upstream.sound_speed
-
-    @property
-    def mach_downstream(self) -> NDArrayFloat:
-        r"""Downstream mach number, $M_2$"""
-        return self.velocity_downstream / self.states_downstream.sound_speed
+    upstream: EqFlowStates
+    downstream: EqFlowStates
 
     @property
     def temperature_ratio(self) -> NDArrayFloat:
         r"""Temperature ratio, $T_2 / T_1$"""
-        return self.states_downstream.T / self.states_upstream.T
+        return self.downstream.temperature / self.upstream.temperature
 
     @property
     def pressure_ratio(self) -> NDArrayFloat:
         r"""Static pressure ratio, $p_2 / p_1$"""
-        return self.states_downstream.P / self.states_upstream.P
+        return self.downstream.pressure / self.upstream.pressure
 
     @property
     def density_ratio(self) -> NDArrayFloat:
         r"""Density ratio, $\rho_2 / \rho_1$"""
-        return (
-            self.states_downstream.density_mass
-            / self.states_upstream.density_mass
-        )
+        return self.downstream.density / self.upstream.density
 
     @property
     def speed_of_sound_ratio(self) -> NDArrayFloat:
         r"""Speed of sound ratio, $\a_2 / \a_1$"""
         return (
-            self.states_downstream.sound_speed
-            / self.states_upstream.sound_speed
+            self.downstream.speed_of_sound_eq / self.upstream.speed_of_sound_eq
         )
-
-    @property
-    def specific_heat_ratio_downstream(self) -> NDArrayFloat:
-        r"""Downstream ratio of specific heats, $\gamma_2$"""
-        return self.states_downstream.cp_mass / self.states_downstream.cv_mass
-
-    @property
-    def specific_heat_ratio_upstream(self) -> NDArrayFloat:
-        r"""Upstream ratio of specific heats, $\gamma_1$"""
-        return self.states_upstream.cp_mass / self.states_upstream.cv_mass
 
 
 def pressure_by_density(
@@ -139,26 +192,6 @@ def enthalpy_by_density(
     return h1 + 0.5 * u1**2 * (1.0 - r12**2)
 
 
-def _density_ratio_residual(r12, u1, _states1) -> NDArrayFloat:
-    states1 = _states1.item()
-    p2 = pressure_by_density(
-        density_ratio=r12,
-        density_upstream=states1.density_mass,
-        velocity_upstream=u1,
-        pressure_upstream=states1.P,
-    )
-    h2 = enthalpy_by_density(
-        density_ratio=r12,
-        velocity_upstream=u1,
-        enthalpy_upstream=states1.enthalpy_mass,
-    )
-    gas = ct.Solution(states1.source)
-    states2 = ct.SolutionArray(gas, shape=p2.shape)
-    states2.HPX = h2, p2, states1.X
-    states2.equilibrate("HP", max_iter=5000)
-    return r12 - states1.density_mass / states2.density_mass
-
-
 def lookup_table_by_pressure_temperature(
     pressure: ArraylikeFloat,
     temperature: ArraylikeFloat,
@@ -194,12 +227,52 @@ def lookup_table_by_states(
         raise OutOfBoundsError(u_msg)
 
     # density ratio (rho1/rho2) limits for root-finding
-    r12_min = 1e-9
-    r12_max = 1.0 - r12_min
+    r12_min = np.zeros_like(u1) + 1e-9
+    r12_max = np.ones_like(u1) - r12_min
+
+    p1 = states1.P
+    r1 = states1.density_mass
+    h1 = states1.enthalpy_mass
+    x1 = states1.X
+
+    @dataclass
+    class Xobj:
+        xarr: NDArrayFloat
+
+    xnew = np.full(u1.shape, fill_value=None, dtype=Xobj)
+    for idx in np.ndindex(u1.shape):
+        xnew[idx] = Xobj(xarr=x1[idx])
+
+    def _density_ratio_residual(_r12, _r1, _u1, _p1, _h1, _x1):
+        # can't pass states1 because it won't get sliced
+        # states1.X needs to be broadcastable because it's used with h2, p2
+        _p2 = pressure_by_density(
+            density_ratio=_r12,
+            density_upstream=_r1,
+            velocity_upstream=_u1,
+            pressure_upstream=_p1,
+        )
+        _h2 = enthalpy_by_density(
+            density_ratio=_r12,
+            velocity_upstream=_u1,
+            enthalpy_upstream=_h1,
+        )
+        gas = ct.Solution(states1.source)
+        st2 = ct.SolutionArray(gas, shape=_p2.shape)
+        xa = np.zeros_like(_p2)
+        newshape = list(_p2.shape)
+        newshape.append(_x1[..., 0].flatten()[0].xarr.size)
+        xa = np.zeros(newshape)
+        for idx in np.ndindex(_p2.shape):
+            xa[idx, :] = _x1[idx].xarr
+        st2.HPX = _h2, _p2, xa
+        st2.equilibrate("HP", max_iter=5000)
+        return _r12 - _r1 / st2.density_mass
+
     res = find_root(
         _density_ratio_residual,
         (r12_min, r12_max),
-        args=(u1, states1),
+        args=(r1, u1, p1, h1, xnew),
     )
     if not np.all(res.success):
         raise RootFindingError(f"find_root did not succeed: {res.status}")
@@ -224,9 +297,22 @@ def lookup_table_by_states(
     u21 = r12
     u2 = u21 * u1
 
+    a1 = speed_of_sound(states1)
+    a2 = speed_of_sound(states2)
+    gam1 = isentropic_exponent(states1)
+    gam2 = isentropic_exponent(states2)
+
     return EqNormalShockSolution(
-        states_upstream=states1,
-        states_downstream=states2,
-        velocity_upstream=u1,
-        velocity_downstream=u2,
+        upstream=EqFlowStates(
+            states=states1,
+            velocity=u1,
+            speed_of_sound_eq=a1,
+            isentropic_exponent=gam1,
+        ),
+        downstream=EqFlowStates(
+            states=states2,
+            velocity=u2,
+            speed_of_sound_eq=a2,
+            isentropic_exponent=gam2,
+        ),
     )

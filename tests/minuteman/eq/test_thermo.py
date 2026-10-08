@@ -9,7 +9,7 @@ import scipy.constants as sc
 from minuteman.eq import thermo
 
 
-def test_specific_heat_ratio_hansen():
+def test_isentropic_exponent_hansen():
     """
     Test taken from Table IV.f of
     Hansen, C. F. (1959). Approximations for the thermodynamic and
@@ -21,8 +21,8 @@ def test_specific_heat_ratio_hansen():
     to approximations made by Hansen at the time, which caused his sound speed
     to overpredict those here.
 
-    Hansen's values are really just specific heat ratio, so this test works
-    for both
+    Hansen's nondimensional speed of sound values are really
+    just isentropic exponent, so this test works for both
     """
     gas = ct.Solution("airNASA9.yaml")
     # convert pressure from atm to Pa
@@ -34,7 +34,7 @@ def test_specific_heat_ratio_hansen():
     states.TPX = t, p, x
     states.equilibrate("TP")
 
-    actual = thermo.specific_heat_ratio(states)
+    actual = thermo.isentropic_exponent(states)
     expected = [
         [1.387, 1.387, 1.387, 1.387, 1.387, 1.387, 1.387],
         [1.337, 1.337, 1.337, 1.337, 1.337, 1.337, 1.337],

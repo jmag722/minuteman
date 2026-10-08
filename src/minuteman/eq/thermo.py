@@ -76,15 +76,15 @@ def speed_of_sound(states: EqSolutionArraylike) -> NDArrayFloat:
     )
 
 
-def specific_heat_ratio(states: EqSolutionArraylike) -> NDArrayFloat:
-    r"""Compute the equilibrium specific heat ratio or isentropic
-    expansion factor $\gamma_s$.
+def isentropic_exponent(states: EqSolutionArraylike) -> NDArrayFloat:
+    r"""Compute the isentropic exponent $\gamma_s$. Note this is not the same
+    as the equilibrium specific heat ratio $\gamma=\frac{c_{p,eq}}{c_{v,eq}}
 
     Args:
         states: Equilibrium states
 
     Returns:
-        Equilibrium specific heat ratio $\gamma_s$
+        Equilibrium isentropic exponent $\gamma_s$
 
     """
     st = eq_soln_toarray(states)
