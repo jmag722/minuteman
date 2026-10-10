@@ -240,10 +240,10 @@ def lookup_table_by_density_temperature(
     mechanism: str = "airNASA9.yaml",
 ) -> EqNormalShockSolution:
     r"""Lookup equilibrium normal shock table properties by upstream density
-    $rho_1$ and temperature $T_1$
+    $\rho_1$ and temperature $T_1$
 
     Args:
-        density: Upstream density $rho_1$ [kg/m3]. Bounds: (0, $\infty$)
+        density: Upstream density $\rho_1$ [kg/m3]. Bounds: (0, $\infty$)
         temperature: Upstream temperature $T_1$ [K]. Bounds: (0, $\infty$)
         velocity: Upstream velocity $u_1$ [m/s]. Bounds: (Mach 1, $\infty$)
         mole_fraction: Upstream mole fractions $X_1$.
