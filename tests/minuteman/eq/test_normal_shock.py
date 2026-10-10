@@ -8,6 +8,7 @@ import pytest
 import scipy.constants as sc
 
 from minuteman.eq import normal_shock
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 current_dir = Path(__file__).parent
 
@@ -97,6 +98,10 @@ def test_lookup_table_by_pt_huber_p_high():
     idx_ne = ne > 0
     idx_ne = ne > 1e14
 
+    xe = expected["Xe"]
+    # low number densities agree poorly
+    idx_xe = xe > 3e-6
+
     gam_s = expected["gamma_s"]
     idx_gam = gam_s > 0
 
@@ -107,6 +112,17 @@ def test_lookup_table_by_pt_huber_p_high():
     np.testing.assert_allclose(soln.density_ratio, r21, rtol=1.1e-2)
     np.testing.assert_allclose(soln.speed_of_sound_ratio, a21, rtol=7.6e-3)
     np.testing.assert_allclose(soln.downstream.mach, m2, rtol=1.1e-2)
+    np.testing.assert_allclose(
+        soln.downstream.mole_fraction("e-")[idx_xe], xe[idx_xe], rtol=0.15
+    )
+    assert (
+        soln.downstream.mass_fraction("N2").shape
+        == soln.downstream.mole_fraction("N2").shape
+    )
+    np.testing.assert_array_equal(
+        soln.downstream.speed_of_sound_eq <= soln.downstream.speed_of_sound_fr,
+        np.full(p21.shape, fill_value=True, dtype=bool),
+    )
     np.testing.assert_allclose(
         soln.downstream.number_density("e-")[idx_ne], ne[idx_ne], rtol=0.17
     )
@@ -166,3 +182,24 @@ def test_lookup_table_by_pt_huber_p_low():
         gam_s[idx_gam],
         rtol=2.9e-3,
     )
+    assert (
+        soln.downstream.mass_fraction("N2").shape
+        == soln.downstream.mole_fraction("N2").shape
+    )
+    np.testing.assert_array_equal(
+        soln.downstream.speed_of_sound_eq <= soln.downstream.speed_of_sound_fr,
+        np.full(p21.shape, fill_value=True, dtype=bool),
+    )
+
+
+@pytest.mark.parametrize(
+    ("func", "p", "t", "v"),
+    [
+        (normal_shock.lookup_table_by_pressure_temperature, -1.0, 1e3, 1e4),
+        (normal_shock.lookup_table_by_pressure_temperature, 1e2, 0.0, 1e4),
+        (normal_shock.lookup_table_by_pressure_temperature, 1e2, 1e4, 0.1),
+    ],
+)
+def test_out_of_bounds(func, p, t, v):
+    with pytest.raises(OutOfBoundsError):
+        func(p, t, v)
