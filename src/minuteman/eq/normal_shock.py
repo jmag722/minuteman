@@ -6,12 +6,9 @@ r"""```python
 ```
 
 This module computes flow parameters of 1D, stationary,
-calorically perfect normal shocks ($\gamma$ is constant).
+equilibrium reaction normal shocks.
 
-For a stationary, nonreacting normal shock, total enthalpy is constant
-(adiabatic flow).
-For perfect (calorically+thermally) gases, total temperature is thus also
-constant across the shock.
+For a stationary normal shock, total enthalpy is constant (adiabatic flow).
 """
 
 from dataclasses import dataclass
@@ -120,7 +117,10 @@ class EqNormalShockSolution:
     """Normal shock solution for a stationary shock in chemical equilibrium."""
 
     upstream: EqFlowStates
+    """Upstream flow properties."""
+
     downstream: EqFlowStates
+    """Downstream flow properties."""
 
     @property
     def temperature_ratio(self) -> NDArrayFloat:
@@ -139,7 +139,7 @@ class EqNormalShockSolution:
 
     @property
     def speed_of_sound_ratio(self) -> NDArrayFloat:
-        r"""Speed of sound ratio, $\a_2 / \a_1$"""
+        r"""Speed of sound ratio, $a_2 / a_1$"""
         return (
             self.downstream.speed_of_sound_eq / self.upstream.speed_of_sound_eq
         )
@@ -180,7 +180,7 @@ def enthalpy_by_density(
     Args:
         density_ratio: Density ratio $\rho_1/\rho_2$
         velocity_upstream: Upstream velocity $u_1$
-        enthalpy_upstream: Upstream enthalpy $1_1$
+        enthalpy_upstream: Upstream enthalpy $h_1$
 
     Returns:
         Downstream enthalpy $h_2$
@@ -199,6 +199,22 @@ def lookup_table_by_pressure_temperature(
     mole_fraction: str = "N2: 0.79, O2: 0.21",
     mechanism: str = "airNASA9.yaml",
 ) -> EqNormalShockSolution:
+    r"""Lookup equilibrium normal shock table properties by upstream pressure
+    $p_1$ and temperature $T_1$
+
+    Args:
+        pressure: Upstream pressure $p_1$. Bounds: (0, $\infty$)
+        temperature: Upstream temperature $T_1$. Bounds: (0, $\infty$)
+        velocity: Upstream velocity $u_1$. Bounds: (Mach 1, $\infty$)
+        mole_fraction: Upstream mole fractions $X_1$.
+        mechanism: Reaction mechanism file.
+
+    Returns:
+        Equilibrium normal shock table.
+
+    Raises:
+        OutOfBoundsError: Pressure or temperature are out of bounds.
+    """
     p1, t1, u1 = broadcast_inputs(pressure, temperature, velocity)
 
     if np.any(p1 <= 0.0):
@@ -212,12 +228,26 @@ def lookup_table_by_pressure_temperature(
     states1 = ct.SolutionArray(gas1, shape=p1.shape)
     states1.TPX = t1, p1, mole_fraction
 
-    return lookup_table_by_states(velocity=u1, states1=states1)
+    return lookup_table_by_states(states1=states1, velocity=u1)
 
 
 def lookup_table_by_states(
-    velocity: NDArrayFloat, states1: ct.SolutionArray
+    states1: ct.SolutionArray, velocity: NDArrayFloat
 ) -> EqNormalShockSolution:
+    r"""Lookup equilibrium normal shock table properties by preinitialized
+    upstream thermodynamic states
+
+    Args:
+        states1: Upstream thermodynamic states.
+        velocity: Upstream velocity $u_1$. Bounds: (Mach 1, $\infty$)
+
+    Returns:
+        Equilibrium normal shock table.
+
+    Raises:
+        OutOfBoundsError: Upstream velocity (Mach) is out of bounds
+        RootFindingError: Root finder failed to converge.
+    """
     u1 = velocity
     if u1.shape != states1.shape:
         raise InvalidArrayShapeError
@@ -235,17 +265,30 @@ def lookup_table_by_states(
     h1 = states1.enthalpy_mass
     x1 = states1.X
 
+    # WHEN SCIPY 1.19 is out! Replace the monstrosity below, either by
+    # passing preserve_shape=True with plane multidimensional mole fracs,
+    # or by passing the entire upstream state directly if that works
+    # with slicing SolutionArray
+
+    # passing species mole fractions,as a multidimensional array of objects
+    # holding 1D arrays, instead of as a multidimensional arrays,
+    # to keep it from having shape issues with find_root
     @dataclass
     class Xobj:
         xarr: NDArrayFloat
 
     xnew = np.full(u1.shape, fill_value=None, dtype=Xobj)
+    # x1 will always have one more dimension than u1
     for idx in np.ndindex(u1.shape):
         xnew[idx] = Xobj(xarr=x1[idx])
 
     def _density_ratio_residual(_r12, _r1, _u1, _p1, _h1, _x1):
-        # can't pass states1 because it won't get sliced
+        # can't pass states1 because it won't get sliced right.
         # states1.X needs to be broadcastable because it's used with h2, p2
+        # x1 can't be multidimensional because currently it gets flattened
+        # after the first 2 iterations. so it needs to have the same shape
+        # as u1/p1/h1 essentially. We're cheating here by putting its last
+        # dimension in an object to hide it
         _p2 = pressure_by_density(
             density_ratio=_r12,
             density_upstream=_r1,
@@ -259,12 +302,17 @@ def lookup_table_by_states(
         )
         gas = ct.Solution(states1.source)
         st2 = ct.SolutionArray(gas, shape=_p2.shape)
+
+        # undo the class, get back a multidimensional array to pass to cantera
+        # must query shape every step because find_root
+        # drops converged indices!
         xa = np.zeros_like(_p2)
         newshape = list(_p2.shape)
         newshape.append(_x1[..., 0].flatten()[0].xarr.size)
         xa = np.zeros(newshape)
         for idx in np.ndindex(_p2.shape):
             xa[idx, :] = _x1[idx].xarr
+
         st2.HPX = _h2, _p2, xa
         st2.equilibrate("HP", max_iter=5000)
         return _r12 - _r1 / st2.density_mass

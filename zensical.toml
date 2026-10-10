@@ -19,7 +19,7 @@ use_directory_urls = false
 extra_css = ["stylesheets/extra.css"]
 
 copyright = """
-Copyright &copy; 2026 The authors
+Copyright &copy; 2026 Jared Magnusson
 """
 
 # Navigation, read more: https://zensical.org/docs/setup/navigation/
@@ -37,6 +37,10 @@ nav = [
      "cpg/shock_tube.md",
      "cpg/shock_shape.md",
      "cpg/thermo.md",
+  ]},
+  {"Equilibrium Reacting Gas" = [
+     "eq/normal_shock.md",
+     "eq/thermo.md",
   ]},
   {"Utilities" = [
      "utils/bounds_check.md",
