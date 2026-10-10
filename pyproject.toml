@@ -13,7 +13,7 @@ authors = [
 ]
 description = "Python library for solving engineering problems."
 readme = "README.md"
-requires-python = ">=3.10, <3.15"
+requires-python = ">=3.11, <3.15"
 license = {file = "LICENSE"}
 keywords = [
   "aerospace",
@@ -32,7 +32,6 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -43,6 +42,7 @@ classifiers = [
 ]
 # min supported version here depends also on min supported Python version
 dependencies = [
+  "cantera>=3, <4",
   "numpy >= 2, <3",
   "scipy>=1.15, <2",
 ]
@@ -55,6 +55,7 @@ nshock = "minuteman.cpg.cli_normal_shock:main"
 oshock = "minuteman.cpg.cli_oblique_shock:main"
 rayleigh= "minuteman.cpg.cli_rayleigh:main"
 shock-standoff = "minuteman.cpg.cli_shock_shape:main"
+nshock-eq = "minuteman.eq.cli_normal_shock:main"
 
 [project.urls]
 homepage = "https://github.com/jmag722/minuteman"
@@ -65,6 +66,7 @@ tracker = "https://github.com/jmag722/minuteman/issues"
 
 [dependency-groups]
 dev = [
+  "matplotlib",
   "mkdocstrings",
   "mkdocstrings-python",
   "pre-commit",

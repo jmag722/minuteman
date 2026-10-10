@@ -88,6 +88,29 @@ def specific_heat_ratio_parser() -> ArgumentParser:
     return gam
 
 
+def mole_fraction_parser() -> ArgumentParser:
+    x = argparse.ArgumentParser(add_help=False)
+    x.add_argument(
+        "--mole-fraction",
+        "-X",
+        type=str,
+        default="N2: 0.79, O2:0.21",
+        help="Mole fractions for upstream species",
+    )
+    return x
+
+
+def reaction_mechanism_parser() -> ArgumentParser:
+    x = argparse.ArgumentParser(add_help=False)
+    x.add_argument(
+        "--mechanism",
+        type=str,
+        default="airNASA9.yaml",
+        help="Reaction mechanism",
+    )
+    return x
+
+
 def flow_regime_parser() -> ArgumentParser:
     fr = argparse.ArgumentParser(add_help=False)
     fr.add_argument(
