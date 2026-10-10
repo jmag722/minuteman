@@ -13,7 +13,7 @@ authors = [
 ]
 description = "Python library for solving engineering problems."
 readme = "README.md"
-requires-python = ">=3.11, <3.15"
+requires-python = ">=3.11, <3.16"
 license = {file = "LICENSE"}
 keywords = [
   "aerospace",
@@ -36,6 +36,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Software Development :: Libraries",
   "Topic :: Scientific/Engineering",
   "Operating System :: OS Independent",
