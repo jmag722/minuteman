@@ -22,3 +22,7 @@ None.
 ## Constants
 
 None.
+
+## References
+
+1. Kao, S., Ziegler, J., Bitter, N., Schmidt, B., Lawson, J., & Shepherd, J. E. (2023). *SDToolbox: Numerical tools for shock and detonation wave modeling*. *Explosion Dynamics Laboratory*, *California Institute of Technology*, Pasadena, CA USA, 911125.

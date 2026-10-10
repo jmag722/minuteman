@@ -24,10 +24,7 @@ def speed_of_sound(states: EqSolutionArraylike) -> NDArrayFloat:
     of thermodynamic states.
 
     Implementation derived from Eq. 7.96-7.102 of
-    Kao, S., Ziegler, J., Bitter, N., Schmidt, B., Lawson, J., & Shepherd,
-    J. E. (2023). *SDToolbox: Numerical tools for shock and
-    detonation wave modeling*. *Explosion Dynamics Laboratory*,
-    *California Institute of Technology*, Pasadena, CA USA, 911125.
+    [1](thermo.md#references)
 
     Args:
         states: Equilibrium states. There is no check that the input states
@@ -78,7 +75,7 @@ def speed_of_sound(states: EqSolutionArraylike) -> NDArrayFloat:
 
 def isentropic_exponent(states: EqSolutionArraylike) -> NDArrayFloat:
     r"""Compute the isentropic exponent $\gamma_s$. Note this is not the same
-    as the equilibrium specific heat ratio $\gamma=\frac{c_{p,eq}}{c_{v,eq}}
+    as the equilibrium specific heat ratio $\gamma=\frac{c_{p,eq}}{c_{v,eq}}$
 
     Args:
         states: Equilibrium states

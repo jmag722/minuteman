@@ -29,3 +29,5 @@
 
 ## Error Types
 
+## References
+1. Anderson, J. D., Jr. (2019). *Hypersonic and high-temperature gas dynamics (3rd ed.)*. American Institute of Aeronautics and Astronautics.

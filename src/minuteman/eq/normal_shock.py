@@ -6,7 +6,8 @@ r"""```python
 ```
 
 This module computes flow parameters of 1D, stationary,
-equilibrium reaction normal shocks.
+equilibrium reaction normal shocks. The implementation follows that of
+[1](normal_shock.md#references)
 
 For a stationary normal shock, total enthalpy is constant (adiabatic flow).
 """
