@@ -30,9 +30,9 @@ Current and upcoming features include (in no particular order):
     - [x]  CPG
     - [ ] Eq.
 - [ ] 1D nozzle calculations
-- [ ] Normal shocks
+- [x] Normal shocks
     - [x] CPG
-    - [ ] Eq.
+    - [x] Eq.
 - [ ] Oblique shocks
     - [x] CPG
     - [ ] Eq.
