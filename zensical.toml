@@ -39,6 +39,7 @@ nav = [
      "cpg/thermo.md",
   ]},
   {"Equilibrium Reacting Gas" = [
+     "eq/cli.md",
      "eq/normal_shock.md",
      "eq/thermo.md",
   ]},

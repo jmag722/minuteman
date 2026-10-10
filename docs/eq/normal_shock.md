@@ -7,6 +7,8 @@
 
 ## High-level API
 
+::: minuteman.eq.normal_shock.lookup_table_by_density_temperature
+
 ::: minuteman.eq.normal_shock.lookup_table_by_pressure_temperature
 
 ::: minuteman.eq.normal_shock.lookup_table_by_states

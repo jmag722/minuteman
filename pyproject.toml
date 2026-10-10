@@ -55,6 +55,7 @@ nshock = "minuteman.cpg.cli_normal_shock:main"
 oshock = "minuteman.cpg.cli_oblique_shock:main"
 rayleigh= "minuteman.cpg.cli_rayleigh:main"
 shock-standoff = "minuteman.cpg.cli_shock_shape:main"
+nshock-eq = "minuteman.eq.cli_normal_shock:main"
 
 [project.urls]
 homepage = "https://github.com/jmag722/minuteman"

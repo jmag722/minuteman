@@ -192,12 +192,30 @@ def test_lookup_table_by_pt_huber_p_low():
     )
 
 
+def test_lookup_table_by_rt_shock_cal():
+    # Expected answer taken from ShockCal 2.10.16.2001
+    # https://www.engapplets.vt.edu/fluids/shockcal/shockCalHelp.html
+    soln = normal_shock.lookup_table_by_density_temperature(
+        1e-3, 300.0, velocity=6e3
+    )
+    np.testing.assert_allclose(soln.upstream.pressure, 86.45696544151603)
+    np.testing.assert_allclose(
+        soln.downstream.density, 0.013645753, rtol=1.5e-3
+    )
+    np.testing.assert_allclose(soln.downstream.mach, 0.263370116, rtol=2.3e-3)
+    np.testing.assert_allclose(
+        soln.downstream.temperature, 5958.38335, rtol=1.5e-2
+    )
+
+
 @pytest.mark.parametrize(
     ("func", "p", "t", "v"),
     [
         (normal_shock.lookup_table_by_pressure_temperature, -1.0, 1e3, 1e4),
         (normal_shock.lookup_table_by_pressure_temperature, 1e2, 0.0, 1e4),
         (normal_shock.lookup_table_by_pressure_temperature, 1e2, 1e4, 0.1),
+        (normal_shock.lookup_table_by_density_temperature, -1.0, 1e3, 1e4),
+        (normal_shock.lookup_table_by_density_temperature, 1e-3, 0.0, 1e4),
     ],
 )
 def test_out_of_bounds(func, p, t, v):

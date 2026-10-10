@@ -204,9 +204,9 @@ def lookup_table_by_pressure_temperature(
     $p_1$ and temperature $T_1$
 
     Args:
-        pressure: Upstream pressure $p_1$. Bounds: (0, $\infty$)
-        temperature: Upstream temperature $T_1$. Bounds: (0, $\infty$)
-        velocity: Upstream velocity $u_1$. Bounds: (Mach 1, $\infty$)
+        pressure: Upstream pressure $p_1$ [Pa]. Bounds: (0, $\infty$)
+        temperature: Upstream temperature $T_1$ [K]. Bounds: (0, $\infty$)
+        velocity: Upstream velocity $u_1$ [m/s]. Bounds: (Mach 1, $\infty$)
         mole_fraction: Upstream mole fractions $X_1$.
         mechanism: Reaction mechanism file.
 
@@ -229,7 +229,45 @@ def lookup_table_by_pressure_temperature(
     states1 = ct.SolutionArray(gas1, shape=p1.shape)
     states1.TPX = t1, p1, mole_fraction
     states1.equilibrate("TP")
+    return lookup_table_by_states(states1=states1, velocity=u1)
 
+
+def lookup_table_by_density_temperature(
+    density: ArraylikeFloat,
+    temperature: ArraylikeFloat,
+    velocity: ArraylikeFloat,
+    mole_fraction: str = "N2: 0.79, O2: 0.21",
+    mechanism: str = "airNASA9.yaml",
+) -> EqNormalShockSolution:
+    r"""Lookup equilibrium normal shock table properties by upstream density
+    $rho_1$ and temperature $T_1$
+
+    Args:
+        density: Upstream density $rho_1$ [kg/m3]. Bounds: (0, $\infty$)
+        temperature: Upstream temperature $T_1$ [K]. Bounds: (0, $\infty$)
+        velocity: Upstream velocity $u_1$ [m/s]. Bounds: (Mach 1, $\infty$)
+        mole_fraction: Upstream mole fractions $X_1$.
+        mechanism: Reaction mechanism file.
+
+    Returns:
+        Equilibrium normal shock table.
+
+    Raises:
+        OutOfBoundsError: Density or temperature are out of bounds.
+    """
+    r1, t1, u1 = broadcast_inputs(density, temperature, velocity)
+
+    if np.any(r1 <= 0.0):
+        r_msg = "Upstream density rho1 must be > 0"
+        raise OutOfBoundsError(r_msg)
+    if np.any(t1 <= 0.0):
+        t_msg = "Upstream temperature T1 must be > 0"
+        raise OutOfBoundsError(t_msg)
+
+    gas1 = ct.Solution(mechanism)
+    states1 = ct.SolutionArray(gas1, shape=r1.shape)
+    states1.TDX = t1, r1, mole_fraction
+    states1.equilibrate("TV", max_iter=5000)
     return lookup_table_by_states(states1=states1, velocity=u1)
 
 
