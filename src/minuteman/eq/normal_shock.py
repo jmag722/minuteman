@@ -228,6 +228,7 @@ def lookup_table_by_pressure_temperature(
     gas1 = ct.Solution(mechanism)
     states1 = ct.SolutionArray(gas1, shape=p1.shape)
     states1.TPX = t1, p1, mole_fraction
+    states1.equilibrate("TP")
 
     return lookup_table_by_states(states1=states1, velocity=u1)
 
@@ -239,7 +240,9 @@ def lookup_table_by_states(
     upstream thermodynamic states
 
     Args:
-        states1: Upstream thermodynamic states.
+        states1: Upstream equilibrium thermodynamic states.
+            Note there is no "equilibrate" call made in this function,
+            the user is responsible for this.
         velocity: Upstream velocity $u_1$. Bounds: (Mach 1, $\infty$)
 
     Returns:

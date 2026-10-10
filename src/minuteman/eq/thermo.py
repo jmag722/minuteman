@@ -28,7 +28,7 @@ def speed_of_sound(states: EqSolutionArraylike) -> NDArrayFloat:
 
     Args:
         states: Equilibrium states. There is no check that the input states
-            are in equilibrium.
+            are in equilibrium, the user is responsible for this.
 
     Returns:
         Equilibrium speed of sound $a_{eq}$
