@@ -37,11 +37,11 @@ def initialize_states(
         state_pair: Thermodynamic property pairs used for initialization.
             Individual state variables are defined as follows:
 
-            - "T": temperature $T$ [K]. Bounds: (0.0, \infty)
+            - "T": temperature $T$ [K]. Bounds: (0.0, $\infty$)
 
-            - "P": pressure $p$ [Pa]. Bounds: (0.0, \infty)
+            - "P": pressure $p$ [Pa]. Bounds: (0.0, $\infty$)
 
-            - "D": density $\rho$ [kg/m3]. Bounds: (0.0, \infty)
+            - "D": density $\rho$ [kg/m3]. Bounds: (0.0, $\infty$)
 
             - "H": specific enthalpy $h$ [J/kg]
 
