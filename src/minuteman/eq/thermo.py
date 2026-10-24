@@ -9,9 +9,9 @@ and where intermolecular forces are neglected.
 
 """
 
-import cantera as ct
 import numpy as np
 
+from minuteman import eq
 from minuteman.utils.types import (
     EqSolutionArraylike,
     NDArrayFloat,
@@ -47,11 +47,9 @@ def speed_of_sound(states: EqSolutionArraylike) -> NDArrayFloat:
     t2 = t0 * fac2
 
     def _get_state(p, t):
-        gas_new = ct.Solution(st1.source)
-        states_new = ct.SolutionArray(gas_new, shape=p0.shape)
-        states_new.TPX = t, p, st1.X
-        states_new.equilibrate("TP")
-        return states_new
+        return eq.initialize_states(
+            "TP", t, p, mole_fraction=st1.X, mechanism=st1.source
+        )
 
     states_p1t0 = _get_state(p=p1, t=t0)
     states_p2t0 = _get_state(p=p2, t=t0)

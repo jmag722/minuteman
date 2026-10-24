@@ -19,6 +19,7 @@ import numpy as np
 import scipy.constants as sc
 from scipy.optimize.elementwise import find_root
 
+from minuteman import eq
 from minuteman.eq.thermo import isentropic_exponent, speed_of_sound
 from minuteman.utils.bounds_check import (
     OutOfBoundsError,
@@ -261,9 +262,6 @@ def lookup_table_by_states(
             velocity_upstream=_u1,
             enthalpy_upstream=_h1,
         )
-        gas = ct.Solution(states1.source)
-        st2 = ct.SolutionArray(gas, shape=_p2.shape)
-
         # undo the class, get back a multidimensional array to pass to cantera
         # must query shape every step because find_root
         # drops converged indices!
@@ -274,8 +272,9 @@ def lookup_table_by_states(
         for idx in np.ndindex(_p2.shape):
             xa[idx, :] = _x1[idx].xarr
 
-        st2.HPX = _h2, _p2, xa
-        st2.equilibrate("HP", max_iter=5000)
+        st2 = eq.initialize_states(
+            "HP", _h2, _p2, mole_fraction=xa, mechanism=states1.source
+        )
         return _r12 - _r1 / st2.density_mass
 
     res = find_root(
@@ -298,10 +297,9 @@ def lookup_table_by_states(
         velocity_upstream=u1,
         enthalpy_upstream=states1.enthalpy_mass,
     )
-    gas2 = ct.Solution(states1.source)
-    states2 = ct.SolutionArray(gas2, shape=u1.shape)
-    states2.HPX = h2, p2, states1.X
-    states2.equilibrate("HP", max_iter=5000)
+    states2 = eq.initialize_states(
+        "HP", h2, p2, mole_fraction=states1.X, mechanism=states1.source
+    )
 
     u21 = r12
     u2 = u21 * u1
