@@ -6,11 +6,11 @@ import numpy as np
 from minuteman import eq
 
 
-def test_initialize_equilibrium_states_tpx():
+def test_initialize_states_tpx():
     pair = "TP"
     arr1 = [300.5, 320.5]
     arr2 = [100.5, 1000.3]
-    actual = eq.initialize_equilibrium_states(
+    actual = eq.initialize_states(
         property_pair=pair,
         arr1=arr1,
         arr2=arr2,
@@ -21,12 +21,12 @@ def test_initialize_equilibrium_states_tpx():
     np.testing.assert_allclose(actual("O2").X, [[0.21], [0.21]], rtol=1e-9)
 
 
-def test_initialize_equilibrium_states_tdy():
+def test_initialize_states_tdy():
     pair = "TD"
     arr1 = [300.5, 320.5]
     arr2 = [0.05, 0.1]
     y = "N2: 0.767, O2: 0.233"
-    actual = eq.initialize_equilibrium_states(
+    actual = eq.initialize_states(
         property_pair=pair,
         arr1=arr1,
         arr2=arr2,

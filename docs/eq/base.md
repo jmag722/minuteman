@@ -7,7 +7,7 @@
 
 ## High-level API
 
-::: minuteman.eq.base.initialize_equilibrium_states
+::: minuteman.eq.base.initialize_states
 
 ## Low-level API
 

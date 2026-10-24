@@ -17,7 +17,7 @@ import numpy.typing as npt
 from minuteman.utils.types import ArraylikeFloat
 
 
-def initialize_equilibrium_states(
+def initialize_states(
     property_pair: Literal["TP", "TD", "HP", "SP", "SV", "UV"],
     arr1: ArraylikeFloat,
     arr2: ArraylikeFloat,

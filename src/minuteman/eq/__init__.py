@@ -2,5 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .base import (
-    initialize_equilibrium_states as initialize_equilibrium_states,
+    initialize_states as initialize_states,
 )
