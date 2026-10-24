@@ -19,8 +19,12 @@ def test_initialize_states_tpx():
     )
     np.testing.assert_allclose(actual.T, property1, rtol=1e-9)
     np.testing.assert_allclose(actual.P, property2, rtol=1e-9)
-    np.testing.assert_allclose(actual("N2").X, [[0.79], [0.79]], rtol=1e-9)
-    np.testing.assert_allclose(actual("O2").X, [[0.21], [0.21]], rtol=1e-9)
+    n2_idx = actual.species_index("N2")
+    xn2 = actual.X[..., n2_idx]
+    o2_idx = actual.species_index("O2")
+    xo2 = actual.X[..., o2_idx]
+    np.testing.assert_allclose(xn2, [0.79, 0.79], rtol=1e-9)
+    np.testing.assert_allclose(xo2, [0.21, 0.21], rtol=1e-9)
 
 
 def test_initialize_states_tdy():
@@ -36,8 +40,12 @@ def test_initialize_states_tdy():
     )
     np.testing.assert_allclose(actual.T, property1, rtol=1e-9)
     np.testing.assert_allclose(actual.density_mass, property2, rtol=1e-9)
-    np.testing.assert_allclose(actual("N2").Y, [[0.767], [0.767]], rtol=1e-9)
-    np.testing.assert_allclose(actual("O2").Y, [[0.233], [0.233]], rtol=1e-9)
+    n2_idx = actual.species_index("N2")
+    yn2 = actual.Y[..., n2_idx]
+    o2_idx = actual.species_index("O2")
+    yo2 = actual.Y[..., o2_idx]
+    np.testing.assert_allclose(yn2, [0.767, 0.767], rtol=1e-9)
+    np.testing.assert_allclose(yo2, [0.233, 0.233], rtol=1e-9)
 
 
 @pytest.mark.parametrize(
