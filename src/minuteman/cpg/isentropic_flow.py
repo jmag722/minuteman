@@ -514,7 +514,7 @@ def mach_by_area_ratio(
     res = find_root(compute_mach, mach_brackets, args=(aratio, gam))
     if not np.all(res.success):
         raise RootFindingError(f"find_root did not succeed: {res.status}")
-    return res.x
+    return np.atleast_1d(res.x)
 
 
 def mach_angle(mach: ArraylikeFloat) -> NDArrayFloat:
