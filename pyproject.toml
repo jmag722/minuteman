@@ -7,7 +7,7 @@ packages = ["src/minuteman"]
 
 [project]
 name = "minuteman"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
   {name = "Jared Magnusson", email = "jmag722@gmail.com"},
 ]
