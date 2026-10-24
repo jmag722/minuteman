@@ -2,37 +2,55 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
+import pytest
 
 from minuteman import eq
+from minuteman.utils.bounds_check import OutOfBoundsError
 
 
 def test_initialize_states_tpx():
     pair = "TP"
-    arr1 = [300.5, 320.5]
-    arr2 = [100.5, 1000.3]
+    property1 = [300.5, 320.5]
+    property2 = [100.5, 1000.3]
     actual = eq.initialize_states(
-        property_pair=pair,
-        arr1=arr1,
-        arr2=arr2,
+        state_pair=pair,
+        property1=property1,
+        property2=property2,
     )
-    np.testing.assert_allclose(actual.T, arr1, rtol=1e-9)
-    np.testing.assert_allclose(actual.P, arr2, rtol=1e-9)
+    np.testing.assert_allclose(actual.T, property1, rtol=1e-9)
+    np.testing.assert_allclose(actual.P, property2, rtol=1e-9)
     np.testing.assert_allclose(actual("N2").X, [[0.79], [0.79]], rtol=1e-9)
     np.testing.assert_allclose(actual("O2").X, [[0.21], [0.21]], rtol=1e-9)
 
 
 def test_initialize_states_tdy():
     pair = "TD"
-    arr1 = [300.5, 320.5]
-    arr2 = [0.05, 0.1]
+    property1 = [300.5, 320.5]
+    property2 = [0.05, 0.1]
     y = "N2: 0.767, O2: 0.233"
     actual = eq.initialize_states(
-        property_pair=pair,
-        arr1=arr1,
-        arr2=arr2,
+        state_pair=pair,
+        property1=property1,
+        property2=property2,
         mass_fraction=y,
     )
-    np.testing.assert_allclose(actual.T, arr1, rtol=1e-9)
-    np.testing.assert_allclose(actual.density_mass, arr2, rtol=1e-9)
+    np.testing.assert_allclose(actual.T, property1, rtol=1e-9)
+    np.testing.assert_allclose(actual.density_mass, property2, rtol=1e-9)
     np.testing.assert_allclose(actual("N2").Y, [[0.767], [0.767]], rtol=1e-9)
     np.testing.assert_allclose(actual("O2").Y, [[0.233], [0.233]], rtol=1e-9)
+
+
+@pytest.mark.parametrize(
+    ("pair", "prop1", "prop2"),
+    [
+        ("TP", -100, 1e3),
+        ("HP", -100, -1),
+        ("SP", -100, -1),
+        ("SV", 300, -1),
+        ("TD", 100, -1),
+        ("UV", -1, -5),
+    ],
+)
+def test_out_of_bounds(pair, prop1, prop2):
+    with pytest.raises(OutOfBoundsError):
+        eq.initialize_states(pair, prop1, prop2)

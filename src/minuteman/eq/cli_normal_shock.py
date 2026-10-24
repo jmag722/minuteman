@@ -3,115 +3,90 @@
 
 """
 ```bash
-usage: nshock-eq [-h] x.x {subcommand}
+usage: nshock-eq [-h] velocity state_pair x.x x.x
+    [--mole-fraction MOLE_FRACTION | --mass-fraction MASS_FRACTION]
+    [--mechanism MECHANISM]
 
-Normal shock table lookup for an equilibrium reacting gas
+Normal shock table lookup for an equilibrium reacting gas (SI units)
 
 positional arguments:
-  x.x                   Upstream velocity [m/s]
+  velocity              Upstream velocity [m/s]
+  state_pair            Thermodynamic property pair, choose: TP, TD, HP,
+                            SP, SV, UV
+  x.x                   First thermodynamic property value
+  x.x                   Second thermodynamic property value
 
 options:
   -h, --help            show this help message and exit
-
-subcommands:
-  choose one of the following
-
-    pressure-temperature (pt, PT, pT)    pressure & temperature
-    density-temperature (rt, rhoT, rhot) density & temperature
-```
-
-Running help on any of these subcommands will give further details of their
-required inputs.
-
-For instance, running `nshock-eq 1e3 PT --help` will yield:
-
-```bash
-usage: nshock-eq x.x pressure-temperature [-h]
-       [--mole-fraction MOLE_FRACTION] [--mechanism MECHANISM] x.x x.x
-
-Compute normal shock outputs by pressure and temperature
-
-positional arguments:
-  x.x                   Upstream pressure [Pa]
-  x.x                   Upstream temperature [K]
-
-options:
-  -h, --help            show this help message and exit
-  --mole-fraction, -X MOLE_FRACTION Mole fractions for upstream species
-  --mechanism MECHANISM Reaction mechanism
+  --mole-fraction, -X MOLE_FRACTION
+                        Mole fractions for upstream species
+                            (default: N2: 0.79, O2:0.21)
+  --mass-fraction, -Y MASS_FRACTION
+                        Mass fractions for upstream species (default: None)
+  --mechanism MECHANISM
+                        Reaction mechanism (default: airNASA9.yaml)
 ```
 """
 
 import argparse
 
+from minuteman import eq
 from minuteman.eq import normal_shock
 from minuteman.utils.cli import (
-    mole_fraction_parser,
+    add_mass_fraction_parser,
+    add_mole_fraction_parser,
+    add_reaction_mechanism_parser,
     print_line_split,
     print_table_line,
-    reaction_mechanism_parser,
 )
 
 
 def main(args: list[str] | None = None) -> None:
     nshock_parser = argparse.ArgumentParser(
         prog="nshock-eq",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Normal shock table lookup for "
-        "an equilibrium reacting gas",
+        "an equilibrium reacting gas (SI units)",
     )
     nshock_parser.add_argument(
-        "velocity", type=float, metavar="x.x", help="Upstream velocity [m/s]"
+        "velocity", type=float, help="Upstream velocity [m/s]"
     )
 
-    subparsers = nshock_parser.add_subparsers(
-        description="choose one of the following", required=True
+    nshock_parser.add_argument(
+        "state_pair",
+        type=str,
+        help="Thermodynamic state pair, choose: TP, TD, HP, SP, SV, UV",
     )
-
-    pt_parser = subparsers.add_parser(
-        "pressure-temperature",
-        description="Compute normal shock outputs by pressure and temperature",
-        aliases=["pt", "PT", "pT"],
-        parents=[mole_fraction_parser(), reaction_mechanism_parser()],
-        help="pressure & temperature",
-    )
-    pt_parser.add_argument(
-        "pressure", type=float, metavar="x.x", help="Upstream pressure [Pa]"
-    )
-    pt_parser.add_argument(
-        "temperature",
+    nshock_parser.add_argument(
+        "property1",
         type=float,
         metavar="x.x",
-        help="Upstream temperature [K]",
+        help="First thermodynamic state variable",
     )
-    pt_parser.set_defaults(
-        func=normal_shock.lookup_table_by_pressure_temperature
-    )
-
-    rt_parser = subparsers.add_parser(
-        "density-temperature",
-        description="Compute normal shock outputs by density and temperature",
-        aliases=["rt", "rhoT", "rhot"],
-        parents=[mole_fraction_parser(), reaction_mechanism_parser()],
-        help="density & temperature",
-    )
-    rt_parser.add_argument(
-        "density", type=float, metavar="x.x", help="Upstream density [kg/m3]"
-    )
-    rt_parser.add_argument(
-        "temperature",
+    nshock_parser.add_argument(
+        "property2",
         type=float,
         metavar="x.x",
-        help="Upstream temperature [K]",
+        help="Second thermodynamic state variable",
     )
-    rt_parser.set_defaults(
-        func=normal_shock.lookup_table_by_density_temperature
-    )
+    frac_parser = nshock_parser.add_mutually_exclusive_group(required=False)
+    add_mole_fraction_parser(frac_parser)
+    add_mass_fraction_parser(frac_parser)
+    add_reaction_mechanism_parser(nshock_parser)
 
     parsed_args = nshock_parser.parse_args(args)
-
-    kwargs = vars(parsed_args).copy()
-    kwargs.pop("func")
-    res = parsed_args.func(**kwargs)
+    states1 = eq.initialize_states(
+        state_pair=parsed_args.state_pair,
+        property1=parsed_args.property1,
+        property2=parsed_args.property2,
+        mole_fraction=parsed_args.mole_fraction,
+        mass_fraction=parsed_args.mass_fraction,
+        mechanism=parsed_args.mechanism,
+    )
+    res = normal_shock.lookup_table_by_states(
+        velocity=parsed_args.velocity,
+        states1=states1,
+    )
 
     sym_width = 9
     print_line_split()

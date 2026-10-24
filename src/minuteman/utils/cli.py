@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
-from argparse import ArgumentParser
+from argparse import ArgumentParser, _ArgumentGroup
 
 import numpy as np
 
@@ -88,27 +88,33 @@ def specific_heat_ratio_parser() -> ArgumentParser:
     return gam
 
 
-def mole_fraction_parser() -> ArgumentParser:
-    x = argparse.ArgumentParser(add_help=False)
-    x.add_argument(
+def add_mole_fraction_parser(parser: ArgumentParser | _ArgumentGroup) -> None:
+    parser.add_argument(
         "--mole-fraction",
         "-X",
         type=str,
         default="N2: 0.79, O2:0.21",
         help="Mole fractions for upstream species",
     )
-    return x
 
 
-def reaction_mechanism_parser() -> ArgumentParser:
-    x = argparse.ArgumentParser(add_help=False)
-    x.add_argument(
+def add_mass_fraction_parser(parser: ArgumentParser | _ArgumentGroup) -> None:
+    parser.add_argument(
+        "--mass-fraction",
+        "-Y",
+        type=str,
+        # default is None, preferring mole_fraction
+        help="Mass fractions for upstream species",
+    )
+
+
+def add_reaction_mechanism_parser(parser: ArgumentParser) -> None:
+    parser.add_argument(
         "--mechanism",
         type=str,
         default="airNASA9.yaml",
         help="Reaction mechanism",
     )
-    return x
 
 
 def flow_regime_parser() -> ArgumentParser:
