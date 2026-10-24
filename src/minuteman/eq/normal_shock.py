@@ -19,16 +19,15 @@ import numpy as np
 import scipy.constants as sc
 from scipy.optimize.elementwise import find_root
 
+from minuteman import eq
 from minuteman.eq.thermo import isentropic_exponent, speed_of_sound
 from minuteman.utils.bounds_check import (
     OutOfBoundsError,
 )
 from minuteman.utils.types import (
     ArraylikeFloat,
-    InvalidArrayShapeError,
     NDArrayFloat,
     RootFindingError,
-    broadcast_inputs,
 )
 
 
@@ -193,95 +192,18 @@ def enthalpy_by_density(
     return h1 + 0.5 * u1**2 * (1.0 - r12**2)
 
 
-def lookup_table_by_pressure_temperature(
-    pressure: ArraylikeFloat,
-    temperature: ArraylikeFloat,
-    velocity: ArraylikeFloat,
-    mole_fraction: str = "N2: 0.79, O2: 0.21",
-    mechanism: str = "airNASA9.yaml",
-) -> EqNormalShockSolution:
-    r"""Lookup equilibrium normal shock table properties by upstream pressure
-    $p_1$ and temperature $T_1$
-
-    Args:
-        pressure: Upstream pressure $p_1$ [Pa]. Bounds: (0, $\infty$)
-        temperature: Upstream temperature $T_1$ [K]. Bounds: (0, $\infty$)
-        velocity: Upstream velocity $u_1$ [m/s]. Bounds: (Mach 1, $\infty$)
-        mole_fraction: Upstream mole fractions $X_1$.
-        mechanism: Reaction mechanism file.
-
-    Returns:
-        Equilibrium normal shock table.
-
-    Raises:
-        OutOfBoundsError: Pressure or temperature are out of bounds.
-    """
-    p1, t1, u1 = broadcast_inputs(pressure, temperature, velocity)
-
-    if np.any(p1 <= 0.0):
-        p_msg = "Upstream pressure p1 must be > 0"
-        raise OutOfBoundsError(p_msg)
-    if np.any(t1 <= 0.0):
-        t_msg = "Upstream temperature T1 must be > 0"
-        raise OutOfBoundsError(t_msg)
-
-    gas1 = ct.Solution(mechanism)
-    states1 = ct.SolutionArray(gas1, shape=p1.shape)
-    states1.TPX = t1, p1, mole_fraction
-    states1.equilibrate("TP")
-    return lookup_table_by_states(states1=states1, velocity=u1)
-
-
-def lookup_table_by_density_temperature(
-    density: ArraylikeFloat,
-    temperature: ArraylikeFloat,
-    velocity: ArraylikeFloat,
-    mole_fraction: str = "N2: 0.79, O2: 0.21",
-    mechanism: str = "airNASA9.yaml",
-) -> EqNormalShockSolution:
-    r"""Lookup equilibrium normal shock table properties by upstream density
-    $\rho_1$ and temperature $T_1$
-
-    Args:
-        density: Upstream density $\rho_1$ [kg/m3]. Bounds: (0, $\infty$)
-        temperature: Upstream temperature $T_1$ [K]. Bounds: (0, $\infty$)
-        velocity: Upstream velocity $u_1$ [m/s]. Bounds: (Mach 1, $\infty$)
-        mole_fraction: Upstream mole fractions $X_1$.
-        mechanism: Reaction mechanism file.
-
-    Returns:
-        Equilibrium normal shock table.
-
-    Raises:
-        OutOfBoundsError: Density or temperature are out of bounds.
-    """
-    r1, t1, u1 = broadcast_inputs(density, temperature, velocity)
-
-    if np.any(r1 <= 0.0):
-        r_msg = "Upstream density rho1 must be > 0"
-        raise OutOfBoundsError(r_msg)
-    if np.any(t1 <= 0.0):
-        t_msg = "Upstream temperature T1 must be > 0"
-        raise OutOfBoundsError(t_msg)
-
-    gas1 = ct.Solution(mechanism)
-    states1 = ct.SolutionArray(gas1, shape=r1.shape)
-    states1.TDX = t1, r1, mole_fraction
-    states1.equilibrate("TV", max_iter=5000)
-    return lookup_table_by_states(states1=states1, velocity=u1)
-
-
 def lookup_table_by_states(
-    states1: ct.SolutionArray, velocity: NDArrayFloat
+    velocity: ArraylikeFloat,
+    states1: ct.SolutionArray,
 ) -> EqNormalShockSolution:
     r"""Lookup equilibrium normal shock table properties by preinitialized
     upstream thermodynamic states
 
     Args:
+        velocity: Upstream velocity $u_1$. Bounds: (Mach 1, $\infty$)
         states1: Upstream equilibrium thermodynamic states.
             Note there is no "equilibrate" call made in this function,
             the user is responsible for this.
-        velocity: Upstream velocity $u_1$. Bounds: (Mach 1, $\infty$)
 
     Returns:
         Equilibrium normal shock table.
@@ -290,9 +212,7 @@ def lookup_table_by_states(
         OutOfBoundsError: Upstream velocity (Mach) is out of bounds
         RootFindingError: Root finder failed to converge.
     """
-    u1 = velocity
-    if u1.shape != states1.shape:
-        raise InvalidArrayShapeError
+    u1 = np.broadcast_to(velocity, states1.shape)
 
     if np.any(u1 / states1.sound_speed <= 1.0):
         u_msg = "Upstream Mach number M1 must be > 1"
@@ -342,9 +262,6 @@ def lookup_table_by_states(
             velocity_upstream=_u1,
             enthalpy_upstream=_h1,
         )
-        gas = ct.Solution(states1.source)
-        st2 = ct.SolutionArray(gas, shape=_p2.shape)
-
         # undo the class, get back a multidimensional array to pass to cantera
         # must query shape every step because find_root
         # drops converged indices!
@@ -355,8 +272,9 @@ def lookup_table_by_states(
         for idx in np.ndindex(_p2.shape):
             xa[idx, :] = _x1[idx].xarr
 
-        st2.HPX = _h2, _p2, xa
-        st2.equilibrate("HP", max_iter=5000)
+        st2 = eq.initialize_states(
+            "HP", _h2, _p2, mole_fraction=xa, mechanism=states1.source
+        )
         return _r12 - _r1 / st2.density_mass
 
     res = find_root(
@@ -379,10 +297,9 @@ def lookup_table_by_states(
         velocity_upstream=u1,
         enthalpy_upstream=states1.enthalpy_mass,
     )
-    gas2 = ct.Solution(states1.source)
-    states2 = ct.SolutionArray(gas2, shape=u1.shape)
-    states2.HPX = h2, p2, states1.X
-    states2.equilibrate("HP", max_iter=5000)
+    states2 = eq.initialize_states(
+        "HP", h2, p2, mole_fraction=states1.X, mechanism=states1.source
+    )
 
     u21 = r12
     u2 = u21 * u1

@@ -9,8 +9,8 @@ from minuteman.eq import cli_normal_shock
 @pytest.mark.parametrize(
     "args",
     [
-        ["2e3", "pt", "50.0", "320.0"],
-        ["4e3", "rhoT", "0.05", "420.0"],
+        ["2e3", "TP", "320.0", "50.0"],
+        ["4e3", "TD", "420.0", "0.05"],
     ],
 )
 def test_main(args):

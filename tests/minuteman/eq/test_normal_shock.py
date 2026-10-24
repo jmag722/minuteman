@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import scipy.constants as sc
 
+from minuteman import eq
 from minuteman.eq import normal_shock
 from minuteman.utils.bounds_check import OutOfBoundsError
 
@@ -22,7 +23,8 @@ def test_lookup_table_by_pt_anderson():
     p1 = 63.660  # Pa
     T1 = 269.5383
 
-    soln = normal_shock.lookup_table_by_pressure_temperature(p1, T1, u1)
+    states1 = eq.initialize_states("TP", T1, p1)
+    soln = normal_shock.lookup_table_by_states(u1, states1)
     assert soln.pressure_ratio == pytest.approx(1387, rel=5e-2)
     assert soln.density_ratio == pytest.approx(15.19, rel=1e-2)
     assert soln.temperature_ratio == pytest.approx(41.64, rel=5e-2)
@@ -31,8 +33,9 @@ def test_lookup_table_by_pt_anderson():
 def test_lookup_table_by_pt_shock_cal():
     # Expected answer taken from ShockCal 2.10.16.2001
     # https://www.engapplets.vt.edu/fluids/shockcal/shockCalHelp.html
-    soln = normal_shock.lookup_table_by_pressure_temperature(
-        pressure=200, temperature=300, velocity=4000
+    states1 = eq.initialize_states("TP", 300.0, 200.0)
+    soln = normal_shock.lookup_table_by_states(
+        velocity=4000.0, states1=states1
     )
     np.testing.assert_equal(soln.upstream.velocity, 4000.0)
     np.testing.assert_allclose(soln.downstream.velocity, 381.734635, rtol=2e-2)
@@ -62,7 +65,8 @@ def test_lookup_table_by_pt_shape():
     t1 = np.array([3e2, 3e3])
     p1, t1 = np.meshgrid(p1, t1, indexing="ij")
     u1 = np.zeros_like(p1) + 5e3
-    soln = normal_shock.lookup_table_by_pressure_temperature(p1, t1, u1)
+    states1 = eq.initialize_states("TP", t1, p1)
+    soln = normal_shock.lookup_table_by_states(u1, states1)
     assert soln.pressure_ratio.shape == p1.shape
 
 
@@ -80,10 +84,12 @@ def test_lookup_table_by_pt_huber_p_high():
     p1 = 0.7135e-1 * sc.atm
     t1 = 217.0
     u1 = sc.kilo * sc.foot * expected["u1"]
-    soln = normal_shock.lookup_table_by_pressure_temperature(
-        pressure=p1,
-        temperature=t1,
+    p1 = np.broadcast_to(p1, u1.shape)
+    t1 = np.broadcast_to(t1, u1.shape)
+    states1 = eq.initialize_states("TP", t1, p1)
+    soln = normal_shock.lookup_table_by_states(
         velocity=u1,
+        states1=states1,
     )
     m1 = expected["M1"]
     t21 = expected["T21"]
@@ -147,11 +153,10 @@ def test_lookup_table_by_pt_huber_p_low():
     p1 = 1.064e-6 * sc.atm
     t1 = 166.0
     u1 = sc.kilo * sc.foot * expected["u1"]
-    soln = normal_shock.lookup_table_by_pressure_temperature(
-        pressure=p1,
-        temperature=t1,
-        velocity=u1,
-    )
+    p1 = np.broadcast_to(p1, u1.shape)
+    t1 = np.broadcast_to(t1, u1.shape)
+    states1 = eq.initialize_states("TP", t1, p1)
+    soln = normal_shock.lookup_table_by_states(velocity=u1, states1=states1)
     m1 = expected["M1"]
     t21 = expected["T21"]
     t2 = expected["T2"]
@@ -195,9 +200,8 @@ def test_lookup_table_by_pt_huber_p_low():
 def test_lookup_table_by_rt_shock_cal():
     # Expected answer taken from ShockCal 2.10.16.2001
     # https://www.engapplets.vt.edu/fluids/shockcal/shockCalHelp.html
-    soln = normal_shock.lookup_table_by_density_temperature(
-        1e-3, 300.0, velocity=6e3
-    )
+    states1 = eq.initialize_states("TD", 300.0, 1e-3)
+    soln = normal_shock.lookup_table_by_states(velocity=6e3, states1=states1)
     np.testing.assert_allclose(soln.upstream.pressure, 86.45696544151603)
     np.testing.assert_allclose(
         soln.downstream.density, 0.013645753, rtol=1.5e-3
@@ -208,16 +212,8 @@ def test_lookup_table_by_rt_shock_cal():
     )
 
 
-@pytest.mark.parametrize(
-    ("func", "p", "t", "v"),
-    [
-        (normal_shock.lookup_table_by_pressure_temperature, -1.0, 1e3, 1e4),
-        (normal_shock.lookup_table_by_pressure_temperature, 1e2, 0.0, 1e4),
-        (normal_shock.lookup_table_by_pressure_temperature, 1e2, 1e4, 0.1),
-        (normal_shock.lookup_table_by_density_temperature, -1.0, 1e3, 1e4),
-        (normal_shock.lookup_table_by_density_temperature, 1e-3, 0.0, 1e4),
-    ],
-)
-def test_out_of_bounds(func, p, t, v):
+def test_out_of_bounds():
+    v = 0.5
+    states1 = eq.initialize_states("TP", 5000, 1e3)
     with pytest.raises(OutOfBoundsError):
-        func(p, t, v)
+        normal_shock.lookup_table_by_states(v, states1)
