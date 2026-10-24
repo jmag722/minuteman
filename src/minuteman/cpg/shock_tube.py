@@ -11,7 +11,7 @@ Solve the 1D Sod shock tube problem
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.optimize import fsolve
+from scipy.optimize import brentq
 
 from minuteman import cpg
 from minuteman.cpg import thermo
@@ -511,11 +511,19 @@ def moving_shock_pressure_ratio(
         a41: Floatlike,
         gam4: Floatlike,
         gam1: Floatlike,
-    ):
+    ) -> Floatlike:
         return p41 - p21 * (
             1
             - ((gam4 - 1) / a41 * (p21 - 1))
             / (2 * gam1 * (2 * gam1 + (gam1 + 1) * (p21 - 1))) ** 0.5
         ) ** (-2 * gam4 / (gam4 - 1))
 
-    return fsolve(_p21_func, 0.5 * p41, (p41, a41, gam4, gam1))[0]
+    epsilon = 1e-12
+    min_p21 = 1.0 + epsilon
+    max_p21 = (1.0 - epsilon) * p41
+    return brentq(
+        _p21_func,
+        a=min_p21,
+        b=max_p21,
+        args=(p41, a41, gam4, gam1),
+    )
