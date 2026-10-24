@@ -209,9 +209,9 @@ def deflection_angle_by_velocity_components(
 
 def _taylor_maccoll_odes(
     polar_angle: float,
-    nondim_velocity_components: tuple[float, float],
+    nondim_velocity_components: NDArrayFloat,
     specific_heat_ratio: float,
-) -> tuple[float, float]:
+) -> NDArrayFloat:
     r"""Return the Taylor-Maccoll 2nd-order ODE as a system of first-order ODE,
     evaluated for a polar angle $\theta$ and nondimensional velocity
     components $V'_r$ and $V'_{\theta}$.
@@ -247,7 +247,7 @@ def _taylor_maccoll_odes(
     dy2_dtheta = (y1 * y2**2 - a2 * (2 * y1 + y2 / np.tan(polar_angle))) / (
         a2 - y2**2
     )
-    return dy1_dtheta, dy2_dtheta
+    return np.asarray([dy1_dtheta, dy2_dtheta])
 
 
 def cone_shock_angle_maxes(
@@ -779,16 +779,14 @@ def solve_taylor_maccoll_by_shock_angle(
         def __call__(
             self,
             t: float,  # noqa: ARG002
-            y: tuple[float, float],
-            gam: float,  # noqa: ARG002
+            y: NDArrayFloat,
         ) -> float:
             return y[1]
 
     solution = solve_ivp(
-        fun=_taylor_maccoll_odes,
+        fun=lambda t, y: _taylor_maccoll_odes(t, y, gam),
         t_span=(theta_s, 0.0),
-        y0=(vr_shock, vtheta_shock),
-        args=(gam,),
+        y0=np.array([vr_shock, vtheta_shock]),
         events=VthetaEqualsZeroEvent(),
         atol=1e-18,
         rtol=1e-13,

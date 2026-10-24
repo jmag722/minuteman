@@ -74,6 +74,7 @@ dev = [
   "pytest",
   "pytest-cov",
   "ruff",
+  "scipy-stubs",
   "zensical",
 ]
 
